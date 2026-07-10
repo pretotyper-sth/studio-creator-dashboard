@@ -60,15 +60,16 @@
   .card .cap{color:var(--muted2);font-size:12px;margin:0 0 12px}
   .row2 > .card .chartbox,
   .row2 > .card .chartbox.sm{
-    flex:1 1 0;
     margin-top:auto;
-    height:auto !important; /* inline height 무시, 형제 카드에 맞춰 채움 */
-    min-height:170px;
+    flex:0 0 auto;
   }
   .chead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-  .chartbox{position:relative;width:100%;height:240px}
+  .chartbox{position:relative;width:100%;height:240px;overflow:hidden;contain:strict;isolation:isolate}
   .chartbox.sm{height:210px}
-  .chartbox canvas{position:absolute;inset:0}
+  .chartbox canvas{display:block;pointer-events:none}
+  .chart-freeze{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;display:none;z-index:1}
+  .chartbox.is-frozen canvas{visibility:hidden}
+  .chartbox.is-frozen .chart-freeze{display:block}
   .funnel{display:flex;flex-direction:column;gap:10px}
   .frow{display:grid;grid-template-columns:132px minmax(0,1fr) 168px;align-items:center;gap:12px;min-height:40px}
   .fname{width:auto;color:var(--muted);font-size:13px;text-align:right;flex-shrink:0;line-height:1.3}
@@ -135,7 +136,7 @@
   .cmt .txt{margin-top:5px;white-space:pre-wrap;font-size:13px}
   .cp-empty{color:var(--muted2);font-size:13px;padding:24px 0;text-align:center;line-height:1.6}
   /* pins + live */
-  #pinLayer{position:absolute;inset:0;pointer-events:none;z-index:30}
+  #pinLayer{position:absolute;left:0;right:0;top:0;height:0;overflow:visible;pointer-events:none;z-index:30}
   #pinLayer>*{pointer-events:auto}
   body.pinning{cursor:crosshair}
   .pin{position:absolute;transform:translate(-50%,-100%);z-index:31}
@@ -173,15 +174,6 @@
   .lb .nm{font-weight:600}
   .lb tr:first-child td{color:var(--text)}
 
-  /* scroll perf: skip offscreen layout/paint */
-  .card, .row2, .score, .mini-kpis, h2.q{
-    content-visibility:auto;
-    contain-intrinsic-size:auto 280px;
-  }
-  h2.q{contain-intrinsic-size:auto 40px}
-  .chartbox, .chartbox.sm{content-visibility:auto; contain-intrinsic-size:240px}
-  .chartbox.sm{contain-intrinsic-size:210px}
-  #pinLayer{contain:layout style}
 
   .score{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 22px;align-items:stretch}
   @media(max-width:1100px){.score{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -865,27 +857,34 @@ function renderSprintAnno(){
 }
 
 
-/* Chart.js perf: no animation, capped DPR, lazy init when visible */
+/* ===== Chart perf: freeze offscreen canvases to static images ===== */
 try{
   Chart.defaults.animation = false;
   if(Chart.defaults.transitions?.active?.animation) Chart.defaults.transitions.active.animation.duration = 0;
-  Chart.defaults.responsive = true;
+  Chart.defaults.responsive = false;
   Chart.defaults.maintainAspectRatio = false;
-  Chart.defaults.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 1.25);
+  Chart.defaults.devicePixelRatio = 1;
+  Chart.defaults.events = [];
+  Chart.defaults.interaction = {mode:'nearest', intersect:true};
+  Chart.defaults.plugins.tooltip.enabled = false;
+  Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
 }catch(e){}
 
 const chartFactories = {};
-const chartReady = new Set();
-let chartObserver = null;
+let chartIO = null;
+const DPR = 1; // fixed 1x — scroll smoothness > retina sharpness on dashboard
 
 function baseOpts(){
   return {
-    responsive:true,
+    responsive:false,
     maintainAspectRatio:false,
     animation:false,
-    resizeDelay:200,
-    devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.25),
-    plugins:{legend:{labels:{color:C.text,boxWidth:12,font:{size:11}}}},
+    devicePixelRatio:1,
+    events:[],
+    plugins:{
+      legend:{labels:{color:C.text,boxWidth:12,font:{size:11}}},
+      tooltip:{enabled:false}
+    },
     scales:{
       x:{ticks:{color:C.text,maxRotation:0,autoSkip:true},grid:{color:C.grid}},
       y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true}
@@ -893,22 +892,169 @@ function baseOpts(){
   };
 }
 
+function chartBox(id){
+  const canvas = document.getElementById(id);
+  return canvas ? (canvas.closest('.chartbox') || canvas.parentElement) : null;
+}
+
+function fitCanvas(canvas){
+  const box = canvas.closest('.chartbox') || canvas.parentElement;
+  const w = Math.max(1, Math.floor(box.clientWidth || box.getBoundingClientRect().width));
+  const h = Math.max(1, Math.floor(box.clientHeight || 210));
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  canvas.width = w;  // DPR=1
+  canvas.height = h;
+  return {w,h};
+}
+
+function ensureFreezeImg(box){
+  let img = box.querySelector('.chart-freeze');
+  if(!img){
+    img = document.createElement('img');
+    img.className = 'chart-freeze';
+    img.alt = '';
+    img.decoding = 'async';
+    img.draggable = false;
+    box.appendChild(img);
+  }
+  return img;
+}
+
+const _freezeTimers = {};
+const _visible = new Set();
+const _pendingFreeze = new Set();
+let _scrollIdleT = null;
+let _scrolling = false;
+
+function markScrolling(){
+  _scrolling = true;
+  clearTimeout(_scrollIdleT);
+  _scrollIdleT = setTimeout(()=>{
+    _scrolling = false;
+    drainCreates();
+    // drain pending freezes one-by-one via rAF to avoid one long hitch
+    const queue = [..._pendingFreeze];
+    _pendingFreeze.clear();
+    let i = 0;
+    function step(){
+      if(i >= queue.length) return;
+      const id = queue[i++];
+      if(!_visible.has(id)) snapshotAndDestroy(id);
+      if(i < queue.length) requestAnimationFrame(step);
+    }
+    if(queue.length) requestAnimationFrame(step);
+  }, 160);
+}
+addEventListener('scroll', markScrolling, {passive:true, capture:true});
+addEventListener('wheel', markScrolling, {passive:true, capture:true});
+addEventListener('touchmove', markScrolling, {passive:true, capture:true});
+
+function cancelFreeze(id){
+  if(_freezeTimers[id]){ clearTimeout(_freezeTimers[id]); delete _freezeTimers[id]; }
+  _pendingFreeze.delete(id);
+}
+
+function snapshotAndDestroy(id){
+  const ch = charts[id];
+  const canvas = document.getElementById(id);
+  const box = chartBox(id);
+  if(!box || !canvas) return;
+  if(_visible.has(id)) return;
+  if(_scrolling){ _pendingFreeze.add(id); return; }
+  if(ch){
+    try{
+      const img = ensureFreezeImg(box);
+      img.src = canvas.toDataURL('image/jpeg', 0.65);
+      ch.destroy();
+    }catch(e){
+      try{ ch.destroy(); }catch(_){}
+    }
+    delete charts[id];
+  }
+  if(box.querySelector('.chart-freeze')?.getAttribute('src')){
+    box.classList.add('is-frozen');
+  }
+}
+
+function scheduleFreeze(id){
+  cancelFreeze(id);
+  _freezeTimers[id] = setTimeout(()=>{
+    delete _freezeTimers[id];
+    if(_scrolling) _pendingFreeze.add(id);
+    else snapshotAndDestroy(id);
+  }, 250);
+}
+
+const _pendingCreate = new Set();
+
+function createChartNow(id){
+  const box = chartBox(id);
+  const canvas = document.getElementById(id);
+  if(!box || !canvas || !chartFactories[id] || charts[id]) return charts[id]||null;
+  if(!_visible.has(id)) return null;
+  const img = box.querySelector('.chart-freeze');
+  if(img && img.getAttribute('src')){
+    box.classList.add('is-frozen');
+    return null;
+  }
+  box.classList.remove('is-frozen');
+  fitCanvas(canvas);
+  charts[id] = chartFactories[id]();
+  return charts[id];
+}
+
+function drainCreates(){
+  if(_scrolling || !_pendingCreate.size) return;
+  const queue = [..._pendingCreate];
+  _pendingCreate.clear();
+  let i = 0;
+  function step(){
+    if(_scrolling){
+      // put remaining back
+      for(; i<queue.length; i++) if(_visible.has(queue[i])) _pendingCreate.add(queue[i]);
+      return;
+    }
+    if(i >= queue.length) return;
+    const id = queue[i++];
+    if(_visible.has(id)) createChartNow(id);
+    if(i < queue.length) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function ensureChart(id){
+  const box = chartBox(id);
+  const canvas = document.getElementById(id);
+  if(!box || !canvas || !chartFactories[id]) return null;
+  cancelFreeze(id);
+  _visible.add(id);
+
+  // Prefer existing snapshot — zero Chart.js cost on scroll-back
+  const img = box.querySelector('.chart-freeze');
+  if(img && img.getAttribute('src') && !charts[id]){
+    box.classList.add('is-frozen');
+    return null;
+  }
+
+  if(charts[id]){ box.classList.remove('is-frozen'); return charts[id]; }
+
+  // Never construct Chart.js mid-scroll
+  if(_scrolling){
+    _pendingCreate.add(id);
+    return null;
+  }
+  return createChartNow(id);
+}
+
 function registerChart(id, factory){
   chartFactories[id] = factory;
   const el = document.getElementById(id);
   if(!el) return;
-  const box = el.closest('.chartbox') || el;
+  const box = el.closest('.chartbox') || el.parentElement;
   box.dataset.chartId = id;
-  if(chartObserver) chartObserver.observe(box);
+  if(chartIO) chartIO.observe(box);
 }
-
-function ensureChart(id){
-  if(charts[id] || !chartFactories[id]) return charts[id];
-  charts[id] = chartFactories[id]();
-  chartReady.add(id);
-  return charts[id];
-}
-
 
 function drawStatusLegend(){
   const d=seg[current], names=['Published','Update Required','기타'], cols=[C.success,C.warn,C.muted];
@@ -918,37 +1064,41 @@ function drawStatusLegend(){
 }
 
 function makeCharts(){
-  if(!chartObserver){
-    chartObserver = new IntersectionObserver((entries)=>{
+  if(!chartIO){
+    chartIO = new IntersectionObserver((entries)=>{
       for(const en of entries){
-        if(!en.isIntersecting) continue;
         const id = en.target.dataset.chartId;
-        if(id) ensureChart(id);
+        if(!id) continue;
+        if(en.isIntersecting) ensureChart(id);
+        else {
+          _visible.delete(id);
+          scheduleFreeze(id);
+        }
       }
-    }, {root:null, rootMargin:'240px 0px', threshold:0.01});
+    }, {root:null, rootMargin:'120px 0px', threshold:0});
   }
 
   registerChart('activeTrend', ()=>{
     const dd=seg[current];
     return new Chart(activeTrend,{type:'line',
-      data:{labels:months,datasets:[{label:'활성 창작',data:dd.activeTrend,borderColor:C.accent,backgroundColor:'rgba(76,141,255,.12)',fill:true,tension:.25,pointRadius:2}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+      data:{labels:months,datasets:[{label:'활성 창작',data:dd.activeTrend,borderColor:C.accent,backgroundColor:'rgba(76,141,255,.12)',fill:true,tension:.2,pointRadius:0}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('cumChart', ()=>{
     const dd=seg[current];
     return new Chart(cumChart,{type:'line',
       data:{labels:months,datasets:[
-        {label:'누적 가입',data:dd.cumS,borderColor:C.muted,tension:.25,pointRadius:1,fill:false},
-        {label:'누적 크리에이터(첫 편집)',data:dd.cumC,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',tension:.25,pointRadius:2,fill:true}]},
+        {label:'누적 가입',data:dd.cumS,borderColor:C.muted,tension:.2,pointRadius:0,fill:false},
+        {label:'누적 크리에이터(첫 편집)',data:dd.cumC,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',tension:.2,pointRadius:0,fill:true}]},
       options:baseOpts()});
   });
 
   registerChart('sprintChart', ()=>{
     const dd=seg[current];
     return new Chart(sprintChart,{type:'bar',
-      data:{labels:sprints,datasets:[{label:'신규 크리에이터',data:dd.sprintNew,backgroundColor:sprints.map(s=>sprintEvents[s]?C.success:C.accent),borderRadius:4}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+      data:{labels:sprints,datasets:[{label:'신규 크리에이터',data:dd.sprintNew,backgroundColor:sprints.map(s=>sprintEvents[s]?C.success:C.accent),borderRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('inoutChart', ()=>{
@@ -957,15 +1107,9 @@ function makeCharts(){
       data:{labels:months,datasets:[
         {label:'순증/순감',data:dd.inflow.map((v,i)=>v-dd.outflow[i]),
           backgroundColor:dd.inflow.map((v,i)=>(v-dd.outflow[i])>=0?C.success:C.danger),
-          borderRadius:4,barPercentage:0.65,categoryPercentage:0.7}]},
+          borderRadius:3,barPercentage:0.65,categoryPercentage:0.7}]},
       options:Object.assign(baseOpts(),{
-        plugins:{legend:{display:false},
-          tooltip:{callbacks:{
-            afterBody:(items)=>{
-              const i=items[0].dataIndex;
-              const inn=seg[current].inflow[i], out=seg[current].outflow[i];
-              return [`진입 ${inn}명 · 이탈 ${out}명`,`배수 ${(inn/out).toFixed(2)}`];
-            }}}},
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
         scales:{
           x:{ticks:{color:C.text,font:{size:12},maxRotation:0,autoSkip:true},grid:{color:C.grid}},
           y:{ticks:{color:C.text,font:{size:12},callback:v=>(v>0?'+':'')+v},
@@ -976,25 +1120,25 @@ function makeCharts(){
   registerChart('continueChart', ()=>{
     const dd=seg[current];
     return new Chart(continueChart,{type:'bar',
-      data:{labels:pubCohortMonths.map((m,i)=>i===2?m+" (측정중)":m),datasets:[{label:'지속 작업률',data:dd.continueByCohort,backgroundColor:pubCohortMonths.map((m,i)=>i===2?C.muted:C.purple),borderRadius:4}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+      data:{labels:pubCohortMonths.map((m,i)=>i===2?m+" (측정중)":m),datasets:[{label:'지속 작업률',data:dd.continueByCohort,backgroundColor:pubCohortMonths.map((m,i)=>i===2?C.muted:C.purple),borderRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
   });
 
   registerChart('returnChart', ()=>{
     const dd=seg[current];
     return new Chart(returnChart,{type:'bar',
-      data:{labels:months,datasets:[{label:'복귀 크리에이터',data:dd.returnCreators,backgroundColor:C.accent,borderRadius:4}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+      data:{labels:months,datasets:[{label:'복귀 크리에이터',data:dd.returnCreators,backgroundColor:C.accent,borderRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('pubChart', ()=>{
     const dd=seg[current]; const ps=splitStatus(dd.pubWorlds);
     return new Chart(pubChart,{type:'bar',
       data:{labels:months,datasets:[
-        {label:'Published',data:ps.published,backgroundColor:C.success,stack:'s',borderRadius:3},
-        {label:'Update Required',data:ps.ur,backgroundColor:C.warn,stack:'s',borderRadius:3},
-        {label:'기타',data:ps.oth,backgroundColor:C.muted,stack:'s',borderRadius:3}]},
-      options:Object.assign(baseOpts(),{scales:{
+        {label:'Published',data:ps.published,backgroundColor:C.success,stack:'s',borderRadius:2},
+        {label:'Update Required',data:ps.ur,backgroundColor:C.warn,stack:'s',borderRadius:2},
+        {label:'기타',data:ps.oth,backgroundColor:C.muted,stack:'s',borderRadius:2}]},
+      options:Object.assign(baseOpts(),{plugins:{tooltip:{enabled:false}},scales:{
         x:{stacked:true,ticks:{color:C.text},grid:{color:C.grid}},
         y:{stacked:true,ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true}}})});
   });
@@ -1003,7 +1147,7 @@ function makeCharts(){
     const dd=seg[current];
     const ch=new Chart(statusChart,{type:'doughnut',
       data:{labels:['Published','Update Required','기타'],datasets:[{data:dd.statusCum,backgroundColor:[C.success,C.warn,C.muted],borderColor:'#171a21',borderWidth:2}]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,resizeDelay:200,devicePixelRatio:Math.min(window.devicePixelRatio||1,1.25),plugins:{legend:{display:false}}}});
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{}})});
     drawStatusLegend();
     return ch;
   });
@@ -1012,15 +1156,15 @@ function makeCharts(){
     const dd=seg[current];
     return new Chart(tierChart,{type:'bar',
       data:{labels:['초기 단계','Tier 3','Tier 2','Tier 1','Tier 0'],datasets:[{label:'월드 수',data:dd.tierDist,
-        backgroundColor:[C.muted,C.success,C.purple,C.accent,C.warn],borderRadius:4}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+        backgroundColor:[C.muted,C.success,C.purple,C.accent,C.warn],borderRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('segChart', ()=>{
     const segColors=[C.accent,C.warn,C.purple], segNames=['Organic','Paid','내부'];
     const ch=new Chart(segChart,{type:'doughnut',
       data:{labels:segNames,datasets:[{data:seg.all.segShare,backgroundColor:segColors,borderColor:'#171a21',borderWidth:2}]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,resizeDelay:200,devicePixelRatio:Math.min(window.devicePixelRatio||1,1.25),plugins:{legend:{display:false}}}});
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{}})});
     document.getElementById('segLegend').innerHTML = segNames.map((n,i)=>
       `<span><span class="dot" style="background:${segColors[i]}"></span>${n} ${seg.all.segShare[i]}명</span>`).join('');
     return ch;
@@ -1029,73 +1173,73 @@ function makeCharts(){
   registerChart('countryChart', ()=>{
     return new Chart(countryChart,{type:'bar',
       data:{labels:country.map(c=>c[0]),datasets:[{label:'활성 창작 크리에이터',data:country.map(c=>c[1]),
-        backgroundColor:[C.accent,C.success,C.warn,C.purple,C.danger,C.muted],borderRadius:4}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+        backgroundColor:[C.accent,C.success,C.warn,C.purple,C.danger,C.muted],borderRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('weeklyNewChart', ()=>{
     const dd=seg[current];
     return new Chart(weeklyNewChart,{type:'bar',
-      data:{labels:weeks,datasets:[{label:'주간 신규',data:dd.weeklyNew,backgroundColor:C.accent,borderRadius:4}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+      data:{labels:weeks,datasets:[{label:'주간 신규',data:dd.weeklyNew,backgroundColor:C.accent,borderRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('mauChart', ()=>{
     const dd=seg[current];
     return new Chart(mauChart,{type:'line',
-      data:{labels:months,datasets:[{label:'MAU',data:dd.mau,borderColor:C.success,backgroundColor:'rgba(53,194,138,.12)',fill:true,tension:.25,pointRadius:2}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+      data:{labels:months,datasets:[{label:'MAU',data:dd.mau,borderColor:C.success,backgroundColor:'rgba(53,194,138,.12)',fill:true,tension:.2,pointRadius:0}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('firstEditMixChart', ()=>{
     const dd=seg[current];
     return new Chart(firstEditMixChart,{type:'doughnut',
       data:{labels:firstEditNames,datasets:[{data:dd.firstEditMix,backgroundColor:[C.accent,C.warn,C.purple,C.success],borderColor:'#171a21',borderWidth:2}]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,resizeDelay:200,devicePixelRatio:Math.min(window.devicePixelRatio||1,1.25),plugins:{legend:{position:'bottom',labels:{color:C.text,boxWidth:10,font:{size:11}}}}}});
+      options:Object.assign(baseOpts(),{plugins:{legend:{position:'bottom',labels:{color:C.text,boxWidth:10,font:{size:11}}},tooltip:{enabled:false}},scales:{}})});
   });
 
   registerChart('actChart', ()=>{
     const dd=seg[current];
     return new Chart(actChart,{type:'bar',
-      data:{labels:months,datasets:[{label:'활성화율',data:dd.actRateByCohort,backgroundColor:C.warn,borderRadius:4}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+      data:{labels:months,datasets:[{label:'활성화율',data:dd.actRateByCohort,backgroundColor:C.warn,borderRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
   });
 
   registerChart('ttfpChart', ()=>{
     const dd=seg[current];
     return new Chart(ttfpChart,{type:'line',
-      data:{labels:months,datasets:[{label:'TTFP 중앙값(일)',data:dd.ttfpDays,borderColor:C.purple,tension:.25,pointRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+      data:{labels:months,datasets:[{label:'TTFP 중앙값(일)',data:dd.ttfpDays,borderColor:C.purple,tension:.2,pointRadius:0}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('paidRetChart', ()=>{
     const dd=seg[current];
     return new Chart(paidRetChart,{type:'bar',
-      data:{labels:months,datasets:[{label:'외주 정착률',data:dd.paidRetention,backgroundColor:C.warn,borderRadius:4}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+      data:{labels:months,datasets:[{label:'외주 정착률',data:dd.paidRetention,backgroundColor:C.warn,borderRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
   });
 
   registerChart('utmChart', ()=>{
     const dd=seg[current];
     return new Chart(utmChart,{type:'bar',
-      data:{labels:utmNames,datasets:[{label:'회원가입',data:dd.utmShare,backgroundColor:[C.accent,C.danger,C.success,C.purple,C.warn,C.muted],borderRadius:4}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+      data:{labels:utmNames,datasets:[{label:'회원가입',data:dd.utmShare,backgroundColor:[C.accent,C.danger,C.success,C.purple,C.warn,C.muted],borderRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('coreChart', ()=>{
     const dd=seg[current];
     return new Chart(coreChart,{type:'line',
-      data:{labels:months,datasets:[{label:'코어',data:dd.coreTrend,borderColor:C.warn,backgroundColor:'rgba(224,179,65,.15)',fill:true,tension:.25,pointRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+      data:{labels:months,datasets:[{label:'코어',data:dd.coreTrend,borderColor:C.warn,backgroundColor:'rgba(224,179,65,.15)',fill:true,tension:.2,pointRadius:0}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('tierLeadChart', ()=>{
     const dd=seg[current];
     return new Chart(tierLeadChart,{type:'line',
       data:{labels:months,datasets:[
-        {label:'Tier3+',data:dd.tier3plus,borderColor:C.success,tension:.25,pointRadius:2},
-        {label:'Tier2+',data:dd.tier2plus,borderColor:C.purple,tension:.25,pointRadius:2},
-        {label:'Tier1+',data:dd.tier1plus,borderColor:C.accent,tension:.25,pointRadius:2}]},
+        {label:'Tier3+',data:dd.tier3plus,borderColor:C.success,tension:.2,pointRadius:0},
+        {label:'Tier2+',data:dd.tier2plus,borderColor:C.purple,tension:.2,pointRadius:0},
+        {label:'Tier1+',data:dd.tier1plus,borderColor:C.accent,tension:.2,pointRadius:0}]},
       options:baseOpts()});
   });
 
@@ -1103,9 +1247,9 @@ function makeCharts(){
     const dd=seg[current];
     return new Chart(discordChart,{type:'line',
       data:{labels:months,datasets:[
-        {label:'디스코드 멤버',data:dd.discordMembers,borderColor:C.accent,tension:.25,pointRadius:2,yAxisID:'y'},
-        {label:'참여 크리에이터',data:dd.communityEngaged,borderColor:C.success,tension:.25,pointRadius:2,yAxisID:'y1'}]},
-      options:Object.assign(baseOpts(),{scales:{
+        {label:'디스코드 멤버',data:dd.discordMembers,borderColor:C.accent,tension:.2,pointRadius:0,yAxisID:'y'},
+        {label:'참여 크리에이터',data:dd.communityEngaged,borderColor:C.success,tension:.2,pointRadius:0,yAxisID:'y1'}]},
+      options:Object.assign(baseOpts(),{plugins:{tooltip:{enabled:false}},scales:{
         x:{ticks:{color:C.text},grid:{color:C.grid}},
         y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true},
         y1:{position:'right',ticks:{color:C.success},grid:{display:false},beginAtZero:true}}})});
@@ -1114,24 +1258,31 @@ function makeCharts(){
   registerChart('ailabsChart', ()=>{
     const dd=seg[current];
     return new Chart(ailabsChart,{type:'bar',
-      data:{labels:months,datasets:[{label:'AI_Labs 누적',data:dd.ailabs,backgroundColor:C.purple,borderRadius:4}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+      data:{labels:months,datasets:[{label:'AI_Labs 누적',data:dd.ailabs,backgroundColor:C.purple,borderRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}}})});
   });
 
   registerChart('agentChart', ()=>{
     const dd=seg[current];
     return new Chart(agentChart,{type:'line',
-      data:{labels:months,datasets:[{label:'Agent 사용률',data:dd.agentUseRate,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',fill:true,tension:.25,pointRadius:2}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+      data:{labels:months,datasets:[{label:'Agent 사용률',data:dd.agentUseRate,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',fill:true,tension:.2,pointRadius:0}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
   });
+}
 
-  // eagerly paint first viewport charts
-  ['activeTrend','weeklyNewChart','mauChart'].forEach(ensureChart);
+function nukeChart(id){
+  if(charts[id]){ try{charts[id].destroy();}catch(e){} delete charts[id]; }
+  const box = chartBox(id);
+  if(!box) return;
+  box.classList.remove('is-frozen');
+  const img = box.querySelector('.chart-freeze');
+  if(img){ img.removeAttribute('src'); img.style.display='none'; }
 }
 
 function updateCharts(){
   const d = seg[current];
   const none='none';
+  // live instances: mutate data
   if(charts.activeTrend){ charts.activeTrend.data.datasets[0].data=d.activeTrend; charts.activeTrend.update(none); }
   if(charts.cumChart){ charts.cumChart.data.datasets[0].data=d.cumS; charts.cumChart.data.datasets[1].data=d.cumC; charts.cumChart.update(none); }
   if(charts.sprintChart){ charts.sprintChart.data.datasets[0].data=d.sprintNew; charts.sprintChart.update(none); }
@@ -1161,7 +1312,40 @@ function updateCharts(){
   if(charts.discordChart){ charts.discordChart.data.datasets[0].data=d.discordMembers; charts.discordChart.data.datasets[1].data=d.communityEngaged; charts.discordChart.update(none); }
   if(charts.ailabsChart){ charts.ailabsChart.data.datasets[0].data=d.ailabs; charts.ailabsChart.update(none); }
   if(charts.agentChart){ charts.agentChart.data.datasets[0].data=d.agentUseRate; charts.agentChart.update(none); }
+
+  // segment change invalidates all snapshots — rebuild visible, clear frozen
+  Object.keys(chartFactories).forEach(id=>{
+    const box = chartBox(id);
+    if(!box) return;
+    const img = box.querySelector('.chart-freeze');
+    if(img) img.removeAttribute('src');
+    box.classList.remove('is-frozen');
+    if(_visible.has(id) && !charts[id]) ensureChart(id);
+  });
 }
+
+function resizeLiveCharts(){
+  Object.keys(charts).forEach(id=>{
+    const canvas=document.getElementById(id);
+    if(!canvas || !charts[id]) return;
+    fitCanvas(canvas);
+    charts[id].resize();
+  });
+  // invalidate frozen snapshots (size changed)
+  document.querySelectorAll('.chartbox.is-frozen').forEach(box=>{
+    const id = box.dataset.chartId;
+    if(!id) return;
+    const img = box.querySelector('.chart-freeze');
+    if(img) img.removeAttribute('src');
+    box.classList.remove('is-frozen');
+  });
+}
+let _chartResizeT=null;
+addEventListener('resize', ()=>{
+  clearTimeout(_chartResizeT);
+  _chartResizeT=setTimeout(resizeLiveCharts, 200);
+}, {passive:true});
+
 
 function renderAll(){ renderScorecard(); renderQ1Kpis(); renderQ6Kpis(); renderQ11Kpis(); renderQ12Kpis(); renderQ13KpisAgent(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); }
 
@@ -1185,7 +1369,7 @@ document.getElementById('funnelTog').addEventListener('click',e=>{
 });
 
 renderDefs(); renderSprintAnno(); renderAll();
-try{ makeCharts(); }catch(err){ console.error('chart load failed',err); }
+try{ makeCharts(); requestAnimationFrame(()=>{ _scrolling=false; drainCreates(); }); }catch(err){ console.error('chart load failed',err); }
 </script>
 
 <script>
