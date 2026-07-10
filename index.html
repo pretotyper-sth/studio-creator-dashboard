@@ -171,6 +171,21 @@
   .lb .rank{color:var(--muted2);width:26px;font-weight:600}
   .lb .nm{font-weight:600}
   .lb tr:first-child td{color:var(--text)}
+
+  .score{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 22px}
+  @media(max-width:1100px){.score{grid-template-columns:repeat(2,1fr)}}
+  .score .card{padding:12px 14px}
+  .score .klabel{margin-bottom:6px}
+  .score .kval{font-size:22px}
+  .score .ktarget{font-size:11px;color:var(--muted2);margin-top:4px}
+  .score .ktarget b{color:var(--text);font-weight:600}
+  .mini-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 14px}
+  @media(max-width:900px){.mini-kpis{grid-template-columns:1fr}}
+  .mini-kpi{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+  .mini-kpi .l{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .mini-kpi .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .mini-kpi .s{font-size:11px;color:var(--muted2);margin-top:4px}
+  .src{display:inline-block;font-size:10px;color:var(--muted2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -198,13 +213,30 @@
     <span class="pill" style="border-color:#3a4150;color:var(--muted)">Paid=구글시트 화이트리스트 · 내부=IP/이메일 도메인</span>
   </div>
 
-  <div class="note" style="margin:-4px 0 22px">집계 기간 표기 규칙 — <b>90일</b>=오늘 기준 최근 90일 슬라이딩 · <b>누적</b>=서비스 시작~현재 · <b>코호트</b>=해당 월에 가입/퍼블리시한 집단 · <b>최근 월</b>=이번 달(부분 포함)</div>
+  <div class="note" style="margin:-4px 0 22px">집계 기간 표기 규칙 — <b>90일</b>=오늘 기준 최근 90일 슬라이딩 · <b>누적</b>=서비스 시작~현재 · <b>코호트</b>=해당 월에 가입/퍼블리시한 집단 · <b>최근 월</b>=이번 달(부분 포함). 지표 출처: <b>[Studio] 핵심 지표</b> · Q3 OKR 얼라인 · 커뮤니티 목표 문서</div>
 
-  <h2 class="q"><span class="qnum">Q1</span>현재 활성 창작 크리에이터는 몇 명인가?</h2>
+  <h2 class="q"><span class="qnum">Q0</span>지금 한눈에 보면, 저변·전환·품질·수익은 어디쯤인가?</h2>
+  <div class="score" id="scorecard"></div>
+  <div class="note" style="margin-top:-8px;margin-bottom:22px">상단 스코어카드 = 이해관계자가 가장 자주 묻는 숫자. 아래 질문별 차트에서 근거를 펼칩니다. (가상 데이터)</div>
+
+  <h2 class="q"><span class="qnum">Q1</span>현재 활성 창작 크리에이터는 몇 명인가? (OKR 가드레일 포함)</h2>
+  <div class="mini-kpis" id="q1Kpis"></div>
   <div class="card">
     <h3>최근 90일 활성 창작 크리에이터 추세</h3>
-    <p class="cap">각 지점 = 해당 월 말일 기준 최근 90일 슬라이딩 값 (마지막 지점은 오늘 7/8 기준) · 출처 studio_log</p>
+    <p class="cap">각 지점 = 해당 월 말일 기준 최근 90일 슬라이딩 값 (마지막 지점은 오늘 7/8 기준) · 출처 studio_log · <span class="src">OKR KR 후보</span></p>
     <div class="chartbox"><canvas id="activeTrend"></canvas></div>
+  </div>
+  <div class="row2" style="margin-top:14px">
+    <div class="card">
+      <h3>주간 신규 크리에이터 (Weekly New)</h3>
+      <p class="cap">최근 7일 슬라이딩 · 최초 편집 완료자 · [Studio] 핵심 지표 Acquisition</p>
+      <div class="chartbox sm"><canvas id="weeklyNewChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>월간 Studio 활성 사용자 (MAU)</h3>
+      <p class="cap">퍼블리시 여부와 무관하게 Studio를 실제로 사용한 월간 유니크 · Leading Metric 목표 500</p>
+      <div class="chartbox sm"><canvas id="mauChart"></canvas></div>
+    </div>
   </div>
 
   <h2 class="q"><span class="qnum">Q2</span>누적 크리에이터는 몇 명인가?</h2>
@@ -218,8 +250,8 @@
   <div class="card">
     <div class="chead">
       <div>
-        <h3>가입 → 첫 편집 → 퍼블리시 → 지속 작업</h3>
-        <p class="cap">회원가입=100% 기준 · [Studio] 핵심 지표 문서 온보딩 퍼널</p>
+        <h3>가입 → 첫 경험 → 활성화 → 첫 편집 → 퍼블리시 → 지속 작업</h3>
+        <p class="cap">회원가입=100% · [Studio] 핵심 지표 온보딩 퍼널 (+첫 경험·활성화 단계 포함)</p>
       </div>
       <div class="seg" id="funnelTog">
         <button data-m="cum" class="on">전체 누적</button>
@@ -228,6 +260,19 @@
     </div>
     <div class="funnel" id="funnel"></div>
     <div class="note" id="funnelNote"></div>
+  </div>
+  <div class="row2" style="margin-top:14px">
+    <div class="card">
+      <h3>첫 편집 액션 유형 비중</h3>
+      <p class="cap">첫 편집을 만든 행동이 무엇인지 · foundation / technical / script / transform</p>
+      <div class="chartbox sm"><canvas id="firstEditMixChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>가입 코호트 활성화율 (7일 내 3시간+)</h3>
+      <p class="cap">Activation Rate · 가입 후 7일 내 누적 TS ≥ 3h 비율</p>
+      <div id="actStat"></div>
+      <div class="chartbox sm" style="margin-top:8px"><canvas id="actChart"></canvas></div>
+    </div>
   </div>
 
   <h2 class="q"><span class="qnum">Q4</span>어느 국가에서 창작 활동이 가장 활발한가?</h2>
@@ -244,7 +289,8 @@
     <div id="leaderboard"></div>
   </div>
 
-  <h2 class="q"><span class="qnum">Q6</span>크리에이터의 퍼블리시 전환율은 얼마나 되는가?</h2>
+  <h2 class="q"><span class="qnum">Q6</span>크리에이터의 퍼블리시 전환율은 얼마나 되는가? (TTFP 포함)</h2>
+  <div class="mini-kpis" id="q6Kpis"></div>
   <div class="card">
     <h3>퍼블리싱 현황</h3>
     <p class="cap">퍼블리시한 <b>유니크 크리에이터</b>(1명이 10개 내도 1명) + 실제 퍼블리시 월드 수 · Public/Update required 상태 구분</p>
@@ -263,11 +309,18 @@
       <div class="legend" id="statusLegend"></div>
     </div>
   </div>
-  <div class="card">
-    <h3>퍼블리시 월드 품질 티어 분포 (누적)</h3>
-    <p class="cap">[Studio] 핵심 지표 문서의 월드 품질 기준(Tier 0~3) 적용 · 신규 방문자 수·D1 리텐션·세션 TS 기준</p>
-    <div class="chartbox sm"><canvas id="tierChart"></canvas></div>
-    <div class="note">왼쪽(낮음) → 오른쪽(높음). 초기 단계(700명 미만) · Tier 3(700명+ · D1 12%+ · 4분+) · Tier 2(2,000명+ · 15%+ · 6분+) · Tier 1(5,000명+ · 20%+ · 8분+) · Tier 0(10,000명+ · 24%+ · 10분+)</div>
+  <div class="row2" style="margin-top:14px">
+    <div class="card">
+      <h3>퍼블리시 월드 품질 티어 분포 (누적)</h3>
+      <p class="cap">[Studio] 핵심 지표 문서의 월드 품질 기준(Tier 0~3) · Leading: Tier3+ / Tier1+ 목표</p>
+      <div class="chartbox sm"><canvas id="tierChart"></canvas></div>
+      <div class="note">왼쪽(낮음) → 오른쪽(높음). 초기 단계 → Tier 3 → 2 → 1 → 0. Tier3+ / Tier1+ 개수는 스코어카드 참고</div>
+    </div>
+    <div class="card">
+      <h3>TTFP 중앙값 추이 (가입 → 첫 퍼블리시)</h3>
+      <p class="cap">Time To First Publish · 코호트별 중앙값(일). 짧을수록 온보딩 효율</p>
+      <div class="chartbox sm"><canvas id="ttfpChart"></canvas></div>
+    </div>
   </div>
 
   <h2 class="q"><span class="qnum">Q7</span>크리에이터 저변은 순증하고 있는가? (유입 대비 이탈)</h2>
@@ -309,11 +362,19 @@
       <div class="chartbox sm" style="margin-top:8px"><canvas id="continueChart"></canvas></div>
     </div>
   </div>
-  <div class="card">
-    <h3>이탈 후 복귀 크리에이터</h3>
-    <p class="cap">마지막 스튜디오 로그인 <b>30일+ 경과 후 재로그인</b>한 크리에이터 (활성화 기준 재충족). 월별 복귀 수</p>
-    <div id="returnStat"></div>
-    <div class="chartbox sm" style="height:170px;margin-top:8px"><canvas id="returnChart"></canvas></div>
+  <div class="row2" style="margin-top:14px">
+    <div class="card">
+      <h3>이탈 후 복귀 크리에이터</h3>
+      <p class="cap">마지막 스튜디오 로그인 <b>30일+ 경과 후 재로그인</b>한 크리에이터 (활성화 기준 재충족). 월별 복귀 수</p>
+      <div id="returnStat"></div>
+      <div class="chartbox sm" style="height:170px;margin-top:8px"><canvas id="returnChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>외주(Paid) 계약자 정착률</h3>
+      <p class="cap">계약 완료일로부터 30일 내 5시간+ 재활동 · [Studio] 핵심 지표 단기 핵심 보조지표</p>
+      <div id="paidRetStat"></div>
+      <div class="chartbox sm" style="margin-top:8px"><canvas id="paidRetChart"></canvas></div>
+    </div>
   </div>
 
   <h2 class="q"><span class="qnum">Q10</span>크리에이터 유입 경로는 어떻게 구성되는가? (Organic · Paid · 내부)</h2>
@@ -322,6 +383,79 @@
     <p class="cap">Organic / Paid / 내부 · 제외가 아니라 나눠서 조회</p>
     <div class="chartbox sm"><canvas id="segChart"></canvas></div>
     <div class="legend" id="segLegend"></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>Hub 유입 소스별 회원가입 (누적)</h3>
+    <p class="cap">PAGE_LOCATION utm_source 기준 · Discord / YouTube / Organic / Referral / Direct / Unknown</p>
+    <div class="chartbox sm"><canvas id="utmChart"></canvas></div>
+  </div>
+
+  <h2 class="q"><span class="qnum">Q11</span>코어 크리에이터·고품질 월드는 얼마나 쌓이고 있는가?</h2>
+  <div class="mini-kpis" id="q11Kpis"></div>
+  <div class="row2">
+    <div class="card">
+      <h3>코어 크리에이터 수 추이 (30일 슬라이딩)</h3>
+      <p class="cap">30일 내 10시간+ · 타겟 장르(TPA/TPS/스포츠) Tier1+ 월드 보유 · 2026 목표 10명</p>
+      <div class="chartbox sm"><canvas id="coreChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Tier3+ / Tier1+ 월드 수 추이</h3>
+      <p class="cap">Leading Metric · Tier3+ 목표 100 · Tier1+ 목표 30 (누적 Live 기준 스냅샷)</p>
+      <div class="chartbox sm"><canvas id="tierLeadChart"></canvas></div>
+    </div>
+  </div>
+
+  <h2 class="q"><span class="qnum">Q12</span>수익화(북극성)까지 얼마나 가고 있는가?</h2>
+  <div class="mini-kpis" id="q12Kpis"></div>
+  <div class="row2">
+    <div class="card">
+      <h3>수익 구간별 크리에이터 수 (90일 슬라이딩)</h3>
+      <p class="cap">$10+ / $100+(북극성) / $1,000+ · Active Earning Creators</p>
+      <div class="chartbox sm"><canvas id="earnChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>퍼블리시 후 60일 내 첫 수익 발생률</h3>
+      <p class="cap">북극성 선행지표 · 이상 징후 감지용</p>
+      <div class="chartbox sm"><canvas id="firstEarnChart"></canvas></div>
+    </div>
+  </div>
+
+  <h2 class="q"><span class="qnum">Q13</span>커뮤니티(디스코드)는 살아 있는가?</h2>
+  <div class="mini-kpis" id="q13Kpis"></div>
+  <div class="row2">
+    <div class="card">
+      <h3>디스코드 멤버 · 참여 크리에이터 추이</h3>
+      <p class="cap">서버 멤버(누적) vs 30일 내 5회+ 활동 참여 크리에이터 · 10월 목표 1,000 / 300</p>
+      <div class="chartbox sm"><canvas id="discordChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>#AI_Labs 누적 결과물</h3>
+      <p class="cap">단순 눈팅이 아닌 결과물 공유 건수 · 10월 목표 100건</p>
+      <div class="chartbox sm"><canvas id="ailabsChart"></canvas></div>
+    </div>
+  </div>
+
+  <h2 class="q"><span class="qnum">Q14</span>추천(레퍼럴)로 신규 크리에이터가 들어오는가?</h2>
+  <div class="mini-kpis" id="q14Kpis"></div>
+  <div class="card">
+    <h3>월별 추천 성공 · K-factor</h3>
+    <p class="cap">90일 내 1명+ 초대 성공한 추천 크리에이터 · K-factor = 크리에이터 1명이 데려온 신규 수</p>
+    <div class="chartbox sm"><canvas id="referralChart"></canvas></div>
+  </div>
+
+  <h2 class="q"><span class="qnum">Q15</span>Agent / 고급 기능은 실제로 쓰이는가?</h2>
+  <div class="mini-kpis" id="q15Kpis"></div>
+  <div class="row2">
+    <div class="card">
+      <h3>Studio Agent 사용 크리에이터 비율 (90일)</h3>
+      <p class="cap">AI로 CRUD 1회+ 한 활성 크리에이터 비중 · 첫 경험/활성화 보조</p>
+      <div class="chartbox sm"><canvas id="agentChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>고급 기능 사용률 (스크립트·애니·임포트)</h3>
+      <p class="cap">Feature Utilization · 90일 활성 중 해당 기능 1회+ 사용 비율</p>
+      <div class="chartbox sm"><canvas id="featureChart"></canvas></div>
+    </div>
   </div>
 
   <h2 class="section">지표 정의 (얼라인용)</h2>
@@ -334,6 +468,7 @@
 
   <footer>
     본 대시보드는 <b>정의 얼라인용 시안이며 수치는 현실적인 범위의 가상 데이터</b>입니다. 실제 데이터가 반영되면 동일한 구조로 실측값이 채워집니다.
+    지표 범위는 <b>[Studio] 핵심 지표</b>·Q3 OKR 얼라인·커뮤니티 목표 문서를 기준으로 넓게 넣었고, 의미 없는 항목은 이후 제거하면 됩니다.
     퍼블리싱 계열은 place↔world 매핑/모델링 반영 후 실측 연결됩니다.
   </footer>
 
@@ -365,6 +500,9 @@
 const months = ["2/28","3/31","4/30","5/31","6/30","7/8(오늘)"]; // 각 지점=해당 월 말일 기준 스냅샷, 마지막은 오늘 기준
 const pubCohortMonths = ["4월","5월","6월"];
 const sprints = ["S30","S31","S32","S33","S34","S35","S36","S37","S38"];
+const weeks = ["W-7","W-6","W-5","W-4","W-3","W-2","W-1","이번주"];
+const utmNames = ["Discord","YouTube","Organic","Referral","Direct","Unknown"];
+const firstEditNames = ["오브젝트 배치","기술/물리","스크립트","이동/변형"];
 
 const seg = {
   all:{active90:278, editConv:68, cumCreators:620, cumSignup:1150,
@@ -375,7 +513,18 @@ const seg = {
        pubWorlds:[31,21,53,34,58,74], segShare:[210,48,20],
        cohort3h:[["4월",55,45,38],["5월",57,46,34],["6월",60,null,null]],
        cohort5h:[["4월",42,34,28],["5월",44,35,25],["6월",47,null,null]],
-       continueByCohort:[38,33,30], returnCreators:[6,8,7,11,9,14]},
+       continueByCohort:[38,33,30], returnCreators:[6,8,7,11,9,14],
+       weeklyNew:[18,22,19,28,31,35,42,38], mau:[210,198,175,230,255,290],
+       actRateByCohort:[62,65,68,64,66,70], firstEditMix:[32,18,22,28],
+       ttfpDays:[21,18,16,14,13,12], paidRetention:[55,58,52,60,57,62],
+       coreTrend:[1,1,2,2,3,4], tier3plus:[18,22,28,34,38,42], tier1plus:[2,3,4,5,6,7],
+       earn10:18, earn100:4, earn1000:0, earnMedian:42, firstEarn60:[8,9,11,10,12,13],
+       discordMembers:[480,512,540,580,620,680], communityEngaged:[5,8,12,16,22,28],
+       ailabs:[4,7,12,18,26,35], referralCreators:[3,4,5,6,8,10], kFactor:[0.08,0.09,0.11,0.12,0.14,0.16],
+       agentUseRate:[12,15,18,22,28,34], featureUse:[45,28,22],
+       utmShare:[180,95,420,70,250,135], pubConv90:42, okrTarget:350, mauTarget:500,
+       editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
+       discordTarget:1000, communityTarget:300, ailabsTarget:100},
   organic:{active90:210, editConv:66, cumCreators:470, cumSignup:980,
        pubCreators90:88, pubCreatorsCum:155, pubWorlds90:96, pubWorldsCum:300, statusCum:[210,70,20], tierDist:[274,18,6,2,0],
        retention:46, retention5h:36, continueRate:32, returnRate:11, inout:1.7,
@@ -384,7 +533,18 @@ const seg = {
        pubWorlds:[24,16,40,26,44,56], segShare:[210,0,0],
        cohort3h:[["4월",52,42,35],["5월",54,43,31],["6월",57,null,null]],
        cohort5h:[["4월",40,32,26],["5월",42,33,24],["6월",45,null,null]],
-       continueByCohort:[36,31,29], returnCreators:[5,6,5,8,7,10]},
+       continueByCohort:[36,31,29], returnCreators:[5,6,5,8,7,10],
+       weeklyNew:[14,17,15,22,24,28,32,29], mau:[160,150,132,175,195,220],
+       actRateByCohort:[60,63,66,62,64,68], firstEditMix:[34,16,20,30],
+       ttfpDays:[22,19,17,15,14,13], paidRetention:[0,0,0,0,0,0],
+       coreTrend:[1,1,1,2,2,3], tier3plus:[12,15,18,22,25,28], tier1plus:[1,2,2,3,4,5],
+       earn10:12, earn100:2, earn1000:0, earnMedian:35, firstEarn60:[7,8,9,9,10,11],
+       discordMembers:[480,512,540,580,620,680], communityEngaged:[4,6,9,12,16,20],
+       ailabs:[3,5,9,14,20,26], referralCreators:[2,3,4,5,6,8], kFactor:[0.07,0.08,0.10,0.11,0.13,0.15],
+       agentUseRate:[10,13,16,20,25,30], featureUse:[42,25,20],
+       utmShare:[180,95,420,70,250,135], pubConv90:42, okrTarget:350, mauTarget:500,
+       editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
+       discordTarget:1000, communityTarget:300, ailabsTarget:100},
   paid:{active90:48, editConv:62, cumCreators:110, cumSignup:150,
        pubCreators90:22, pubCreatorsCum:40, pubWorlds90:22, pubWorldsCum:90, statusCum:[60,22,8], tierDist:[80,6,2,1,1],
        retention:41, retention5h:33, continueRate:40, returnRate:15, inout:2.2,
@@ -393,7 +553,18 @@ const seg = {
        pubWorlds:[4,3,9,6,11,14], segShare:[0,48,0],
        cohort3h:[["4월",48,38,32],["5월",50,39,29],["6월",52,null,null]],
        cohort5h:[["4월",36,28,22],["5월",38,29,20],["6월",40,null,null]],
-       continueByCohort:[44,38,34], returnCreators:[1,2,2,3,2,4]},
+       continueByCohort:[44,38,34], returnCreators:[1,2,2,3,2,4],
+       weeklyNew:[2,3,2,4,5,5,7,6], mau:[30,35,40,48,55,62],
+       actRateByCohort:[70,72,75,71,74,78], firstEditMix:[28,22,25,25],
+       ttfpDays:[14,12,11,10,9,8], paidRetention:[55,58,52,60,57,62],
+       coreTrend:[0,0,1,1,1,1], tier3plus:[4,5,7,8,9,10], tier1plus:[1,1,1,2,2,2],
+       earn10:5, earn100:2, earn1000:0, earnMedian:80, firstEarn60:[12,14,15,16,18,20],
+       discordMembers:[480,512,540,580,620,680], communityEngaged:[1,2,3,4,5,6],
+       ailabs:[1,2,3,4,5,7], referralCreators:[1,1,1,1,2,2], kFactor:[0.05,0.05,0.06,0.06,0.08,0.09],
+       agentUseRate:[20,24,28,32,38,42], featureUse:[55,40,30],
+       utmShare:[20,10,40,15,30,35], pubConv90:46, okrTarget:350, mauTarget:500,
+       editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
+       discordTarget:1000, communityTarget:300, ailabsTarget:100},
   internal:{active90:20, editConv:90, cumCreators:40, cumSignup:20,
        pubCreators90:12, pubCreatorsCum:20, pubWorlds90:14, pubWorldsCum:45, statusCum:[34,7,4], tierDist:[38,4,2,1,0],
        retention:75, retention5h:66, continueRate:70, returnRate:20, inout:1.1,
@@ -402,31 +573,50 @@ const seg = {
        pubWorlds:[6,4,7,5,8,9], segShare:[0,0,20],
        cohort3h:[["4월",78,70,66],["5월",80,71,63],["6월",82,null,null]],
        cohort5h:[["4월",66,58,54],["5월",68,59,52],["6월",70,null,null]],
-       continueByCohort:[75,72,70], returnCreators:[1,1,1,1,1,2]},
+       continueByCohort:[75,72,70], returnCreators:[1,1,1,1,1,2],
+       weeklyNew:[1,1,1,1,1,1,1,1], mau:[18,17,16,19,20,20],
+       actRateByCohort:[88,90,92,90,91,93], firstEditMix:[20,25,30,25],
+       ttfpDays:[7,6,6,5,5,4], paidRetention:[0,0,0,0,0,0],
+       coreTrend:[0,0,0,0,0,0], tier3plus:[2,2,3,4,4,4], tier1plus:[0,0,1,0,0,0],
+       earn10:1, earn100:0, earn1000:0, earnMedian:0, firstEarn60:[0,0,0,0,0,0],
+       discordMembers:[480,512,540,580,620,680], communityEngaged:[0,0,0,0,1,2],
+       ailabs:[0,0,0,0,1,2], referralCreators:[0,0,0,0,0,0], kFactor:[0,0,0,0,0,0],
+       agentUseRate:[40,45,50,55,60,65], featureUse:[70,55,40],
+       utmShare:[0,0,0,0,0,20], pubConv90:60, okrTarget:350, mauTarget:500,
+       editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
+       discordTarget:1000, communityTarget:300, ailabsTarget:100},
 };
+
 
 const sprintEvents = {"S33":"온보딩 튜토리얼 개편","S36":"디스코드 크리에이터 이벤트","S38":"템플릿 5종 추가 배포"};
 
 const defs = [
-  ["90일 슬라이딩 활성 창작 크리에이터","오늘 기준 최근 90일 안에 실제로 편집을 한 번이라도 한 순수 크리에이터 수 (매일 갱신)","최근 90일 · studio_log 편집 이벤트(world_modified) 유니크 계정"],
-  ["편집 전환율","최근 90일에 스튜디오에 들어온 사람 중 실제 편집까지 간 비율","최근 90일 · 편집 크리에이터 ÷ 스튜디오 활성"],
-  ["전체 누적 크리에이터","서비스 시작~현재까지 '첫 편집'을 한 번이라도 한 사람의 총 인원 (한 번 도달하면 계속 포함)","서비스 시작~현재 누적 · first_edit_date 있는 계정"],
-  ["퍼블리시 크리에이터 (유니크)","실제로 월드를 퍼블리시한 '사람' 수. 1명이 10개 내도 1명. 누적/90일","퍼블리시 성공 로그 DISTINCT accountid"],
-  ["신규 퍼블리시 월드","크리에이터가 새로 출시한 월드 수 (World=시작 Place 롤업)","place_cooking(성공) → 매핑으로 World 집계"],
-  ["퍼블리시 월드 상태","퍼블리시된 월드가 실제 Public인지, Update required 등으로 비공개인지 구분","월드 상태값 public / update_required / 기타"],
-  ["퍼블리시 전환율","최근 90일에 만든 크리에이터 중 최근 90일에 실제 퍼블리시까지 한 비율 (분자·분모 모두 90일)","90일 퍼블리시 유니크 크리에이터 ÷ 90일 활성 창작 크리에이터"],
+  ["90일 슬라이딩 활성 창작 크리에이터","오늘 기준 최근 90일 안에 실제로 편집을 한 번이라도 한 순수 크리에이터 수 (매일 갱신) · Q3 OKR KR 후보","최근 90일 · studio_log 편집 이벤트(world_modified) 유니크 계정"],
+  ["편집 전환율","최근 90일에 스튜디오에 들어온 사람 중 실제 편집까지 간 비율 · Leading 목표 70%","최근 90일 · 편집 크리에이터 ÷ 스튜디오 활성"],
+  ["월간 Studio 활성 사용자(MAU)","퍼블리시 여부와 무관하게 Studio를 실제로 사용한 월간 유니크 · Leading 목표 500","월 단위 · studio_login/편집 유니크"],
+  ["주간 신규 크리에이터","최근 7일간 최초 편집 완료한 크리에이터 수","슬라이딩 7일 · world_modified 최초"],
+  ["전체 누적 크리에이터","서비스 시작~현재까지 '첫 편집'을 한 번이라도 한 사람의 총 인원","서비스 시작~현재 누적 · first_edit_date"],
+  ["첫 경험","스튜디오 첫 실행 후 7일 내 플레이테스트 1회(3초+) 또는 누적 편집 1시간+","가입/첫실행 코호트"],
   ["활성화 (Activation)","가입 후 7일 내 스튜디오에서 누적 3시간+ 활동한 비율","가입 코호트 · TS 합 ≥ 3h"],
-  ["리텐션 (일반 재방문)","시간 임계값 없이, 이후 기간(D7/D30)에 스튜디오에서 '다시 활동했나'","코호트별 재활동 여부 (활동 1건 이상)"],
-  ["정착 리텐션 (Retained)","첫 퍼블리시 후 30일 내 누적 N시간+(3h 기본/5h 토글) 재활동한 비율. 상단 숫자는 '30일이 다 지난 가장 최근 코호트(현재 5월)' 값","stg_user_ts_union.total_ts 합 ≥ 임계값 · 퍼블리시 코호트"],
-  ["지속 작업 (Continued)","첫 퍼블리시 후 30일 내 동일 월드 v2+ 업데이트 또는 다른 월드 신규 퍼블리시한 비율. 상단 숫자는 최근 완료 코호트(5월) 기준","퍼블리시 히스토리 · world_version/신규 world"],
-  ["이탈 후 복귀 (Return)","마지막 스튜디오 로그인 30일+ 경과 후 재로그인 (활성화 기준 재충족)","studio_login 히스토리 LAG · gap ≥ 30일"],
-  ["인/아웃 비율","월별로 '최근 90일 활성' 집합에 새로 든 계정(진입) ÷ 빠진 계정(이탈=직전엔 활성이었으나 이후 90일 연속 무활동). 1↑이면 저변 순증","월 단위 · 90일 활성 로스터의 진입/이탈 수"],
-  ["활동시간(TS) 기준","3시간 = 누적 10,800초. 로그인~종료 세션시간 합(지속접속 보정 포함). 벽시계 접속시간 아님","해당 집계창(예: 30일) 내 stg_user_ts_union.total_ts 합"],
-  ["세그먼트 구분","Organic / Paid / 내부를 나눠서 조회 (제외 아님)","Paid=구글시트 화이트리스트, 내부=IP·이메일 도메인"],
-  ["국가별 활성 크리에이터","최근 90일 활성 창작 크리에이터를 접속 국가로 집계 (전체 세그먼트 기준)","studio_log.country · 최근 90일 유니크 계정"],
-  ["크리에이터 리더보드","최근 90일 편집 횟수 기준 상위 크리에이터 (전체 세그먼트 기준)","최근 90일 · accountid별 world_modified 카운트 내림차순"],
-  ["월드 품질 티어","월간 신규 방문자·D1 리텐션·세션 TS 기준으로 월드 품질을 5단계로 분류 ([Studio] 핵심 지표 문서 기준)","Tier0~3 + 초기단계 · 월드별 최근 방문 지표 기준 분류"],
+  ["퍼블리시 크리에이터 (유니크)","실제로 월드를 퍼블리시한 '사람' 수. 누적/90일 · Leading 목표 300(누적 관점)","퍼블리시 성공 로그 DISTINCT accountid"],
+  ["퍼블리시 전환율","최근 90일 활성 창작 중 최근 90일 퍼블리시 유니크 비율","90일 퍼블리시 유니크 ÷ 90일 활성 창작"],
+  ["TTFP","가입 → 첫 퍼블리시까지 걸린 일수 중앙값","코호트별 중앙값"],
+  ["정착 리텐션 (Retained)","첫 퍼블리시 후 30일 내 누적 N시간+(3h/5h) 재활동 비율","퍼블리시 코호트 · TS"],
+  ["지속 작업 (Continued)","첫 퍼블리시 후 30일 내 동일 월드 v2+ 또는 다른 월드 신규 퍼블리시","퍼블리시 히스토리"],
+  ["외주 계약자 정착률","계약 완료일로부터 30일 내 5시간+ 재활동 · 단기 핵심 보조지표","Paid 화이트리스트 · 수동 계약일"],
+  ["코어 크리에이터","30일 내 10시간+ · 타겟 장르 Tier1+ 월드 보유 · 2026 목표 10","슬라이딩 30일"],
+  ["Tier3+ / Tier1+ 월드","품질 Leading · Tier3+ 목표 100 · Tier1+ 목표 30","월드 품질 티어 기준"],
+  ["수익화 크리에이터 (북극성)","90일 내 $100+ 누적 수익 · North Star · Leading 목표 30","슬라이딩 90일 수익"],
+  ["퍼블리시 후 60일 내 첫 수익","북극성 선행지표","퍼블리시 코호트"],
+  ["커뮤니티 참여 크리에이터","30일 내 Discord/포럼 5회+ 활동 · 10월 목표 300","Discord/포럼 로그"],
+  ["디스코드 멤버 / AI_Labs","서버 멤버 누적 · #AI_Labs 결과물 공유 건수 · 10월 목표 1000/100","커뮤니티 목표 문서"],
+  ["추천 크리에이터 / K-factor","90일 내 1명+ 초대 성공 · K-factor=데려온 신규 수","레퍼럴 추적"],
+  ["Agent / 고급 기능 사용률","AI CRUD 1회+ · 스크립트·애니·임포트 사용 비율","Feature Utilization"],
+  ["Hub 유입 소스","utm_source 기준 회원가입 분포","PAGE_LOCATION UTM"],
+  ["인/아웃 순증","90일 활성 로스터 진입−이탈","월 스냅샷"],
+  ["이탈 후 복귀","마지막 스튜디오 로그인 30일+ 후 재로그인","studio_login LAG"],
 ];
+
 
 let current = "all";
 let retTh = "3h";
@@ -510,26 +700,30 @@ function renderFunnel(){
   if(funnelMode==='period'){
     const n=d.cumS.length;
     const signupDelta = Math.max(1, d.cumS[n-1]-d.cumS[n-2]);
-    // 6월 코호트 기준 단계별 전환율 (가입→…→지속). 역전 없도록 단조 감소
-    const rates=[1, 0.70, 0.58, 0.48, 0.22, 0.08];
-    const names=["신규 가입","스튜디오 로그인","에디터 진입","첫 편집","퍼블리시","지속 작업"];
-    const colors=[C.accent,'#5b9bff','#6f7dff',C.purple,C.success,'#2fa876'];
+    // 가입→로그인→에디터→첫경험→활성화→첫편집→퍼블리시→지속 (단조 감소)
+    const rates=[1, 0.78, 0.68, 0.55, 0.42, 0.36, 0.18, 0.07];
+    const names=["신규 가입","스튜디오 로그인","에디터 진입","첫 경험","활성화(7일 3h+)","첫 편집","퍼블리시","지속 작업"];
+    const colors=[C.accent,'#5b9bff','#6f7dff','#7a8cff',C.warn,C.purple,C.success,'#2fa876'];
     steps = funnelSteps(names.map((name,i)=>[name, signupDelta*rates[i], colors[i]]));
     base = steps[0][1];
-    document.getElementById('funnelNote').textContent = '6월 한 달간 신규 가입한 크리에이터 기준 · 신규 가입=100% · 단계마다 이전 단계 이하로만 감소';
+    document.getElementById('funnelNote').textContent = '6월 한 달간 신규 가입 기준 · 신규 가입=100% · 첫 경험/활성화 단계 포함 · 단조 감소';
   } else {
     base = d.cumSignup;
     const continued = Math.round(d.pubCreatorsCum * d.continueRate/100);
+    const firstExp = Math.round(d.cumCreators * 0.78);
+    const activated = Math.round(d.cumCreators * 0.62);
     steps = funnelSteps([
       ["회원가입", base, C.accent],
-      ["스튜디오 로그인", Math.round(base*0.70), '#5b9bff'],
-      ["에디터 진입", Math.round(base*0.60), '#6f7dff'],
+      ["스튜디오 로그인", Math.round(base*0.72), '#5b9bff'],
+      ["에디터 진입", Math.round(base*0.62), '#6f7dff'],
+      ["첫 경험", firstExp, '#7a8cff'],
+      ["활성화(7일 3h+)", activated, C.warn],
       ["첫 편집", d.cumCreators, C.purple],
       ["퍼블리시", d.pubCreatorsCum, C.success],
       ["지속 작업", continued, '#2fa876'],
     ]);
     base = steps[0][1];
-    document.getElementById('funnelNote').textContent = '서비스 시작~현재 전체 누적 기준 · 회원가입=100% · 단계마다 이전 단계 이하로만 감소';
+    document.getElementById('funnelNote').textContent = '서비스 시작~현재 누적 · 회원가입=100% · 첫 경험/활성화 포함 · 단조 감소';
   }
   document.getElementById('funnel').innerHTML = steps.map((s,i)=>{
     const p = (s[1]/base*100);
@@ -603,6 +797,92 @@ function renderCohort(){
     `<div class="note" style="margin:0 0 8px">각 칸 = 첫 퍼블리시 후 그 시점까지 누적 <b>${retTh}+</b> 재활동한 크리에이터 비율(%)</div>
      <table><thead><tr><th>코호트</th><th class="num">7일 뒤</th><th class="num">14일 뒤</th><th class="num">30일 뒤</th></tr></thead><tbody>${rows}</tbody></table>
      <div class="note">– = 아직 그 기간이 안 지난 코호트(측정 중) · 5시간은 문서 기준이나 다소 타이트해 <b>3시간을 기본</b>으로 baseline 관찰 권장</div>`;
+}
+
+
+function pct(v,t){return t? Math.round(v/t*100):0}
+function kpiCard(label,val,unit,sub,tag){
+  return `<div class="card kpi"><div class="klabel">${label}${tag?` <span class="src">${tag}</span>`:''}</div>
+    <div class="kval">${val}<span class="kunit">${unit||''}</span></div>
+    <div class="ksub">${sub||''}</div></div>`;
+}
+function mini(label,val,sub,cls){
+  return `<div class="mini-kpi ${cls||''}"><div class="l">${label}</div><div class="v">${val}</div><div class="s">${sub||''}</div></div>`;
+}
+function renderScorecard(){
+  const d=seg[current];
+  const t3=d.tier3plus.at(-1), t1=d.tier1plus.at(-1);
+  document.getElementById('scorecard').innerHTML =
+    kpiCard('90일 활성 창작', d.active90, '명', `OKR 가드레일 ${d.okrTarget} · 달성 ${pct(d.active90,d.okrTarget)}%`, 'OKR') +
+    kpiCard('편집 전환율', d.editConv, '%', `목표 ${d.editConvTarget}%`, 'Leading') +
+    kpiCard('퍼블리시 전환(90일)', d.pubConv90, '%', `퍼블리시 ${d.pubCreators90} / 활성 ${d.active90}`, '전환') +
+    kpiCard('MAU (Studio)', d.mau.at(-1), '명', `목표 ${d.mauTarget}`, 'Leading') +
+    kpiCard('Tier3+ 월드', t3, '개', `목표 ${d.tier3Target} · ${pct(t3,d.tier3Target)}%`, '품질') +
+    kpiCard('Tier1+ 월드', t1, '개', `목표 ${d.tier1Target} · ${pct(t1,d.tier1Target)}%`, '품질') +
+    kpiCard('수익 $100+(90일)', d.earn100, '명', `북극성 · 목표 ${d.earnTarget}`, 'North Star') +
+    kpiCard('코어 크리에이터', d.coreTrend.at(-1), '명', `목표 ${d.coreTarget}`, 'Core');
+}
+function renderQ1Kpis(){
+  const d=seg[current];
+  document.getElementById('q1Kpis').innerHTML =
+    mini('90일 활성 창작', `${d.active90}<small style="font-size:13px;color:var(--muted)"> / ${d.okrTarget}</small>`, `OKR 대비 ${pct(d.active90,d.okrTarget)}% · 가드레일 편집전환 ${d.editConv}%`) +
+    mini('주간 신규 (이번주)', `${d.weeklyNew.at(-1)}명`, '최근 7일 최초 편집') +
+    mini('Studio MAU', `${d.mau.at(-1)}명`, `목표 ${d.mauTarget}`);
+}
+function renderQ6Kpis(){
+  const d=seg[current];
+  document.getElementById('q6Kpis').innerHTML =
+    mini('90일 퍼블리시 전환', `${d.pubConv90}%`, `${d.pubCreators90}명 / 활성 ${d.active90}`) +
+    mini('TTFP 중앙값', `${d.ttfpDays.at(-1)}일`, '가입 → 첫 퍼블리시') +
+    mini('누적 퍼블리시 크리에이터', `${d.pubCreatorsCum}명`, 'Leading 목표 300 관점');
+}
+function renderQ11Kpis(){
+  const d=seg[current];
+  document.getElementById('q11Kpis').innerHTML =
+    mini('코어 크리에이터', `${d.coreTrend.at(-1)} / ${d.coreTarget}`, '30일 슬라이딩') +
+    mini('Tier3+ 월드', `${d.tier3plus.at(-1)} / ${d.tier3Target}`, '품질 Leading') +
+    mini('Tier1+ 월드', `${d.tier1plus.at(-1)} / ${d.tier1Target}`, '재방문 월드');
+}
+function renderQ12Kpis(){
+  const d=seg[current];
+  document.getElementById('q12Kpis').innerHTML =
+    mini('북극성 $100+(90일)', `${d.earn100} / ${d.earnTarget}`, 'Active Earning') +
+    mini('$10+ / $1,000+', `${d.earn10} / ${d.earn1000}`, `수익 중앙값 $${d.earnMedian}`) +
+    mini('60일 내 첫 수익률', `${d.firstEarn60.at(-1)}%`, '선행지표');
+}
+function renderQ13Kpis(){
+  const d=seg[current];
+  document.getElementById('q13Kpis').innerHTML =
+    mini('디스코드 멤버', `${d.discordMembers.at(-1)} / ${d.discordTarget}`, `달성 ${pct(d.discordMembers.at(-1),d.discordTarget)}%`) +
+    mini('참여 크리에이터(30일 5회+)', `${d.communityEngaged.at(-1)} / ${d.communityTarget}`, `달성 ${pct(d.communityEngaged.at(-1),d.communityTarget)}%`) +
+    mini('AI_Labs 결과물', `${d.ailabs.at(-1)} / ${d.ailabsTarget}`, `달성 ${pct(d.ailabs.at(-1),d.ailabsTarget)}%`);
+}
+function renderQ14Kpis(){
+  const d=seg[current];
+  document.getElementById('q14Kpis').innerHTML =
+    mini('추천 크리에이터(최근월)', `${d.referralCreators.at(-1)}명`, '90일 내 1명+ 초대') +
+    mini('K-factor', `${d.kFactor.at(-1)}`, '1명당 데려온 신규') +
+    mini('레퍼럴 참여 추세', `${d.referralCreators[0]} → ${d.referralCreators.at(-1)}`, '최근 6개월');
+}
+function renderQ15Kpis(){
+  const d=seg[current];
+  document.getElementById('q15Kpis').innerHTML =
+    mini('Agent 사용률(90일)', `${d.agentUseRate.at(-1)}%`, 'AI CRUD 1회+') +
+    mini('스크립트 사용', `${d.featureUse[0]}%`, '90일 활성 대비') +
+    mini('애니 / 임포트', `${d.featureUse[1]}% / ${d.featureUse[2]}%`, '고급 기능');
+}
+function renderActStat(){
+  const d=seg[current], latest=d.actRateByCohort.at(-1);
+  document.getElementById('actStat').innerHTML =
+    `<span class="bigstat">${latest}<small>%</small></span>
+     <span style="color:var(--muted2);font-size:12px">최근 가입 코호트 · 7일 내 3시간+ 활성화율</span>`;
+}
+function renderPaidRetStat(){
+  const d=seg[current], latest=d.paidRetention.at(-1);
+  const show = current==='organic' || current==='internal' ? '—' : latest;
+  document.getElementById('paidRetStat').innerHTML =
+    `<span class="bigstat">${show}${show==='—'?'': '<small>%</small>'}</span>
+     <span style="color:var(--muted2);font-size:12px">계약 완료 후 30일 내 5시간+ · Paid 세그먼트에서 의미 있음</span>`;
 }
 
 function renderDefs(){
@@ -694,6 +974,67 @@ function makeCharts(){
     data:{labels:country.map(c=>c[0]),datasets:[{label:'활성 창작 크리에이터',data:country.map(c=>c[1]),
       backgroundColor:[C.accent,C.success,C.warn,C.purple,C.danger,C.muted],borderRadius:5}]},
     options:Object.assign(base(),{plugins:{legend:{display:false}}})});
+
+  charts.weeklyNew = new Chart(weeklyNewChart,{type:'bar',
+    data:{labels:weeks,datasets:[{label:'주간 신규',data:d.weeklyNew,backgroundColor:C.accent,borderRadius:4}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
+  charts.mau = new Chart(mauChart,{type:'line',
+    data:{labels:months,datasets:[{label:'MAU',data:d.mau,borderColor:C.success,backgroundColor:'rgba(53,194,138,.12)',fill:true,tension:.3,pointRadius:3}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
+  charts.firstEditMix = new Chart(firstEditMixChart,{type:'doughnut',
+    data:{labels:firstEditNames,datasets:[{data:d.firstEditMix,backgroundColor:[C.accent,C.warn,C.purple,C.success],borderColor:'#171a21',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:C.text,boxWidth:10,font:{size:11}}}}}});
+  charts.act = new Chart(actChart,{type:'bar',
+    data:{labels:months,datasets:[{label:'활성화율',data:d.actRateByCohort,backgroundColor:C.warn,borderRadius:4}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+  charts.ttfp = new Chart(ttfpChart,{type:'line',
+    data:{labels:months,datasets:[{label:'TTFP 중앙값(일)',data:d.ttfpDays,borderColor:C.purple,tension:.3,pointRadius:4}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
+  charts.paidRet = new Chart(paidRetChart,{type:'bar',
+    data:{labels:months,datasets:[{label:'외주 정착률',data:d.paidRetention,backgroundColor:C.warn,borderRadius:4}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+  charts.utm = new Chart(utmChart,{type:'bar',
+    data:{labels:utmNames,datasets:[{label:'회원가입',data:d.utmShare,backgroundColor:[C.accent,C.danger,C.success,C.purple,C.warn,C.muted],borderRadius:4}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
+  charts.core = new Chart(coreChart,{type:'line',
+    data:{labels:months,datasets:[{label:'코어',data:d.coreTrend,borderColor:C.warn,backgroundColor:'rgba(224,179,65,.15)',fill:true,tension:.3,pointRadius:4}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
+  charts.tierLead = new Chart(tierLeadChart,{type:'line',
+    data:{labels:months,datasets:[
+      {label:'Tier3+',data:d.tier3plus,borderColor:C.success,tension:.3,pointRadius:3},
+      {label:'Tier1+',data:d.tier1plus,borderColor:C.accent,tension:.3,pointRadius:3}]},
+    options:base()});
+  charts.earn = new Chart(earnChart,{type:'bar',
+    data:{labels:['$10+','$100+','$1,000+'],datasets:[{label:'크리에이터',data:[d.earn10,d.earn100,d.earn1000],backgroundColor:[C.muted,C.warn,C.success],borderRadius:5}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
+  charts.firstEarn = new Chart(firstEarnChart,{type:'line',
+    data:{labels:months,datasets:[{label:'60일 내 첫 수익률',data:d.firstEarn60,borderColor:C.warn,tension:.3,pointRadius:3}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:40}}})});
+  charts.discord = new Chart(discordChart,{type:'line',
+    data:{labels:months,datasets:[
+      {label:'디스코드 멤버',data:d.discordMembers,borderColor:C.accent,tension:.3,pointRadius:3,yAxisID:'y'},
+      {label:'참여 크리에이터',data:d.communityEngaged,borderColor:C.success,tension:.3,pointRadius:3,yAxisID:'y1'}]},
+    options:Object.assign(base(),{scales:{
+      x:{ticks:{color:C.text},grid:{color:C.grid}},
+      y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true},
+      y1:{position:'right',ticks:{color:C.success},grid:{display:false},beginAtZero:true}}})});
+  charts.ailabs = new Chart(ailabsChart,{type:'bar',
+    data:{labels:months,datasets:[{label:'AI_Labs 누적',data:d.ailabs,backgroundColor:C.purple,borderRadius:4}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
+  charts.referral = new Chart(referralChart,{type:'bar',
+    data:{labels:months,datasets:[
+      {label:'추천 크리에이터',data:d.referralCreators,backgroundColor:C.accent,borderRadius:4,yAxisID:'y'},
+      {label:'K-factor',type:'line',data:d.kFactor,borderColor:C.warn,borderWidth:2,yAxisID:'y1',tension:.3,pointRadius:4}]},
+    options:Object.assign(base(),{scales:{
+      x:{ticks:{color:C.text},grid:{color:C.grid}},
+      y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true},
+      y1:{position:'right',ticks:{color:C.warn},grid:{display:false},beginAtZero:true,suggestedMax:0.3}}})});
+  charts.agent = new Chart(agentChart,{type:'line',
+    data:{labels:months,datasets:[{label:'Agent 사용률',data:d.agentUseRate,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',fill:true,tension:.3,pointRadius:3}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+  charts.feature = new Chart(featureChart,{type:'bar',
+    data:{labels:['스크립트','애니메이션','임포트'],datasets:[{label:'사용률',data:d.featureUse,backgroundColor:[C.purple,C.accent,C.success],borderRadius:5}]},
+    options:Object.assign(base(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
 }
 
 function drawStatusLegend(){
@@ -717,9 +1058,25 @@ function updateCharts(){
   charts.pub.data.datasets[0].data=ps.pub; charts.pub.data.datasets[1].data=ps.ur; charts.pub.data.datasets[2].data=ps.oth; charts.pub.update();
   charts.status.data.datasets[0].data=d.statusCum; charts.status.update(); drawStatusLegend();
   charts.tier.data.datasets[0].data=d.tierDist; charts.tier.update();
+  charts.weeklyNew.data.datasets[0].data=d.weeklyNew; charts.weeklyNew.update();
+  charts.mau.data.datasets[0].data=d.mau; charts.mau.update();
+  charts.firstEditMix.data.datasets[0].data=d.firstEditMix; charts.firstEditMix.update();
+  charts.act.data.datasets[0].data=d.actRateByCohort; charts.act.update();
+  charts.ttfp.data.datasets[0].data=d.ttfpDays; charts.ttfp.update();
+  charts.paidRet.data.datasets[0].data=d.paidRetention; charts.paidRet.update();
+  charts.utm.data.datasets[0].data=d.utmShare; charts.utm.update();
+  charts.core.data.datasets[0].data=d.coreTrend; charts.core.update();
+  charts.tierLead.data.datasets[0].data=d.tier3plus; charts.tierLead.data.datasets[1].data=d.tier1plus; charts.tierLead.update();
+  charts.earn.data.datasets[0].data=[d.earn10,d.earn100,d.earn1000]; charts.earn.update();
+  charts.firstEarn.data.datasets[0].data=d.firstEarn60; charts.firstEarn.update();
+  charts.discord.data.datasets[0].data=d.discordMembers; charts.discord.data.datasets[1].data=d.communityEngaged; charts.discord.update();
+  charts.ailabs.data.datasets[0].data=d.ailabs; charts.ailabs.update();
+  charts.referral.data.datasets[0].data=d.referralCreators; charts.referral.data.datasets[1].data=d.kFactor; charts.referral.update();
+  charts.agent.data.datasets[0].data=d.agentUseRate; charts.agent.update();
+  charts.feature.data.datasets[0].data=d.featureUse; charts.feature.update();
 }
 
-function renderAll(){ renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); }
+function renderAll(){ renderScorecard(); renderQ1Kpis(); renderQ6Kpis(); renderQ11Kpis(); renderQ12Kpis(); renderQ13Kpis(); renderQ14Kpis(); renderQ15Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); }
 
 document.getElementById('seg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
@@ -746,7 +1103,7 @@ try{ makeCharts(); }catch(err){ console.error('chart load failed',err); }
 
 <script>
 /* ===== 코멘트: 핀 + 목록 (정적 FE · localStorage) ===== */
-const SECTIONS=["전체","핵심 KPI","저변 추세","3주 스프린트","온보딩 퍼널","리텐션/인아웃","지속작업/복귀","세그먼트/퍼블리싱","지표 정의","기타"];
+const SECTIONS=["전체","스코어카드","저변/OKR","온보딩 퍼널","퍼블리시/TTFP","리텐션/정착","코어/품질","수익화","커뮤니티","레퍼럴","Agent/기능","세그먼트","지표 정의","기타"];
 const CKEY='studio_dash_comments_v1';
 const nameEl=document.getElementById('c-name'), secEl=document.getElementById('c-section');
 nameEl.value=localStorage.getItem('cname')||'';
