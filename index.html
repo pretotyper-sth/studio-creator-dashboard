@@ -254,8 +254,8 @@
   <div class="card">
     <div class="chead">
       <div>
-        <h3>가입 → 첫 경험 → 활성화 → 첫 편집 → 퍼블리시 → 지속 작업</h3>
-        <p class="cap">회원가입=100% · [Studio] 핵심 지표 온보딩 퍼널 (+첫 경험·활성화 단계 포함)</p>
+        <h3>회원가입 → 스튜디오 로그인 → 에디터 진입 → 첫 편집 → 퍼블리싱 → 지속 작업</h3>
+        <p class="cap">회원가입=100% · [Studio] 핵심 지표 · 신규 크리에이터 온보딩 퍼널 (활성화는 퍼널 단계 아님)</p>
       </div>
       <div class="seg" id="funnelTog">
         <button data-m="cum" class="on">전체 누적</button>
@@ -273,7 +273,7 @@
     </div>
     <div class="card">
       <h3>가입 코호트 활성화율 (7일 내 3시간+)</h3>
-      <p class="cap">Activation Rate · 가입 후 7일 내 누적 TS ≥ 3h 비율</p>
+      <p class="cap">Activation Rate · 퍼널 단계가 아닌 별도 활성화 지표 · 가입 후 7일 내 누적 TS ≥ 3h</p>
       <div id="actStat"></div>
       <div class="chartbox sm" style="margin-top:8px"><canvas id="actChart"></canvas></div>
     </div>
@@ -572,8 +572,7 @@ const defs = [
   ["월간 Studio 활성 사용자(MAU)","퍼블리시 여부와 무관하게 Studio를 실제로 사용한 월간 유니크","월 단위 · studio_login/편집 유니크"],
   ["주간 신규 크리에이터","최근 7일간 최초 편집 완료한 크리에이터 수","슬라이딩 7일 · world_modified 최초"],
   ["전체 누적 크리에이터","서비스 시작~현재까지 '첫 편집'을 한 번이라도 한 사람의 총 인원","서비스 시작~현재 누적 · first_edit_date"],
-  ["첫 경험","스튜디오 첫 실행 후 7일 내 플레이테스트 1회(3초+) 또는 누적 편집 1시간+","가입/첫실행 코호트"],
-  ["활성화 (Activation)","가입 후 7일 내 스튜디오에서 누적 3시간+ 활동한 비율","가입 코호트 · TS 합 ≥ 3h"],
+  ["활성화 (Activation)","가입 후 7일 내 스튜디오에서 누적 3시간+ 활동한 비율. 온보딩 퍼널 단계가 아니라 별도 Activation Rate 지표","가입 코호트 · TS 합 ≥ 3h"],
   ["퍼블리시 크리에이터 (유니크)","실제로 월드를 퍼블리시한 '사람' 수. 누적/90일","퍼블리시 성공 로그 DISTINCT accountid"],
   ["퍼블리시 월드 상태 (Publishing/Version Status)","Published=배포 완료(접속 가능). Update Required=운영 일시중지(접속 불가). Banned=운영 금지. ※ Public/Private/Pause는 Access Setting(노출 설정)으로 별도 축 — Public≠Published","상태값 문서 · World Publishing Status + World Version Status"],
   ["Access Setting (노출 설정)","사용자가 설정하는 월드 노출: Public(앱 노출·접속) / Pause(노출·접속불가) / Private(비노출). Published 월드여도 Access가 Private이면 앱에 안 보임","상태값 문서 · Access Setting"],
@@ -674,33 +673,33 @@ function funnelSteps(raw){
 function renderFunnel(){
   const d = seg[current];
   let base, steps;
+  // [Studio] 핵심 지표 · 신규 크리에이터 온보딩 퍼널
+  // 회원가입 → 스튜디오 로그인 → 에디터 진입 → 첫 편집 → 퍼블리싱 → 지속 작업
+  // ※ 활성화(7일 3h+)·첫 경험은 퍼널 단계가 아님 (별도 Activation Rate)
   if(funnelMode==='period'){
     const n=d.cumS.length;
     const signupDelta = Math.max(1, d.cumS[n-1]-d.cumS[n-2]);
-    // 가입→로그인→에디터→첫경험→활성화→첫편집→퍼블리시→지속 (단조 감소)
-    const rates=[1, 0.78, 0.68, 0.55, 0.42, 0.36, 0.18, 0.07];
-    const names=["신규 가입","스튜디오 로그인","에디터 진입","첫 경험","활성화(7일 3h+)","첫 편집","퍼블리시","지속 작업"];
-    const colors=[C.accent,'#5b9bff','#6f7dff','#7a8cff',C.warn,C.purple,C.success,'#2fa876'];
+    const rates=[1, 0.78, 0.68, 0.36, 0.18, 0.07];
+    const names=["회원가입","스튜디오 로그인","에디터 진입","첫 편집","퍼블리싱","지속 작업"];
+    const colors=[C.accent,'#5b9bff','#6f7dff',C.purple,C.success,'#2fa876'];
     steps = funnelSteps(names.map((name,i)=>[name, signupDelta*rates[i], colors[i]]));
     base = steps[0][1];
-    document.getElementById('funnelNote').textContent = '6월 한 달간 신규 가입 기준 · 신규 가입=100% · 첫 경험/활성화 단계 포함 · 단조 감소';
+    document.getElementById('funnelNote').textContent = '6월 한 달간 신규 가입 기준 · 회원가입=100% · [Studio] 핵심 지표 온보딩 퍼널 · 단조 감소';
   } else {
     base = d.cumSignup;
     const continued = Math.round(d.pubCreatorsCum * d.continueRate/100);
-    const firstExp = Math.round(d.cumCreators * 0.78);
-    const activated = Math.round(d.cumCreators * 0.62);
+    const studioLogin = Math.round(base*0.72);
+    const editorEnter = Math.round(base*0.62);
     steps = funnelSteps([
       ["회원가입", base, C.accent],
-      ["스튜디오 로그인", Math.round(base*0.72), '#5b9bff'],
-      ["에디터 진입", Math.round(base*0.62), '#6f7dff'],
-      ["첫 경험", firstExp, '#7a8cff'],
-      ["활성화(7일 3h+)", activated, C.warn],
+      ["스튜디오 로그인", studioLogin, '#5b9bff'],
+      ["에디터 진입", editorEnter, '#6f7dff'],
       ["첫 편집", d.cumCreators, C.purple],
-      ["퍼블리시", d.pubCreatorsCum, C.success],
+      ["퍼블리싱", d.pubCreatorsCum, C.success],
       ["지속 작업", continued, '#2fa876'],
     ]);
     base = steps[0][1];
-    document.getElementById('funnelNote').textContent = '서비스 시작~현재 누적 · 회원가입=100% · 첫 경험/활성화 포함 · 단조 감소';
+    document.getElementById('funnelNote').textContent = '서비스 시작~현재 누적 · 회원가입=100% · [Studio] 핵심 지표 온보딩 퍼널 · 단조 감소';
   }
   document.getElementById('funnel').innerHTML = steps.map((s,i)=>{
     const p = (s[1]/base*100);
