@@ -173,6 +173,16 @@
   .lb .nm{font-weight:600}
   .lb tr:first-child td{color:var(--text)}
 
+  /* scroll perf: skip offscreen layout/paint */
+  .card, .row2, .score, .mini-kpis, h2.q{
+    content-visibility:auto;
+    contain-intrinsic-size:auto 280px;
+  }
+  h2.q{contain-intrinsic-size:auto 40px}
+  .chartbox, .chartbox.sm{content-visibility:auto; contain-intrinsic-size:240px}
+  .chartbox.sm{contain-intrinsic-size:210px}
+  #pinLayer{contain:layout style}
+
   .score{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 22px;align-items:stretch}
   @media(max-width:1100px){.score{grid-template-columns:repeat(2,minmax(0,1fr))}}
   .score > .card{margin-top:0 !important;min-width:0;height:100%;padding:12px 14px}
@@ -854,167 +864,303 @@ function renderSprintAnno(){
     "예시 주석(수동 기록 필요): " + Object.entries(sprintEvents).map(([s,e])=>`<b>${s}</b> ${e}`).join(" · ");
 }
 
-function makeCharts(){
-  const d = seg[current];
-  const base=()=>({responsive:true,maintainAspectRatio:false,
+
+/* Chart.js perf: no animation, capped DPR, lazy init when visible */
+try{
+  Chart.defaults.animation = false;
+  if(Chart.defaults.transitions?.active?.animation) Chart.defaults.transitions.active.animation.duration = 0;
+  Chart.defaults.responsive = true;
+  Chart.defaults.maintainAspectRatio = false;
+  Chart.defaults.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 1.25);
+}catch(e){}
+
+const chartFactories = {};
+const chartReady = new Set();
+let chartObserver = null;
+
+function baseOpts(){
+  return {
+    responsive:true,
+    maintainAspectRatio:false,
+    animation:false,
+    resizeDelay:200,
+    devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.25),
     plugins:{legend:{labels:{color:C.text,boxWidth:12,font:{size:11}}}},
-    scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true}}});
-
-  charts.active = new Chart(activeTrend,{type:'line',
-    data:{labels:months,datasets:[{label:'활성 창작',data:d.activeTrend,borderColor:C.accent,backgroundColor:'rgba(76,141,255,.12)',fill:true,tension:.3,pointRadius:3}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
-
-  charts.cum = new Chart(cumChart,{type:'line',
-    data:{labels:months,datasets:[
-      {label:'누적 가입',data:d.cumS,borderColor:C.muted,tension:.3,pointRadius:2,fill:false},
-      {label:'누적 크리에이터(첫 편집)',data:d.cumC,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',tension:.3,pointRadius:3,fill:true}]},
-    options:base()});
-
-  charts.sprint = new Chart(sprintChart,{type:'bar',
-    data:{labels:sprints,datasets:[{label:'신규 크리에이터',data:d.sprintNew,backgroundColor:sprints.map(s=>sprintEvents[s]?C.success:C.accent),borderRadius:5}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
-
-  charts.inout = new Chart(inoutChart,{type:'bar',
-    data:{labels:months,datasets:[
-      {label:'순증/순감',data:d.inflow.map((v,i)=>v-d.outflow[i]),
-        backgroundColor:d.inflow.map((v,i)=>(v-d.outflow[i])>=0?C.success:C.danger),
-        borderRadius:5,barPercentage:0.65,categoryPercentage:0.7}]},
-    options:Object.assign(base(),{
-      plugins:{legend:{display:false},
-        tooltip:{callbacks:{
-          afterBody:(items)=>{
-            const i=items[0].dataIndex;
-            const inn=seg[current].inflow[i], out=seg[current].outflow[i];
-            return [`진입 ${inn}명 · 이탈 ${out}명`,`배수 ${(inn/out).toFixed(2)}`];
-          }}}},
-      scales:{
-        x:{ticks:{color:C.text,font:{size:13,weight:'500'}},grid:{color:C.grid}},
-        y:{ticks:{color:C.text,font:{size:13},callback:v=>(v>0?'+':'')+v},
-           grid:{color:C.grid},
-           title:{display:true,text:'순증 명수 (진입 − 이탈)',color:C.muted,font:{size:13}}}}})});
-
-  charts.continue = new Chart(continueChart,{type:'bar',
-    data:{labels:pubCohortMonths.map((m,i)=>i===2?m+" (측정중)":m),datasets:[{label:'지속 작업률',data:d.continueByCohort,backgroundColor:pubCohortMonths.map((m,i)=>i===2?C.muted:C.purple),borderRadius:4}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
-
-  charts.return = new Chart(returnChart,{type:'bar',
-    data:{labels:months,datasets:[{label:'복귀 크리에이터',data:d.returnCreators,backgroundColor:C.accent,borderRadius:4}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
-
-  const ps=splitStatus(d.pubWorlds);
-  charts.pub = new Chart(pubChart,{type:'bar',
-    data:{labels:months,datasets:[
-      {label:'Published',data:ps.published,backgroundColor:C.success,stack:'s',borderRadius:3},
-      {label:'Update Required',data:ps.ur,backgroundColor:C.warn,stack:'s',borderRadius:3},
-      {label:'기타',data:ps.oth,backgroundColor:C.muted,stack:'s',borderRadius:3}]},
-    options:Object.assign(base(),{scales:{
-      x:{stacked:true,ticks:{color:C.text},grid:{color:C.grid}},
-      y:{stacked:true,ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true}}})});
-
-  charts.status = new Chart(statusChart,{type:'doughnut',
-    data:{labels:['Published','Update Required','기타'],datasets:[{data:d.statusCum,backgroundColor:[C.success,C.warn,C.muted],borderColor:'#171a21',borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
-  drawStatusLegend();
-
-  // 품질 스케일: 왼쪽(낮음) → 오른쪽(높음). Tier 0이 최고 품질
-  charts.tier = new Chart(tierChart,{type:'bar',
-    data:{labels:['초기 단계','Tier 3','Tier 2','Tier 1','Tier 0'],datasets:[{label:'월드 수',data:d.tierDist,
-      backgroundColor:[C.muted,C.success,C.purple,C.accent,C.warn],borderRadius:5}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}},
-      scales:{x:{ticks:{color:C.text,font:{size:12}},grid:{color:C.grid}},
-              y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true}}})});
-
-  const segColors=[C.accent,C.warn,C.purple], segNames=['Organic','Paid','내부'];
-  charts.seg = new Chart(segChart,{type:'doughnut',
-    data:{labels:segNames,datasets:[{data:seg.all.segShare,backgroundColor:segColors,borderColor:'#171a21',borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
-  document.getElementById('segLegend').innerHTML = segNames.map((n,i)=>
-    `<span><span class="dot" style="background:${segColors[i]}"></span>${n} ${seg.all.segShare[i]}명</span>`).join('');
-
-  charts.country = new Chart(countryChart,{type:'bar',
-    data:{labels:country.map(c=>c[0]),datasets:[{label:'활성 창작 크리에이터',data:country.map(c=>c[1]),
-      backgroundColor:[C.accent,C.success,C.warn,C.purple,C.danger,C.muted],borderRadius:5}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
-
-  charts.weeklyNew = new Chart(weeklyNewChart,{type:'bar',
-    data:{labels:weeks,datasets:[{label:'주간 신규',data:d.weeklyNew,backgroundColor:C.accent,borderRadius:4}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
-  charts.mau = new Chart(mauChart,{type:'line',
-    data:{labels:months,datasets:[{label:'MAU',data:d.mau,borderColor:C.success,backgroundColor:'rgba(53,194,138,.12)',fill:true,tension:.3,pointRadius:3}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
-  charts.firstEditMix = new Chart(firstEditMixChart,{type:'doughnut',
-    data:{labels:firstEditNames,datasets:[{data:d.firstEditMix,backgroundColor:[C.accent,C.warn,C.purple,C.success],borderColor:'#171a21',borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:C.text,boxWidth:10,font:{size:11}}}}}});
-  charts.act = new Chart(actChart,{type:'bar',
-    data:{labels:months,datasets:[{label:'활성화율',data:d.actRateByCohort,backgroundColor:C.warn,borderRadius:4}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
-  charts.ttfp = new Chart(ttfpChart,{type:'line',
-    data:{labels:months,datasets:[{label:'TTFP 중앙값(일)',data:d.ttfpDays,borderColor:C.purple,tension:.3,pointRadius:4}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
-  charts.paidRet = new Chart(paidRetChart,{type:'bar',
-    data:{labels:months,datasets:[{label:'외주 정착률',data:d.paidRetention,backgroundColor:C.warn,borderRadius:4}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
-  charts.utm = new Chart(utmChart,{type:'bar',
-    data:{labels:utmNames,datasets:[{label:'회원가입',data:d.utmShare,backgroundColor:[C.accent,C.danger,C.success,C.purple,C.warn,C.muted],borderRadius:4}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
-  charts.core = new Chart(coreChart,{type:'line',
-    data:{labels:months,datasets:[{label:'코어',data:d.coreTrend,borderColor:C.warn,backgroundColor:'rgba(224,179,65,.15)',fill:true,tension:.3,pointRadius:4}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
-  charts.tierLead = new Chart(tierLeadChart,{type:'line',
-    data:{labels:months,datasets:[
-      {label:'Tier3+',data:d.tier3plus,borderColor:C.success,tension:.3,pointRadius:3},
-      {label:'Tier2+',data:d.tier2plus,borderColor:C.purple,tension:.3,pointRadius:3},
-      {label:'Tier1+',data:d.tier1plus,borderColor:C.accent,tension:.3,pointRadius:3}]},
-    options:base()});
-  charts.discord = new Chart(discordChart,{type:'line',
-    data:{labels:months,datasets:[
-      {label:'디스코드 멤버',data:d.discordMembers,borderColor:C.accent,tension:.3,pointRadius:3,yAxisID:'y'},
-      {label:'참여 크리에이터',data:d.communityEngaged,borderColor:C.success,tension:.3,pointRadius:3,yAxisID:'y1'}]},
-    options:Object.assign(base(),{scales:{
-      x:{ticks:{color:C.text},grid:{color:C.grid}},
-      y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true},
-      y1:{position:'right',ticks:{color:C.success},grid:{display:false},beginAtZero:true}}})});
-  charts.ailabs = new Chart(ailabsChart,{type:'bar',
-    data:{labels:months,datasets:[{label:'AI_Labs 누적',data:d.ailabs,backgroundColor:C.purple,borderRadius:4}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}}})});
-  charts.agent = new Chart(agentChart,{type:'line',
-    data:{labels:months,datasets:[{label:'Agent 사용률',data:d.agentUseRate,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',fill:true,tension:.3,pointRadius:3}]},
-    options:Object.assign(base(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+    scales:{
+      x:{ticks:{color:C.text,maxRotation:0,autoSkip:true},grid:{color:C.grid}},
+      y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true}
+    }
+  };
 }
+
+function registerChart(id, factory){
+  chartFactories[id] = factory;
+  const el = document.getElementById(id);
+  if(!el) return;
+  const box = el.closest('.chartbox') || el;
+  box.dataset.chartId = id;
+  if(chartObserver) chartObserver.observe(box);
+}
+
+function ensureChart(id){
+  if(charts[id] || !chartFactories[id]) return charts[id];
+  charts[id] = chartFactories[id]();
+  chartReady.add(id);
+  return charts[id];
+}
+
 
 function drawStatusLegend(){
   const d=seg[current], names=['Published','Update Required','기타'], cols=[C.success,C.warn,C.muted];
-  document.getElementById('statusLegend').innerHTML = names.map((n,i)=>
+  const el=document.getElementById('statusLegend');
+  if(el) el.innerHTML = names.map((n,i)=>
     `<span><span class="dot" style="background:${cols[i]}"></span>${n} ${d.statusCum[i]}</span>`).join('');
+}
+
+function makeCharts(){
+  if(!chartObserver){
+    chartObserver = new IntersectionObserver((entries)=>{
+      for(const en of entries){
+        if(!en.isIntersecting) continue;
+        const id = en.target.dataset.chartId;
+        if(id) ensureChart(id);
+      }
+    }, {root:null, rootMargin:'240px 0px', threshold:0.01});
+  }
+
+  registerChart('activeTrend', ()=>{
+    const dd=seg[current];
+    return new Chart(activeTrend,{type:'line',
+      data:{labels:months,datasets:[{label:'활성 창작',data:dd.activeTrend,borderColor:C.accent,backgroundColor:'rgba(76,141,255,.12)',fill:true,tension:.25,pointRadius:2}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('cumChart', ()=>{
+    const dd=seg[current];
+    return new Chart(cumChart,{type:'line',
+      data:{labels:months,datasets:[
+        {label:'누적 가입',data:dd.cumS,borderColor:C.muted,tension:.25,pointRadius:1,fill:false},
+        {label:'누적 크리에이터(첫 편집)',data:dd.cumC,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',tension:.25,pointRadius:2,fill:true}]},
+      options:baseOpts()});
+  });
+
+  registerChart('sprintChart', ()=>{
+    const dd=seg[current];
+    return new Chart(sprintChart,{type:'bar',
+      data:{labels:sprints,datasets:[{label:'신규 크리에이터',data:dd.sprintNew,backgroundColor:sprints.map(s=>sprintEvents[s]?C.success:C.accent),borderRadius:4}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('inoutChart', ()=>{
+    const dd=seg[current];
+    return new Chart(inoutChart,{type:'bar',
+      data:{labels:months,datasets:[
+        {label:'순증/순감',data:dd.inflow.map((v,i)=>v-dd.outflow[i]),
+          backgroundColor:dd.inflow.map((v,i)=>(v-dd.outflow[i])>=0?C.success:C.danger),
+          borderRadius:4,barPercentage:0.65,categoryPercentage:0.7}]},
+      options:Object.assign(baseOpts(),{
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{
+            afterBody:(items)=>{
+              const i=items[0].dataIndex;
+              const inn=seg[current].inflow[i], out=seg[current].outflow[i];
+              return [`진입 ${inn}명 · 이탈 ${out}명`,`배수 ${(inn/out).toFixed(2)}`];
+            }}}},
+        scales:{
+          x:{ticks:{color:C.text,font:{size:12},maxRotation:0,autoSkip:true},grid:{color:C.grid}},
+          y:{ticks:{color:C.text,font:{size:12},callback:v=>(v>0?'+':'')+v},
+             grid:{color:C.grid},
+             title:{display:true,text:'순증 명수 (진입 − 이탈)',color:C.muted,font:{size:12}}}}})});
+  });
+
+  registerChart('continueChart', ()=>{
+    const dd=seg[current];
+    return new Chart(continueChart,{type:'bar',
+      data:{labels:pubCohortMonths.map((m,i)=>i===2?m+" (측정중)":m),datasets:[{label:'지속 작업률',data:dd.continueByCohort,backgroundColor:pubCohortMonths.map((m,i)=>i===2?C.muted:C.purple),borderRadius:4}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+  });
+
+  registerChart('returnChart', ()=>{
+    const dd=seg[current];
+    return new Chart(returnChart,{type:'bar',
+      data:{labels:months,datasets:[{label:'복귀 크리에이터',data:dd.returnCreators,backgroundColor:C.accent,borderRadius:4}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('pubChart', ()=>{
+    const dd=seg[current]; const ps=splitStatus(dd.pubWorlds);
+    return new Chart(pubChart,{type:'bar',
+      data:{labels:months,datasets:[
+        {label:'Published',data:ps.published,backgroundColor:C.success,stack:'s',borderRadius:3},
+        {label:'Update Required',data:ps.ur,backgroundColor:C.warn,stack:'s',borderRadius:3},
+        {label:'기타',data:ps.oth,backgroundColor:C.muted,stack:'s',borderRadius:3}]},
+      options:Object.assign(baseOpts(),{scales:{
+        x:{stacked:true,ticks:{color:C.text},grid:{color:C.grid}},
+        y:{stacked:true,ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true}}})});
+  });
+
+  registerChart('statusChart', ()=>{
+    const dd=seg[current];
+    const ch=new Chart(statusChart,{type:'doughnut',
+      data:{labels:['Published','Update Required','기타'],datasets:[{data:dd.statusCum,backgroundColor:[C.success,C.warn,C.muted],borderColor:'#171a21',borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:false,resizeDelay:200,devicePixelRatio:Math.min(window.devicePixelRatio||1,1.25),plugins:{legend:{display:false}}}});
+    drawStatusLegend();
+    return ch;
+  });
+
+  registerChart('tierChart', ()=>{
+    const dd=seg[current];
+    return new Chart(tierChart,{type:'bar',
+      data:{labels:['초기 단계','Tier 3','Tier 2','Tier 1','Tier 0'],datasets:[{label:'월드 수',data:dd.tierDist,
+        backgroundColor:[C.muted,C.success,C.purple,C.accent,C.warn],borderRadius:4}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('segChart', ()=>{
+    const segColors=[C.accent,C.warn,C.purple], segNames=['Organic','Paid','내부'];
+    const ch=new Chart(segChart,{type:'doughnut',
+      data:{labels:segNames,datasets:[{data:seg.all.segShare,backgroundColor:segColors,borderColor:'#171a21',borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:false,resizeDelay:200,devicePixelRatio:Math.min(window.devicePixelRatio||1,1.25),plugins:{legend:{display:false}}}});
+    document.getElementById('segLegend').innerHTML = segNames.map((n,i)=>
+      `<span><span class="dot" style="background:${segColors[i]}"></span>${n} ${seg.all.segShare[i]}명</span>`).join('');
+    return ch;
+  });
+
+  registerChart('countryChart', ()=>{
+    return new Chart(countryChart,{type:'bar',
+      data:{labels:country.map(c=>c[0]),datasets:[{label:'활성 창작 크리에이터',data:country.map(c=>c[1]),
+        backgroundColor:[C.accent,C.success,C.warn,C.purple,C.danger,C.muted],borderRadius:4}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('weeklyNewChart', ()=>{
+    const dd=seg[current];
+    return new Chart(weeklyNewChart,{type:'bar',
+      data:{labels:weeks,datasets:[{label:'주간 신규',data:dd.weeklyNew,backgroundColor:C.accent,borderRadius:4}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('mauChart', ()=>{
+    const dd=seg[current];
+    return new Chart(mauChart,{type:'line',
+      data:{labels:months,datasets:[{label:'MAU',data:dd.mau,borderColor:C.success,backgroundColor:'rgba(53,194,138,.12)',fill:true,tension:.25,pointRadius:2}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('firstEditMixChart', ()=>{
+    const dd=seg[current];
+    return new Chart(firstEditMixChart,{type:'doughnut',
+      data:{labels:firstEditNames,datasets:[{data:dd.firstEditMix,backgroundColor:[C.accent,C.warn,C.purple,C.success],borderColor:'#171a21',borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:false,resizeDelay:200,devicePixelRatio:Math.min(window.devicePixelRatio||1,1.25),plugins:{legend:{position:'bottom',labels:{color:C.text,boxWidth:10,font:{size:11}}}}}});
+  });
+
+  registerChart('actChart', ()=>{
+    const dd=seg[current];
+    return new Chart(actChart,{type:'bar',
+      data:{labels:months,datasets:[{label:'활성화율',data:dd.actRateByCohort,backgroundColor:C.warn,borderRadius:4}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+  });
+
+  registerChart('ttfpChart', ()=>{
+    const dd=seg[current];
+    return new Chart(ttfpChart,{type:'line',
+      data:{labels:months,datasets:[{label:'TTFP 중앙값(일)',data:dd.ttfpDays,borderColor:C.purple,tension:.25,pointRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('paidRetChart', ()=>{
+    const dd=seg[current];
+    return new Chart(paidRetChart,{type:'bar',
+      data:{labels:months,datasets:[{label:'외주 정착률',data:dd.paidRetention,backgroundColor:C.warn,borderRadius:4}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+  });
+
+  registerChart('utmChart', ()=>{
+    const dd=seg[current];
+    return new Chart(utmChart,{type:'bar',
+      data:{labels:utmNames,datasets:[{label:'회원가입',data:dd.utmShare,backgroundColor:[C.accent,C.danger,C.success,C.purple,C.warn,C.muted],borderRadius:4}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('coreChart', ()=>{
+    const dd=seg[current];
+    return new Chart(coreChart,{type:'line',
+      data:{labels:months,datasets:[{label:'코어',data:dd.coreTrend,borderColor:C.warn,backgroundColor:'rgba(224,179,65,.15)',fill:true,tension:.25,pointRadius:3}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('tierLeadChart', ()=>{
+    const dd=seg[current];
+    return new Chart(tierLeadChart,{type:'line',
+      data:{labels:months,datasets:[
+        {label:'Tier3+',data:dd.tier3plus,borderColor:C.success,tension:.25,pointRadius:2},
+        {label:'Tier2+',data:dd.tier2plus,borderColor:C.purple,tension:.25,pointRadius:2},
+        {label:'Tier1+',data:dd.tier1plus,borderColor:C.accent,tension:.25,pointRadius:2}]},
+      options:baseOpts()});
+  });
+
+  registerChart('discordChart', ()=>{
+    const dd=seg[current];
+    return new Chart(discordChart,{type:'line',
+      data:{labels:months,datasets:[
+        {label:'디스코드 멤버',data:dd.discordMembers,borderColor:C.accent,tension:.25,pointRadius:2,yAxisID:'y'},
+        {label:'참여 크리에이터',data:dd.communityEngaged,borderColor:C.success,tension:.25,pointRadius:2,yAxisID:'y1'}]},
+      options:Object.assign(baseOpts(),{scales:{
+        x:{ticks:{color:C.text},grid:{color:C.grid}},
+        y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true},
+        y1:{position:'right',ticks:{color:C.success},grid:{display:false},beginAtZero:true}}})});
+  });
+
+  registerChart('ailabsChart', ()=>{
+    const dd=seg[current];
+    return new Chart(ailabsChart,{type:'bar',
+      data:{labels:months,datasets:[{label:'AI_Labs 누적',data:dd.ailabs,backgroundColor:C.purple,borderRadius:4}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
+  });
+
+  registerChart('agentChart', ()=>{
+    const dd=seg[current];
+    return new Chart(agentChart,{type:'line',
+      data:{labels:months,datasets:[{label:'Agent 사용률',data:dd.agentUseRate,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',fill:true,tension:.25,pointRadius:2}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
+  });
+
+  // eagerly paint first viewport charts
+  ['activeTrend','weeklyNewChart','mauChart'].forEach(ensureChart);
 }
 
 function updateCharts(){
   const d = seg[current];
-  charts.active.data.datasets[0].data=d.activeTrend; charts.active.update();
-  charts.cum.data.datasets[0].data=d.cumS; charts.cum.data.datasets[1].data=d.cumC; charts.cum.update();
-  charts.sprint.data.datasets[0].data=d.sprintNew; charts.sprint.update();
-  charts.inout.data.datasets[0].data=d.inflow.map((v,i)=>v-d.outflow[i]);
-  charts.inout.data.datasets[0].backgroundColor=d.inflow.map((v,i)=>(v-d.outflow[i])>=0?C.success:C.danger);
-  charts.inout.update();
+  const none='none';
+  if(charts.activeTrend){ charts.activeTrend.data.datasets[0].data=d.activeTrend; charts.activeTrend.update(none); }
+  if(charts.cumChart){ charts.cumChart.data.datasets[0].data=d.cumS; charts.cumChart.data.datasets[1].data=d.cumC; charts.cumChart.update(none); }
+  if(charts.sprintChart){ charts.sprintChart.data.datasets[0].data=d.sprintNew; charts.sprintChart.update(none); }
+  if(charts.inoutChart){
+    charts.inoutChart.data.datasets[0].data=d.inflow.map((v,i)=>v-d.outflow[i]);
+    charts.inoutChart.data.datasets[0].backgroundColor=d.inflow.map((v,i)=>(v-d.outflow[i])>=0?C.success:C.danger);
+    charts.inoutChart.update(none);
+  }
   renderInout();
-  charts.continue.data.datasets[0].data=d.continueByCohort; charts.continue.update();
-  charts.return.data.datasets[0].data=d.returnCreators; charts.return.update();
-  const ps=splitStatus(d.pubWorlds);
-  charts.pub.data.datasets[0].data=ps.published; charts.pub.data.datasets[1].data=ps.ur; charts.pub.data.datasets[2].data=ps.oth; charts.pub.update();
-  charts.status.data.datasets[0].data=d.statusCum; charts.status.update(); drawStatusLegend();
-  charts.tier.data.datasets[0].data=d.tierDist; charts.tier.update();
-  charts.weeklyNew.data.datasets[0].data=d.weeklyNew; charts.weeklyNew.update();
-  charts.mau.data.datasets[0].data=d.mau; charts.mau.update();
-  charts.firstEditMix.data.datasets[0].data=d.firstEditMix; charts.firstEditMix.update();
-  charts.act.data.datasets[0].data=d.actRateByCohort; charts.act.update();
-  charts.ttfp.data.datasets[0].data=d.ttfpDays; charts.ttfp.update();
-  charts.paidRet.data.datasets[0].data=d.paidRetention; charts.paidRet.update();
-  charts.utm.data.datasets[0].data=d.utmShare; charts.utm.update();
-  charts.core.data.datasets[0].data=d.coreTrend; charts.core.update();
-  charts.tierLead.data.datasets[0].data=d.tier3plus; charts.tierLead.data.datasets[1].data=d.tier2plus; charts.tierLead.data.datasets[2].data=d.tier1plus; charts.tierLead.update();
-  charts.discord.data.datasets[0].data=d.discordMembers; charts.discord.data.datasets[1].data=d.communityEngaged; charts.discord.update();
-  charts.ailabs.data.datasets[0].data=d.ailabs; charts.ailabs.update();
-  charts.agent.data.datasets[0].data=d.agentUseRate; charts.agent.update();
+  if(charts.continueChart){ charts.continueChart.data.datasets[0].data=d.continueByCohort; charts.continueChart.update(none); }
+  if(charts.returnChart){ charts.returnChart.data.datasets[0].data=d.returnCreators; charts.returnChart.update(none); }
+  if(charts.pubChart){
+    const ps=splitStatus(d.pubWorlds);
+    charts.pubChart.data.datasets[0].data=ps.published; charts.pubChart.data.datasets[1].data=ps.ur; charts.pubChart.data.datasets[2].data=ps.oth; charts.pubChart.update(none);
+  }
+  if(charts.statusChart){ charts.statusChart.data.datasets[0].data=d.statusCum; charts.statusChart.update(none); drawStatusLegend(); }
+  if(charts.tierChart){ charts.tierChart.data.datasets[0].data=d.tierDist; charts.tierChart.update(none); }
+  if(charts.weeklyNewChart){ charts.weeklyNewChart.data.datasets[0].data=d.weeklyNew; charts.weeklyNewChart.update(none); }
+  if(charts.mauChart){ charts.mauChart.data.datasets[0].data=d.mau; charts.mauChart.update(none); }
+  if(charts.firstEditMixChart){ charts.firstEditMixChart.data.datasets[0].data=d.firstEditMix; charts.firstEditMixChart.update(none); }
+  if(charts.actChart){ charts.actChart.data.datasets[0].data=d.actRateByCohort; charts.actChart.update(none); }
+  if(charts.ttfpChart){ charts.ttfpChart.data.datasets[0].data=d.ttfpDays; charts.ttfpChart.update(none); }
+  if(charts.paidRetChart){ charts.paidRetChart.data.datasets[0].data=d.paidRetention; charts.paidRetChart.update(none); }
+  if(charts.utmChart){ charts.utmChart.data.datasets[0].data=d.utmShare; charts.utmChart.update(none); }
+  if(charts.coreChart){ charts.coreChart.data.datasets[0].data=d.coreTrend; charts.coreChart.update(none); }
+  if(charts.tierLeadChart){ charts.tierLeadChart.data.datasets[0].data=d.tier3plus; charts.tierLeadChart.data.datasets[1].data=d.tier2plus; charts.tierLeadChart.data.datasets[2].data=d.tier1plus; charts.tierLeadChart.update(none); }
+  if(charts.discordChart){ charts.discordChart.data.datasets[0].data=d.discordMembers; charts.discordChart.data.datasets[1].data=d.communityEngaged; charts.discordChart.update(none); }
+  if(charts.ailabsChart){ charts.ailabsChart.data.datasets[0].data=d.ailabs; charts.ailabsChart.update(none); }
+  if(charts.agentChart){ charts.agentChart.data.datasets[0].data=d.agentUseRate; charts.agentChart.update(none); }
 }
 
 function renderAll(){ renderScorecard(); renderQ1Kpis(); renderQ6Kpis(); renderQ11Kpis(); renderQ12Kpis(); renderQ13KpisAgent(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); }
@@ -1023,7 +1169,7 @@ document.getElementById('seg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
   current=b.dataset.seg;
   [...document.querySelectorAll('#seg button')].forEach(x=>x.classList.toggle('on',x===b));
-  renderAll(); if(charts.active) updateCharts();
+  renderAll(); updateCharts();
 });
 document.getElementById('retTog').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
@@ -1168,7 +1314,8 @@ document.addEventListener('keydown',(e)=>{
 });
 
 loadComments();
-addEventListener('resize',renderPins);
+let _pinResizeT=null;
+addEventListener('resize',()=>{ clearTimeout(_pinResizeT); _pinResizeT=setTimeout(renderPins,150); }, {passive:true});
 </script>
 </body>
 </html>
