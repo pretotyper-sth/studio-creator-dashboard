@@ -395,7 +395,7 @@
   <div class="row2">
     <div class="card">
       <h3>코어 크리에이터 수 추이 (30일 슬라이딩)</h3>
-      <p class="cap">30일 내 10시간+ · 타겟 장르(TPA/TPS/스포츠) Tier1+ 월드 보유</p>
+      <p class="cap">30일 내 10시간+ · <b>Tier 2 이상</b> 월드 보유 (장르 제한 없음 · 당분간 운영 정의)</p>
       <div class="chartbox sm"><canvas id="coreChart"></canvas></div>
     </div>
     <div class="card">
@@ -489,7 +489,7 @@ const seg = {
        weeklyNew:[18,22,19,28,31,35,42,38], mau:[210,198,175,230,255,290],
        actRateByCohort:[62,65,68,64,66,70], firstEditMix:[32,18,22,28],
        ttfpDays:[21,18,16,14,13,12], paidRetention:[55,58,52,60,57,62],
-       coreTrend:[1,1,2,2,3,4], tier3plus:[18,22,28,34,38,42], tier1plus:[2,3,4,5,6,7],
+       coreTrend:[4,5,7,9,11,14], tier3plus:[18,22,28,34,38,42], tier1plus:[2,3,4,5,6,7],
        earn10:18, earn100:4, earn1000:0, earnMedian:42, firstEarn60:[8,9,11,10,12,13],
        discordMembers:[480,512,540,580,620,680], communityEngaged:[5,8,12,16,22,28],
        ailabs:[4,7,12,18,26,35], referralCreators:[3,4,5,6,8,10], kFactor:[0.08,0.09,0.11,0.12,0.14,0.16],
@@ -509,7 +509,7 @@ const seg = {
        weeklyNew:[14,17,15,22,24,28,32,29], mau:[160,150,132,175,195,220],
        actRateByCohort:[60,63,66,62,64,68], firstEditMix:[34,16,20,30],
        ttfpDays:[22,19,17,15,14,13], paidRetention:[0,0,0,0,0,0],
-       coreTrend:[1,1,1,2,2,3], tier3plus:[12,15,18,22,25,28], tier1plus:[1,2,2,3,4,5],
+       coreTrend:[3,4,5,7,8,10], tier3plus:[12,15,18,22,25,28], tier1plus:[1,2,2,3,4,5],
        earn10:12, earn100:2, earn1000:0, earnMedian:35, firstEarn60:[7,8,9,9,10,11],
        discordMembers:[480,512,540,580,620,680], communityEngaged:[4,6,9,12,16,20],
        ailabs:[3,5,9,14,20,26], referralCreators:[2,3,4,5,6,8], kFactor:[0.07,0.08,0.10,0.11,0.13,0.15],
@@ -529,7 +529,7 @@ const seg = {
        weeklyNew:[2,3,2,4,5,5,7,6], mau:[30,35,40,48,55,62],
        actRateByCohort:[70,72,75,71,74,78], firstEditMix:[28,22,25,25],
        ttfpDays:[14,12,11,10,9,8], paidRetention:[55,58,52,60,57,62],
-       coreTrend:[0,0,1,1,1,1], tier3plus:[4,5,7,8,9,10], tier1plus:[1,1,1,2,2,2],
+       coreTrend:[1,1,2,2,3,3], tier3plus:[4,5,7,8,9,10], tier1plus:[1,1,1,2,2,2],
        earn10:5, earn100:2, earn1000:0, earnMedian:80, firstEarn60:[12,14,15,16,18,20],
        discordMembers:[480,512,540,580,620,680], communityEngaged:[1,2,3,4,5,6],
        ailabs:[1,2,3,4,5,7], referralCreators:[1,1,1,1,2,2], kFactor:[0.05,0.05,0.06,0.06,0.08,0.09],
@@ -549,7 +549,7 @@ const seg = {
        weeklyNew:[1,1,1,1,1,1,1,1], mau:[18,17,16,19,20,20],
        actRateByCohort:[88,90,92,90,91,93], firstEditMix:[20,25,30,25],
        ttfpDays:[7,6,6,5,5,4], paidRetention:[0,0,0,0,0,0],
-       coreTrend:[0,0,0,0,0,0], tier3plus:[2,2,3,4,4,4], tier1plus:[0,0,1,0,0,0],
+       coreTrend:[0,0,1,1,1,1], tier3plus:[2,2,3,4,4,4], tier1plus:[0,0,1,0,0,0],
        earn10:1, earn100:0, earn1000:0, earnMedian:0, firstEarn60:[0,0,0,0,0,0],
        discordMembers:[480,512,540,580,620,680], communityEngaged:[0,0,0,0,1,2],
        ailabs:[0,0,0,0,1,2], referralCreators:[0,0,0,0,0,0], kFactor:[0,0,0,0,0,0],
@@ -578,7 +578,7 @@ const defs = [
   ["정착 리텐션 (Retained)","첫 퍼블리시 후 30일 내 누적 N시간+(3h/5h) 재활동 비율","퍼블리시 코호트 · TS"],
   ["지속 작업 (Continued)","첫 퍼블리시 후 30일 내 동일 월드 v2+ 또는 다른 월드 신규 퍼블리시","퍼블리시 히스토리"],
   ["외주 계약자 정착률","계약 완료일로부터 30일 내 5시간+ 재활동 · 단기 핵심 보조지표","Paid 화이트리스트 · 수동 계약일"],
-  ["코어 크리에이터","30일 내 10시간+ · 타겟 장르 Tier1+ 월드 보유","슬라이딩 30일"],
+  ["코어 크리에이터","30일 내 10시간+ · Tier 2 이상 월드 보유 (장르 제한 없음). 당분간 운영 정의 — 이후 타겟 장르·Tier1+로 재강화 가능","슬라이딩 30일"],
   ["Tier3+ / Tier1+ 월드","Tier3+ / Tier1+ 월드 수","월드 품질 티어 기준"],
   ["커뮤니티 참여 크리에이터","30일 내 Discord/포럼 5회+ 활동","Discord/포럼 로그"],
   ["디스코드 멤버 / AI_Labs","서버 멤버 누적 · #AI_Labs 결과물 공유 건수","Discord/포럼"],
