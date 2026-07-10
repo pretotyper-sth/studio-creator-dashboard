@@ -1266,7 +1266,13 @@ addEventListener('resize', ()=>{
 }
 
 /* ===== Native web charts: responsive SVG + CSS, no canvas/Chart.js ===== */
-const svgW=1000, svgH=260, svgM={l:54,r:34,t:30,b:38};
+const svgM={l:52,r:30,t:30,b:34};
+// Measure the real pixel box so the SVG viewBox matches 1:1 (no text/number stretching)
+function chartDims(id){
+  const el=document.getElementById(id);
+  const r=el?el.getBoundingClientRect():null;
+  return {W:Math.max(320,Math.round((r&&r.width)||640)), H:Math.max(150,Math.round((r&&r.height)||220))};
+}
 const sx=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const niceMax=v=>{
   if(v<=0) return 1;
@@ -1318,64 +1324,69 @@ function tipRows(sets,i,opt){
   return sets.map(s=>`<div class="tip-row"><span><span class="tip-dot" style="background:${s.color||colorAt(s,i)}"></span>${sx(s.label)}</span><b>${fmtVal(s.data[i],opt)}</b></div>`).join('');
 }
 
-function svgMount(id,title,body){
+function svgMount(id,title,body,W,H){
   const el=document.getElementById(id);
   if(!el) return;
-  el.innerHTML=`<svg viewBox="0 0 ${svgW} ${svgH}" preserveAspectRatio="none" role="img" aria-label="${sx(title)}">${body}</svg>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${sx(title)}">${body}</svg>`;
 }
 
-function legendSvg(sets){
+function legendSvg(sets,W){
   if(sets.length<2) return '';
-  let x=svgM.l;
-  return sets.map(s=>{
-    const item=`<line x1="${x}" y1="13" x2="${x+18}" y2="13" stroke="${s.color}" stroke-width="3"/>
-      <text class="legend-text" x="${x+24}" y="17">${sx(s.label)}</text>`;
-    x+=Math.max(115,s.label.length*13+48);
+  // right-align legend so it never collides with the y-axis labels
+  const widths=sets.map(s=>28+s.label.length*7.2);
+  const totalW=widths.reduce((a,b)=>a+b,0);
+  let x=Math.max(svgM.l, W-svgM.r-totalW);
+  return sets.map((s,i)=>{
+    const item=`<line x1="${x}" y1="12" x2="${x+16}" y2="12" stroke="${s.color}" stroke-width="3"/>
+      <text class="legend-text" x="${x+22}" y="16">${sx(s.label)}</text>`;
+    x+=widths[i];
     return item;
   }).join('');
 }
 
 function lineChart(id,title,labels,sets,opt={}){
-  const pw=svgW-svgM.l-svgM.r, ph=svgH-svgM.t-svgM.b;
+  const {W,H}=chartDims(id);
+  const pw=W-svgM.l-svgM.r, ph=H-svgM.t-svgM.b;
   const left=sets.filter(s=>!s.right), right=sets.filter(s=>s.right);
   const maxL=opt.max||niceMax(Math.max(1,...left.flatMap(s=>s.data)));
   const maxR=right.length?niceMax(Math.max(1,...right.flatMap(s=>s.data))):maxL;
   const xp=i=>svgM.l+(labels.length===1?pw/2:i*pw/(labels.length-1));
   const yp=(v,max)=>svgM.t+ph-(v/max)*ph;
-  let body=legendSvg(sets);
+  let body=legendSvg(sets,W);
   for(let i=0;i<=4;i++){
     const y=svgM.t+i*ph/4, val=maxL*(1-i/4);
-    body+=`<line class="grid-line" x1="${svgM.l}" y1="${y}" x2="${svgW-svgM.r}" y2="${y}"/>
-      <text class="axis-text" x="${svgM.l-9}" y="${y+4}" text-anchor="end">${fmtAxis(val,opt.percent)}</text>`;
+    body+=`<line class="grid-line" x1="${svgM.l}" y1="${y}" x2="${W-svgM.r}" y2="${y}"/>
+      <text class="axis-text" x="${svgM.l-8}" y="${y+4}" text-anchor="end">${fmtAxis(val,opt.percent)}</text>`;
     if(right.length){
-      body+=`<text class="axis-text" x="${svgW-svgM.r+9}" y="${y+4}">${fmtAxis(maxR*(1-i/4),false)}</text>`;
+      body+=`<text class="axis-text" x="${W-svgM.r+8}" y="${y+4}">${fmtAxis(maxR*(1-i/4),false)}</text>`;
     }
   }
   labels.forEach((label,i)=>{
-    body+=`<text class="axis-text" x="${xp(i)}" y="${svgH-11}" text-anchor="middle">${sx(label)}</text>`;
+    body+=`<text class="axis-text" x="${xp(i)}" y="${H-12}" text-anchor="middle">${sx(label)}</text>`;
   });
   sets.forEach(set=>{
     const max=set.right?maxR:maxL;
     const points=set.data.map((v,i)=>[xp(i),yp(v,max)]);
-    const path=points.map((p,i)=>`${i?'L':'M'}${p[0]},${p[1]}`).join(' ');
+    const path=points.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
     if(set.fill){
-      body+=`<path d="${path} L${points.at(-1)[0]},${svgM.t+ph} L${points[0][0]},${svgM.t+ph} Z" fill="${set.color}" opacity=".12"/>`;
+      body+=`<path d="${path} L${points.at(-1)[0].toFixed(1)},${svgM.t+ph} L${points[0][0].toFixed(1)},${svgM.t+ph} Z" fill="${set.color}" opacity=".12"/>`;
     }
     body+=`<path class="series-line" d="${path}" stroke="${set.color}"/>`;
-    body+=points.map(p=>`<circle class="dot-mark" cx="${p[0]}" cy="${p[1]}" r="3" fill="${set.color}"/>`).join('');
+    body+=points.map(p=>`<circle class="dot-mark" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${set.color}"/>`).join('');
   });
   // index-mode hover columns: one tooltip listing every series at that x
   const colW=pw/Math.max(1,labels.length);
   labels.forEach((label,i)=>{
     const cx=xp(i)-colW/2;
     const tip=`<div class="tip-h">${sx(label)}</div>${tipRows(sets,i,opt)}`;
-    body+=`<rect class="hitcol" x="${Math.max(svgM.l,cx)}" y="${svgM.t}" width="${colW}" height="${ph}" data-tip="${sx(tip)}"/>`;
+    body+=`<rect class="hitcol" x="${Math.max(svgM.l,cx).toFixed(1)}" y="${svgM.t}" width="${colW.toFixed(1)}" height="${ph}" data-tip="${sx(tip)}"/>`;
   });
-  svgMount(id,title,body);
+  svgMount(id,title,body,W,H);
 }
 
 function barChart(id,title,labels,sets,opt={}){
-  const pw=svgW-svgM.l-svgM.r, ph=svgH-svgM.t-svgM.b;
+  const {W,H}=chartDims(id);
+  const pw=W-svgM.l-svgM.r, ph=H-svgM.t-svgM.b;
   const all=sets.flatMap(s=>s.data);
   const min=Math.min(0,...all);
   const rawMax=opt.stacked
@@ -1385,15 +1396,15 @@ function barChart(id,title,labels,sets,opt={}){
   const range=max-min||1;
   const yp=v=>svgM.t+ph-((v-min)/range)*ph;
   const zeroY=yp(0);
-  const groupW=pw/labels.length, outerW=groupW*.64;
-  let body=opt.legend===false?'':legendSvg(sets);
+  const groupW=pw/labels.length, outerW=Math.min(groupW*.64,64);
+  let body=opt.legend===false?'':legendSvg(sets,W);
   for(let i=0;i<=4;i++){
     const val=max-(max-min)*i/4, y=yp(val);
-    body+=`<line class="grid-line" x1="${svgM.l}" y1="${y}" x2="${svgW-svgM.r}" y2="${y}"/>
-      <text class="axis-text" x="${svgM.l-9}" y="${y+4}" text-anchor="end">${fmtAxis(val,opt.percent)}</text>`;
+    body+=`<line class="grid-line" x1="${svgM.l}" y1="${y.toFixed(1)}" x2="${W-svgM.r}" y2="${y.toFixed(1)}"/>
+      <text class="axis-text" x="${svgM.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end">${fmtAxis(val,opt.percent)}</text>`;
   }
   labels.forEach((label,i)=>{
-    body+=`<text class="axis-text" x="${svgM.l+groupW*(i+.5)}" y="${svgH-11}" text-anchor="middle">${sx(label)}</text>`;
+    body+=`<text class="axis-text" x="${(svgM.l+groupW*(i+.5)).toFixed(1)}" y="${H-12}" text-anchor="middle">${sx(label)}</text>`;
   });
   if(opt.stacked){
     labels.forEach((label,i)=>{
@@ -1401,12 +1412,12 @@ function barChart(id,title,labels,sets,opt={}){
       const bx=svgM.l+groupW*i+(groupW-outerW)/2;
       sets.forEach(set=>{
         const v=set.data[i]||0, y=yp(acc+v), h=Math.max(0,yp(acc)-y);
-        body+=`<rect class="bar" x="${bx}" y="${y}" width="${outerW}" height="${h}" rx="3" fill="${colorAt(set,i)}"/>`;
+        body+=`<rect class="bar" x="${bx.toFixed(1)}" y="${y.toFixed(1)}" width="${outerW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${colorAt(set,i)}"/>`;
         acc+=v;
       });
       const total=sets.reduce((n,s)=>n+(s.data[i]||0),0);
       const tip=`<div class="tip-h">${sx(label)} · 합계 ${total.toLocaleString()}</div>${tipRows(sets,i,opt)}`;
-      body+=`<rect class="hitbar" x="${bx}" y="${svgM.t}" width="${outerW}" height="${ph}" fill="transparent" data-tip="${sx(tip)}"/>`;
+      body+=`<rect class="hitbar" x="${bx.toFixed(1)}" y="${svgM.t}" width="${outerW.toFixed(1)}" height="${ph}" fill="transparent" data-tip="${sx(tip)}"/>`;
     });
   }else{
     const bw=outerW/sets.length;
@@ -1415,10 +1426,10 @@ function barChart(id,title,labels,sets,opt={}){
       const x=svgM.l+groupW*i+(groupW-outerW)/2+bw*j;
       const head=sets.length>1?`${sx(label)} · ${sx(set.label)}`:sx(label);
       const tip=`<div class="tip-h">${head}</div><div class="tip-row"><span><span class="tip-dot" style="background:${colorAt(set,i)}"></span>${sx(set.label)}</span><b>${fmtVal(v,opt)}</b></div>`;
-      body+=`<rect class="bar hitbar" x="${x}" y="${y}" width="${Math.max(2,bw-3)}" height="${h}" rx="3" fill="${colorAt(set,i)}" data-tip="${sx(tip)}"/>`;
+      body+=`<rect class="bar hitbar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(2,bw-3).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${colorAt(set,i)}" data-tip="${sx(tip)}"/>`;
     }));
   }
-  svgMount(id,title,body);
+  svgMount(id,title,body,W,H);
 }
 
 function donutChart(id,title,labels,values,colors){
@@ -1505,6 +1516,15 @@ function renderCharts(){
 
 function makeCharts(){renderCharts()}
 function updateCharts(){renderCharts()}
+
+// Re-render on width changes so the SVG viewBox always matches the box 1:1 (no stretched text)
+let _reflowT=null, _lastW=innerWidth;
+addEventListener('resize',()=>{
+  if(innerWidth===_lastW) return;
+  _lastW=innerWidth;
+  clearTimeout(_reflowT);
+  _reflowT=setTimeout(()=>{ try{renderCharts();}catch(e){} }, 150);
+}, {passive:true});
 
 
 function renderAll(){ renderScorecard(); renderQ1Kpis(); renderQ2Kpis(); renderQ6Kpis(); renderQ11Kpis(); renderQ12Kpis(); renderQ13KpisAgent(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); }
