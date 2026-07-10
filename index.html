@@ -137,55 +137,6 @@
   .inout-m .net.down{color:var(--danger)}
   .inout-m .sub{font-size:11px;color:var(--muted2);margin-top:4px;line-height:1.35}
   footer{margin-top:40px;color:var(--muted2);font-size:12px;border-top:1px solid var(--border);padding-top:16px}
-  #ctools{position:fixed;right:20px;bottom:20px;z-index:40;display:flex;gap:12px;align-items:center}
-  #cbtn{background:var(--accent);color:#fff;border:0;border-radius:99px;padding:12px 18px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);white-space:nowrap}
-  #cbtn span{background:rgba(255,255,255,.25);border-radius:99px;padding:0 7px;margin-left:4px;font-size:12px}
-  #cpanel{position:fixed;top:0;right:0;width:360px;max-width:92vw;height:100vh;background:var(--panel);border-left:1px solid var(--border);z-index:50;transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column}
-  #cpanel.open{transform:none;box-shadow:-8px 0 30px rgba(0,0,0,.4)}
-  .cp-head{padding:16px 16px 14px;border-bottom:1px solid var(--border);position:relative}
-  .cp-head h3{margin:0 0 3px;font-size:15px}
-  .cp-head p{margin:0;color:var(--muted2);font-size:12px}
-  .cp-close{position:absolute;top:12px;right:12px;background:transparent;border:0;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
-  .cp-form{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
-  .cp-form input,.cp-form select,.cp-form textarea{background:var(--panel2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:8px 10px;font-size:13px;font-family:inherit;width:100%}
-  .cp-form textarea{resize:vertical;min-height:64px}
-  .cp-form button{background:var(--accent);color:#fff;border:0;border-radius:7px;padding:9px;font-weight:600;cursor:pointer}
-  .cp-list{flex:1;overflow:auto;padding:6px 16px 24px}
-  .cmt{padding:11px 0;border-bottom:1px solid var(--border)}
-  .cmt .who{font-size:12px;color:var(--muted)}
-  .cmt .who b{color:var(--text)}
-  .cmt .sec{display:inline-block;font-size:10px;color:var(--accent);border:1px solid var(--border);border-radius:4px;padding:0 5px;margin-left:4px}
-  .cmt .txt{margin-top:5px;white-space:pre-wrap;font-size:13px}
-  .cp-empty{color:var(--muted2);font-size:13px;padding:24px 0;text-align:center;line-height:1.6}
-  /* pins + live */
-  #pinLayer{position:absolute;left:0;right:0;top:0;height:0;overflow:visible;pointer-events:none;z-index:30}
-  #pinLayer>*{pointer-events:auto}
-  body.pinning{cursor:crosshair}
-  .pin{position:absolute;transform:translate(-50%,-100%);z-index:31}
-  .pin .mk{width:24px;height:24px;border-radius:50% 50% 50% 3px;background:var(--accent);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
-  .pop{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);width:230px;background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:10px 11px;box-shadow:0 6px 24px rgba(0,0,0,.5)}
-  .pop .who{font-size:11px;color:var(--muted);margin-bottom:4px}
-  .pop .who b{color:var(--text)}
-  .pop .txt{font-size:13px;white-space:pre-wrap}
-  .composer{position:absolute;transform:translate(-50%,8px);width:250px;background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:10px;box-shadow:0 8px 30px rgba(0,0,0,.55);z-index:60}
-  .composer input,.composer textarea{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px;font-size:13px;font-family:inherit;margin-bottom:6px}
-  .composer textarea{min-height:56px;resize:vertical}
-  .composer .row{display:flex;gap:6px;justify-content:flex-end;margin:0}
-  .composer button{border:0;border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer}
-  .composer .save{background:var(--accent);color:#fff;font-weight:600}
-  .composer .cancel{background:var(--panel2);color:var(--muted)}
-  .liveNote{position:absolute;transform:translate(-2px,-2px);max-width:280px;background:rgba(224,179,65,.14);border:1px solid var(--warn);border-radius:8px;padding:6px 9px;font-size:13px;color:#f0dca0;z-index:32;white-space:pre-wrap}
-  .liveNote b{display:block;font-size:10px;color:var(--warn);margin-bottom:2px}
-  .liveSelf{position:fixed;z-index:70;min-width:240px;background:var(--panel);border:1px solid var(--warn);border-radius:8px;padding:6px 10px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
-  .liveSelf input{width:100%;background:transparent;border:0;color:var(--text);font-size:14px;outline:none;font-family:inherit}
-  .liveSelf .h{font-size:10px;color:var(--warn);margin-bottom:3px}
-  #banner{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:80;background:var(--accent);color:#fff;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.4);display:none}
-  #banner.show{display:block}
-  #hintbar{position:fixed;left:20px;bottom:20px;z-index:40;color:var(--muted2);font-size:12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:7px 11px}
-  #hintbar b{color:var(--muted)}
-  #clistbtn{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:99px;padding:12px 16px;font-size:14px;cursor:pointer;white-space:nowrap}
-  .pop .del{float:right;color:var(--danger);cursor:pointer;font-size:11px;font-weight:600}
-  .cmt .cdel{float:right;color:var(--danger);cursor:pointer;font-size:11px}
   /* question-led layout */
   .qnum{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--fill,rgba(76,141,255,.15));color:var(--accent);font-size:12px;font-weight:700;margin-right:8px;flex-shrink:0;vertical-align:middle}
   h2.q{font-size:17px;color:var(--text);margin:36px 0 12px;font-weight:700;display:flex;align-items:center}
@@ -216,7 +167,6 @@
 </head>
 <body>
 <div class="wrap">
-  <div id="pinLayer"></div>
 
   <header class="top">
     <div>
@@ -468,27 +418,6 @@
     퍼블리싱 계열은 place↔world 매핑/모델링 반영 후 실측 연결됩니다.
   </footer>
 
-</div>
-
-<div id="banner"></div>
-<div id="hintbar"><b>핀 코멘트</b> 버튼으로 위치 지정 · <b>/</b> 키로 임시 메모</div>
-<div id="ctools">
-  <button id="clistbtn" onclick="togglePanel()">목록</button>
-  <button id="cbtn" onclick="togglePin()">핀 코멘트 <span id="cbadge">0</span></button>
-</div>
-<div id="cpanel">
-  <div class="cp-head">
-    <h3>피드백 코멘트</h3>
-    <p>이 브라우저에만 저장됩니다 (기기 간 공유 없음)</p>
-    <button class="cp-close" onclick="togglePanel()">&times;</button>
-  </div>
-  <div class="cp-form">
-    <input id="c-name" placeholder="이름 (예: 김정수)" />
-    <select id="c-section"></select>
-    <textarea id="c-text" placeholder="여기 이렇게 수정해주세요 / 이 지표 정의 맞나요? / 이 항목 추가해주세요 ..."></textarea>
-    <button onclick="postComment()">코멘트 남기기</button>
-  </div>
-  <div class="cp-list" id="c-list"></div>
 </div>
 
 <script>
@@ -1549,136 +1478,6 @@ document.getElementById('funnelTog').addEventListener('click',e=>{
 
 renderDefs(); renderSprintAnno(); renderAll();
 try{ makeCharts(); }catch(err){ console.error('chart load failed',err); }
-</script>
-
-<script>
-/* ===== 코멘트: 핀 + 목록 (정적 FE · localStorage) ===== */
-const SECTIONS=["전체","스코어카드","저변","온보딩 퍼널","퍼블리시","리텐션/정착","코어/품질","커뮤니티","Agent","세그먼트","지표 정의","기타"];
-const CKEY='studio_dash_comments_v1';
-const nameEl=document.getElementById('c-name'), secEl=document.getElementById('c-section');
-nameEl.value=localStorage.getItem('cname')||'';
-nameEl.addEventListener('change',()=>localStorage.setItem('cname',nameEl.value));
-secEl.innerHTML=SECTIONS.map(s=>`<option>${s}</option>`).join('');
-
-const wrap=document.querySelector('.wrap'), pinLayer=document.getElementById('pinLayer'), banner=document.getElementById('banner');
-function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
-function myName(){return (localStorage.getItem('cname')||'').trim()||'익명'}
-function ts2(t){return new Date(t).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}
-function relCoords(cx,cy){const r=wrap.getBoundingClientRect();return {xRel:(cx-r.left)/r.width, yPx:(cy-r.top)};}
-
-function readComments(){
-  try{return JSON.parse(localStorage.getItem(CKEY)||'[]');}catch(e){return [];}
-}
-function writeComments(list){
-  localStorage.setItem(CKEY, JSON.stringify(list));
-}
-
-function togglePanel(){document.getElementById('cpanel').classList.toggle('open')}
-function postComment(){
-  const text=document.getElementById('c-text').value.trim(); if(!text)return;
-  const list=readComments();
-  list.push({id:Date.now(),author:nameEl.value.trim()||'익명',section:secEl.value,text,ts:Date.now(),pinned:false});
-  writeComments(list);
-  document.getElementById('c-text').value=''; loadComments();
-}
-
-let comments=[];
-function loadComments(){
-  comments=readComments();
-  document.getElementById('cbadge').textContent=comments.length;
-  const el=document.getElementById('c-list');
-  if(!comments.length){el.innerHTML='<div class="cp-empty">아직 코멘트가 없습니다.<br/>화면의 원하는 지점을 클릭해 핀을 남기거나 여기에 작성하세요.</div>';}
-  else{
-    el.innerHTML=comments.slice().reverse().map(c=>`<div class="cmt">
-      <div class="who"><span class="cdel" data-id="${c.id}">삭제</span><b>${esc(c.author)||'익명'}</b><span class="sec">${c.pinned?'핀':esc(c.section)}</span> · ${ts2(c.ts)}</div>
-      <div class="txt">${esc(c.text)}</div></div>`).join('');
-    el.querySelectorAll('.cdel').forEach(b=>b.onclick=()=>delComment(Number(b.dataset.id)));
-  }
-  renderPins();
-}
-
-/* ----- pins ----- */
-let openPin=null;
-function closePop(){if(openPin){openPin.remove();openPin=null;}}
-function delComment(id){
-  writeComments(readComments().filter(c=>c.id!==id));
-  closePop(); loadComments();
-}
-function renderPins(){
-  [...pinLayer.querySelectorAll('.pin')].forEach(n=>n.remove());
-  comments.filter(c=>c.pinned && c.xRel!=null).forEach((c,i)=>{
-    const p=document.createElement('div'); p.className='pin';
-    p.style.left=(c.xRel*100)+'%'; p.style.top=c.yPx+'px';
-    p.innerHTML=`<div class="mk">${i+1}</div>`;
-    p.querySelector('.mk').onclick=(e)=>{e.stopPropagation();
-      if(openPin && openPin._for===c.id){closePop();return;}
-      closePop();
-      const pop=document.createElement('div'); pop.className='pop'; pop._for=c.id;
-      pop.innerHTML=`<div class="who"><span class="del">삭제</span><b>${esc(c.author)||'익명'}</b> · ${ts2(c.ts)}</div><div class="txt">${esc(c.text)}</div>`;
-      pop.querySelector('.del').onclick=(ev)=>{ev.stopPropagation(); delComment(c.id);};
-      p.appendChild(pop); openPin=pop;
-    };
-    pinLayer.appendChild(p);
-  });
-}
-
-/* ----- pin placement mode ----- */
-let pinMode=false, composer=null;
-function togglePin(){setPinMode(!pinMode);}
-function setPinMode(on){pinMode=on; document.body.classList.toggle('pinning',on);
-  banner.textContent=on?'코멘트를 남길 위치를 클릭하세요 · ESC로 취소':''; banner.classList.toggle('show',on);
-  if(!on) removeComposer();}
-function removeComposer(){if(composer){composer.remove();composer=null;}}
-function openComposer(cx,cy){
-  removeComposer();
-  const {xRel,yPx}=relCoords(cx,cy);
-  const c=document.createElement('div'); c.className='composer';
-  c.style.left=(xRel*100)+'%'; c.style.top=yPx+'px';
-  c.innerHTML=`<input class="cn" placeholder="이름" value="${esc(myName()==='익명'?'':myName())}"/>
-    <textarea class="ct" placeholder="여기에 코멘트..."></textarea>
-    <div class="row"><button class="cancel">취소</button><button class="save">남기기</button></div>`;
-  c.onclick=(e)=>e.stopPropagation();
-  pinLayer.appendChild(c); composer=c; c.querySelector('.ct').focus();
-  c.querySelector('.cancel').onclick=()=>{removeComposer();setPinMode(false);};
-  c.querySelector('.save').onclick=()=>{
-    const text=c.querySelector('.ct').value.trim(); if(!text){removeComposer();setPinMode(false);return;}
-    const nm=c.querySelector('.cn').value.trim(); if(nm) localStorage.setItem('cname',nm);
-    const list=readComments();
-    list.push({id:Date.now(),author:nm||'익명',text,pinned:true,section:'핀',xRel,yPx,ts:Date.now()});
-    writeComments(list);
-    removeComposer(); setPinMode(false); loadComments();
-  };
-}
-
-document.addEventListener('click',(e)=>{
-  if(e.target.closest('#ctools,#cbtn,#clistbtn,#cpanel,.composer,.pin,.pop,.liveSelf')) return;
-  if(pinMode){ if(composer){removeComposer();setPinMode(false);} else openComposer(e.clientX,e.clientY); return; }
-  if(openPin) closePop();
-});
-
-/* ----- local scratch note (/) — 서버 없이 본인만 ----- */
-let liveBox=null;
-function startLive(){
-  if(liveBox) return;
-  const box=document.createElement('div'); box.className='liveSelf';
-  box.style.left=Math.min(innerWidth/2-120,innerWidth-260)+'px'; box.style.top=(innerHeight/2)+'px';
-  box.innerHTML=`<div class="h">임시 메모 (이 탭만) · ESC로 닫기</div><input placeholder="입력..."/>`;
-  document.body.appendChild(box); liveBox=box;
-  const inp=box.querySelector('input'); inp.focus();
-  inp.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();endLive();}});
-  inp.addEventListener('blur',()=>setTimeout(endLive,120));
-}
-function endLive(){ if(!liveBox) return; liveBox.remove(); liveBox=null; }
-document.addEventListener('keydown',(e)=>{
-  const tag=(document.activeElement&&document.activeElement.tagName)||'';
-  const typing=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT';
-  if(e.key==='/'&&!typing&&!pinMode){e.preventDefault(); startLive();}
-  if(e.key==='Escape'){ if(pinMode) setPinMode(false); closePop(); endLive(); }
-});
-
-loadComments();
-let _pinResizeT=null;
-addEventListener('resize',()=>{ clearTimeout(_pinResizeT); _pinResizeT=setTimeout(renderPins,150); }, {passive:true});
 </script>
 </body>
 </html>
