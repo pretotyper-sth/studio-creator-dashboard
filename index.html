@@ -73,6 +73,18 @@
   .webchart .series-line{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
   .webchart .bar{transition:opacity .12s ease}
   .webchart .bar:hover{opacity:.78}
+  .webchart .hitcol{fill:transparent;cursor:pointer}
+  .webchart .hitcol:hover{fill:rgba(140,160,200,.08)}
+  .webchart .dot-mark{transition:r .1s ease}
+  .webchart .hitbar{cursor:pointer}
+  .donut-item{cursor:default;border-radius:6px;padding:2px 4px;margin:-2px -4px;transition:background .12s ease}
+  .donut-item:hover{background:var(--panel2)}
+  .chart-tip{position:fixed;z-index:90;pointer-events:none;display:none;background:rgba(20,24,31,.97);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12.5px;color:var(--text);box-shadow:0 8px 26px rgba(0,0,0,.55);max-width:250px;line-height:1.5}
+  .chart-tip .tip-h{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  .chart-tip .tip-row{display:flex;align-items:center;justify-content:space-between;gap:14px;white-space:nowrap}
+  .chart-tip .tip-row + .tip-row{margin-top:3px}
+  .chart-tip .tip-dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px;vertical-align:middle}
+  .chart-tip .tip-row b{font-variant-numeric:tabular-nums;font-weight:700}
   .donut-wrap{height:100%;display:flex;align-items:center;justify-content:center;gap:28px}
   .donut-ring{width:148px;height:148px;border-radius:50%;position:relative;flex:0 0 auto}
   .donut-ring::after{content:"";position:absolute;inset:34px;border-radius:50%;background:var(--panel)}
@@ -1264,12 +1276,52 @@ const niceMax=v=>{
 };
 const colorAt=(set,i)=>Array.isArray(set.colors)?set.colors[i%set.colors.length]:(set.color||C.accent);
 const fmtAxis=(v,percent)=>percent?`${Math.round(v)}%`:Math.round(v).toLocaleString();
+const fmtVal=(v,opt={})=>opt.percent?`${v}%`:`${v.toLocaleString()}${opt.unit||''}`;
+
+/* ----- shared hover/click tooltip (replaces native <title>) ----- */
+let _tipEl=null;
+function chartTip(){
+  if(!_tipEl){ _tipEl=document.createElement('div'); _tipEl.className='chart-tip'; document.body.appendChild(_tipEl); }
+  return _tipEl;
+}
+function showTip(html,cx,cy){
+  const t=chartTip();
+  t.innerHTML=html; t.style.display='block';
+  const r=t.getBoundingClientRect(), pad=14;
+  let left=cx+pad, top=cy+pad;
+  if(left+r.width>innerWidth-8) left=cx-r.width-pad;
+  if(top+r.height>innerHeight-8) top=cy-r.height-pad;
+  t.style.left=Math.max(8,left)+'px';
+  t.style.top=Math.max(8,top)+'px';
+}
+function hideTip(){ if(_tipEl) _tipEl.style.display='none'; }
+const tipTarget=e=>(e.target && e.target.closest) ? e.target.closest('[data-tip]') : null;
+document.addEventListener('mouseover',e=>{
+  const el=tipTarget(e);
+  if(el) showTip(el.getAttribute('data-tip'), e.clientX, e.clientY);
+});
+document.addEventListener('mousemove',e=>{
+  if(!_tipEl || _tipEl.style.display!=='block') return;
+  const el=tipTarget(e);
+  if(el) showTip(el.getAttribute('data-tip'), e.clientX, e.clientY); else hideTip();
+});
+document.addEventListener('mouseout',e=>{
+  if(tipTarget(e)) hideTip();
+});
+document.addEventListener('click',e=>{
+  const el=tipTarget(e);
+  if(el) showTip(el.getAttribute('data-tip'), e.clientX, e.clientY);
+},true);
+addEventListener('scroll',hideTip,{passive:true,capture:true});
+
+function tipRows(sets,i,opt){
+  return sets.map(s=>`<div class="tip-row"><span><span class="tip-dot" style="background:${s.color||colorAt(s,i)}"></span>${sx(s.label)}</span><b>${fmtVal(s.data[i],opt)}</b></div>`).join('');
+}
 
 function svgMount(id,title,body){
   const el=document.getElementById(id);
   if(!el) return;
-  el.innerHTML=`<svg viewBox="0 0 ${svgW} ${svgH}" preserveAspectRatio="none" role="img" aria-label="${sx(title)}">
-    <title>${sx(title)}</title>${body}</svg>`;
+  el.innerHTML=`<svg viewBox="0 0 ${svgW} ${svgH}" preserveAspectRatio="none" role="img" aria-label="${sx(title)}">${body}</svg>`;
 }
 
 function legendSvg(sets){
@@ -1310,8 +1362,14 @@ function lineChart(id,title,labels,sets,opt={}){
       body+=`<path d="${path} L${points.at(-1)[0]},${svgM.t+ph} L${points[0][0]},${svgM.t+ph} Z" fill="${set.color}" opacity=".12"/>`;
     }
     body+=`<path class="series-line" d="${path}" stroke="${set.color}"/>`;
-    body+=points.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${set.color}">
-      <title>${sx(labels[i])} · ${sx(set.label)} ${set.data[i].toLocaleString()}</title></circle>`).join('');
+    body+=points.map(p=>`<circle class="dot-mark" cx="${p[0]}" cy="${p[1]}" r="3" fill="${set.color}"/>`).join('');
+  });
+  // index-mode hover columns: one tooltip listing every series at that x
+  const colW=pw/Math.max(1,labels.length);
+  labels.forEach((label,i)=>{
+    const cx=xp(i)-colW/2;
+    const tip=`<div class="tip-h">${sx(label)}</div>${tipRows(sets,i,opt)}`;
+    body+=`<rect class="hitcol" x="${Math.max(svgM.l,cx)}" y="${svgM.t}" width="${colW}" height="${ph}" data-tip="${sx(tip)}"/>`;
   });
   svgMount(id,title,body);
 }
@@ -1340,19 +1398,24 @@ function barChart(id,title,labels,sets,opt={}){
   if(opt.stacked){
     labels.forEach((label,i)=>{
       let acc=0;
+      const bx=svgM.l+groupW*i+(groupW-outerW)/2;
       sets.forEach(set=>{
         const v=set.data[i]||0, y=yp(acc+v), h=Math.max(0,yp(acc)-y);
-        body+=`<rect class="bar" x="${svgM.l+groupW*i+(groupW-outerW)/2}" y="${y}" width="${outerW}" height="${h}" rx="3" fill="${colorAt(set,i)}">
-          <title>${sx(label)} · ${sx(set.label)} ${v.toLocaleString()}</title></rect>`;
+        body+=`<rect class="bar" x="${bx}" y="${y}" width="${outerW}" height="${h}" rx="3" fill="${colorAt(set,i)}"/>`;
         acc+=v;
       });
+      const total=sets.reduce((n,s)=>n+(s.data[i]||0),0);
+      const tip=`<div class="tip-h">${sx(label)} · 합계 ${total.toLocaleString()}</div>${tipRows(sets,i,opt)}`;
+      body+=`<rect class="hitbar" x="${bx}" y="${svgM.t}" width="${outerW}" height="${ph}" fill="transparent" data-tip="${sx(tip)}"/>`;
     });
   }else{
     const bw=outerW/sets.length;
     labels.forEach((label,i)=>sets.forEach((set,j)=>{
       const v=set.data[i]||0, y=Math.min(yp(v),zeroY), h=Math.max(1,Math.abs(yp(v)-zeroY));
-      body+=`<rect class="bar" x="${svgM.l+groupW*i+(groupW-outerW)/2+bw*j}" y="${y}" width="${Math.max(2,bw-3)}" height="${h}" rx="3" fill="${colorAt(set,i)}">
-        <title>${sx(label)} · ${sx(set.label)} ${v.toLocaleString()}</title></rect>`;
+      const x=svgM.l+groupW*i+(groupW-outerW)/2+bw*j;
+      const head=sets.length>1?`${sx(label)} · ${sx(set.label)}`:sx(label);
+      const tip=`<div class="tip-h">${head}</div><div class="tip-row"><span><span class="tip-dot" style="background:${colorAt(set,i)}"></span>${sx(set.label)}</span><b>${fmtVal(v,opt)}</b></div>`;
+      body+=`<rect class="bar hitbar" x="${x}" y="${y}" width="${Math.max(2,bw-3)}" height="${h}" rx="3" fill="${colorAt(set,i)}" data-tip="${sx(tip)}"/>`;
     }));
   }
   svgMount(id,title,body);
@@ -1369,9 +1432,13 @@ function donutChart(id,title,labels,values,colors){
   }).join(',');
   el.innerHTML=`<div class="donut-wrap" role="img" aria-label="${sx(title)}">
     <div class="donut-ring" style="background:conic-gradient(${stops})"><div class="donut-center">${total.toLocaleString()}</div></div>
-    <div class="donut-list">${labels.map((l,i)=>`<div class="donut-item">
-      <span><span class="dot" style="background:${colors[i]}"></span>${sx(l)}</span><b>${values[i].toLocaleString()}</b>
-    </div>`).join('')}</div></div>`;
+    <div class="donut-list">${labels.map((l,i)=>{
+      const p=Math.round(values[i]/total*100);
+      const tip=`<div class="tip-h">${sx(title)}</div><div class="tip-row"><span><span class="tip-dot" style="background:${colors[i]}"></span>${sx(l)}</span><b>${values[i].toLocaleString()} · ${p}%</b></div>`;
+      return `<div class="donut-item" data-tip="${sx(tip)}">
+      <span><span class="dot" style="background:${colors[i]}"></span>${sx(l)}</span><b>${values[i].toLocaleString()} <span style="color:var(--muted2);font-weight:500">${p}%</span></b>
+    </div>`;
+    }).join('')}</div></div>`;
 }
 
 function drawStatusLegend(){
@@ -1382,58 +1449,58 @@ function drawStatusLegend(){
 
 function renderCharts(){
   const d=seg[current], ps=splitStatus(d.pubWorlds);
-  lineChart('activeTrend','최근 90일 활성 창작 크리에이터',months,[{label:'활성 창작',data:d.activeTrend,color:C.accent,fill:true}]);
-  barChart('weeklyNewChart','주간 신규 크리에이터',weeks,[{label:'주간 신규',data:d.weeklyNew,color:C.accent}],{legend:false});
-  lineChart('mauChart','월간 Studio 활성 사용자',months,[{label:'MAU',data:d.mau,color:C.success,fill:true}]);
+  lineChart('activeTrend','최근 90일 활성 창작 크리에이터',months,[{label:'활성 창작',data:d.activeTrend,color:C.accent,fill:true}],{unit:'명'});
+  barChart('weeklyNewChart','주간 신규 크리에이터',weeks,[{label:'주간 신규',data:d.weeklyNew,color:C.accent}],{legend:false,unit:'명'});
+  lineChart('mauChart','월간 Studio 활성 사용자',months,[{label:'MAU',data:d.mau,color:C.success,fill:true}],{unit:'명'});
   lineChart('cumChart','누적 크리에이터 단계별 현황',months,[
     {label:'가입',data:d.cumS,color:C.muted},
     {label:'첫 편집',data:d.cumC,color:C.purple},
     {label:'퍼블리시',data:d.cumPub,color:C.success}
-  ]);
+  ],{unit:'명'});
   donutChart('firstEditMixChart','첫 편집 액션 유형 비중',firstEditNames,d.firstEditMix,[C.accent,C.warn,C.purple,C.success]);
   barChart('actChart','가입 코호트 활성화율',months,[{label:'활성화율',data:d.actRateByCohort,color:C.warn}],{legend:false,max:100,percent:true});
   barChart('countryChart','국가별 활성 창작 크리에이터',country.map(v=>v[0]),[
     {label:'활성 창작',data:country.map(v=>v[1]),colors:[C.accent,C.success,C.warn,C.purple,C.danger,C.muted]}
-  ],{legend:false});
+  ],{legend:false,unit:'명'});
   barChart('pubChart','월별 신규 퍼블리시 월드',months,[
     {label:'Published',data:ps.published,color:C.success},
     {label:'Update Required',data:ps.ur,color:C.warn},
     {label:'기타',data:ps.oth,color:C.muted}
-  ],{stacked:true});
+  ],{stacked:true,unit:'개'});
   donutChart('statusChart','퍼블리시 월드 상태 구성',['Published','Update Required','기타'],d.statusCum,[C.success,C.warn,C.muted]);
   drawStatusLegend();
   barChart('tierChart','퍼블리시 월드 품질 티어 분포',['초기','Tier 3','Tier 2','Tier 1','Tier 0'],[
     {label:'월드 수',data:d.tierDist,colors:[C.muted,C.success,C.purple,C.accent,C.warn]}
-  ],{legend:false});
-  lineChart('ttfpChart','TTFP 중앙값 추이',months,[{label:'중앙값(일)',data:d.ttfpDays,color:C.purple}]);
+  ],{legend:false,unit:'개'});
+  lineChart('ttfpChart','TTFP 중앙값 추이',months,[{label:'중앙값',data:d.ttfpDays,color:C.purple}],{unit:'일'});
   const nets=d.inflow.map((v,i)=>v-d.outflow[i]);
   barChart('inoutChart','90일 활성 로스터 순증',months,[
     {label:'순증/순감',data:nets,colors:nets.map(v=>v>=0?C.success:C.danger)}
-  ],{legend:false});
+  ],{legend:false,unit:'명'});
   barChart('continueChart','지속 작업률',pubCohortMonths.map((m,i)=>i===2?`${m}*`:m),[
     {label:'지속 작업률',data:d.continueByCohort,colors:[C.purple,C.purple,C.muted]}
   ],{legend:false,max:100,percent:true});
-  barChart('returnChart','이탈 후 복귀 크리에이터',months,[{label:'복귀',data:d.returnCreators,color:C.accent}],{legend:false});
+  barChart('returnChart','이탈 후 복귀 크리에이터',months,[{label:'복귀',data:d.returnCreators,color:C.accent}],{legend:false,unit:'명'});
   barChart('paidRetChart','외주 계약자 정착률',months,[{label:'정착률',data:d.paidRetention,color:C.warn}],{legend:false,max:100,percent:true});
   barChart('sprintChart','스프린트별 신규 크리에이터',sprints,[
     {label:'신규 크리에이터',data:d.sprintNew,colors:sprints.map(s=>sprintEvents[s]?C.success:C.accent)}
-  ],{legend:false});
+  ],{legend:false,unit:'명'});
   donutChart('segChart','90일 활성 크리에이터 구성',['Organic','Paid','내부'],seg.all.segShare,[C.accent,C.warn,C.purple]);
   document.getElementById('segLegend').innerHTML=['Organic','Paid','내부'].map((n,i)=>
     `<span><span class="dot" style="background:${[C.accent,C.warn,C.purple][i]}"></span>${n} ${seg.all.segShare[i]}명</span>`).join('');
-  barChart('utmChart','Hub 유입 소스별 회원가입',utmNames,[{label:'회원가입',data:d.utmShare,colors:[C.accent,C.danger,C.success,C.purple,C.warn,C.muted]}],{legend:false});
-  lineChart('coreChart','90일 코어 크리에이터',months,[{label:'코어',data:d.coreTrend,color:C.warn,fill:true}]);
+  barChart('utmChart','Hub 유입 소스별 회원가입',utmNames,[{label:'회원가입',data:d.utmShare,colors:[C.accent,C.danger,C.success,C.purple,C.warn,C.muted]}],{legend:false,unit:'명'});
+  lineChart('coreChart','90일 코어 크리에이터',months,[{label:'코어',data:d.coreTrend,color:C.warn,fill:true}],{unit:'명'});
   lineChart('tierLeadChart','품질 티어 월드 추이',months,[
     {label:'Tier3+',data:d.tier3plus,color:C.success},
     {label:'Tier2+',data:d.tier2plus,color:C.purple},
     {label:'Tier1+',data:d.tier1plus,color:C.accent}
-  ]);
+  ],{unit:'개'});
   lineChart('agentChart','Studio Agent 사용률',months,[{label:'사용률',data:d.agentUseRate,color:C.purple,fill:true}],{max:100,percent:true});
   lineChart('discordChart','디스코드 멤버와 참여 크리에이터',months,[
     {label:'디스코드 멤버',data:d.discordMembers,color:C.accent},
     {label:'참여 크리에이터',data:d.communityEngaged,color:C.success,right:true}
-  ]);
-  barChart('ailabsChart','AI_Labs 누적 결과물',months,[{label:'AI_Labs',data:d.ailabs,color:C.purple}],{legend:false});
+  ],{unit:'명'});
+  barChart('ailabsChart','AI_Labs 누적 결과물',months,[{label:'AI_Labs',data:d.ailabs,color:C.purple}],{legend:false,unit:'건'});
 }
 
 function makeCharts(){renderCharts()}
