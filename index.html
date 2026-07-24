@@ -748,19 +748,21 @@ function legendSvg(sets,W){
 
 function lineChart(id,title,labels,sets,opt={}){
   const {W,H}=chartDims(id);
-  const pw=W-svgM.l-svgM.r, ph=H-svgM.t-svgM.b;
   const left=sets.filter(s=>!s.right), right=sets.filter(s=>s.right);
   const maxL=opt.max||niceMax(Math.max(1,...left.flatMap(s=>s.data)));
   const maxR=right.length?niceMax(Math.max(1,...right.flatMap(s=>s.data))):maxL;
+  // 오른쪽 축이 있으면 라벨이 잘리지 않게 여백을 라벨 폭만큼 확보
+  const mR=right.length?Math.max(svgM.r,8+estTextW(fmtAxis(maxR,false))+10):svgM.r;
+  const pw=W-svgM.l-mR, ph=H-svgM.t-svgM.b;
   const xp=i=>svgM.l+(labels.length===1?pw/2:i*pw/(labels.length-1));
   const yp=(v,max)=>svgM.t+ph-(v/max)*ph;
   let body=legendSvg(sets,W);
   for(let i=0;i<=4;i++){
     const y=svgM.t+i*ph/4, val=maxL*(1-i/4);
-    body+=`<line class="grid-line" x1="${svgM.l}" y1="${y}" x2="${W-svgM.r}" y2="${y}"/>
+    body+=`<line class="grid-line" x1="${svgM.l}" y1="${y}" x2="${W-mR}" y2="${y}"/>
       <text class="axis-text" x="${svgM.l-8}" y="${y+4}" text-anchor="end">${fmtAxis(val,opt.percent)}</text>`;
     if(right.length){
-      body+=`<text class="axis-text" x="${W-svgM.r+8}" y="${y+4}">${fmtAxis(maxR*(1-i/4),false)}</text>`;
+      body+=`<text class="axis-text" x="${W-mR+8}" y="${y+4}">${fmtAxis(maxR*(1-i/4),false)}</text>`;
     }
   }
   labels.forEach((label,i)=>{
@@ -848,16 +850,18 @@ function barChart(id,title,labels,sets,opt={}){
    totals 막대 위에 parts 막대를 겹쳐 "전체 중 얼마"가 한눈에 보이게 함 */
 function comboChart(id,title,labels,cfg,opt={}){
   const {W,H}=chartDims(id);
-  const pw=W-svgM.l-svgM.r, ph=H-svgM.t-svgM.b;
   const maxL=niceMax(Math.max(1,...cfg.totals.data));
   const maxR=100;
+  // 오른쪽 % 축 라벨("100%")이 잘리지 않게 여백을 라벨 폭만큼 확보
+  const mR=Math.max(svgM.r,8+estTextW('100%')+10);
+  const pw=W-svgM.l-mR, ph=H-svgM.t-svgM.b;
   const ypL=v=>svgM.t+ph-(v/maxL)*ph;
   const ypR=v=>svgM.t+ph-(v/maxR)*ph;
   const groupW=pw/labels.length, outerW=Math.min(groupW*.6,56), innerW=Math.max(8,outerW*.5);
   const items=[cfg.totals,cfg.parts,cfg.rate];
   // legend: bar swatch 2개 + line swatch 1개 (right-aligned)
   const widths=items.map(s=>34+estTextW(s.label));
-  let lx=Math.max(svgM.l, W-svgM.r-widths.reduce((a,b)=>a+b,0));
+  let lx=Math.max(svgM.l, W-mR-widths.reduce((a,b)=>a+b,0));
   let body='';
   items.forEach((s,i)=>{
     body+=i<2
@@ -868,9 +872,9 @@ function comboChart(id,title,labels,cfg,opt={}){
   });
   for(let i=0;i<=4;i++){
     const y=svgM.t+i*ph/4;
-    body+=`<line class="grid-line" x1="${svgM.l}" y1="${y}" x2="${W-svgM.r}" y2="${y}"/>
+    body+=`<line class="grid-line" x1="${svgM.l}" y1="${y}" x2="${W-mR}" y2="${y}"/>
       <text class="axis-text" x="${svgM.l-8}" y="${y+4}" text-anchor="end">${fmtAxis(maxL*(1-i/4),false)}</text>
-      <text class="axis-text" x="${W-svgM.r+8}" y="${y+4}" style="fill:${cfg.rate.color}">${Math.round(maxR*(1-i/4))}%</text>`;
+      <text class="axis-text" x="${W-mR+8}" y="${y+4}" style="fill:${cfg.rate.color}">${Math.round(maxR*(1-i/4))}%</text>`;
   }
   labels.forEach((label,i)=>{
     body+=`<text class="axis-text" x="${(svgM.l+groupW*(i+.5)).toFixed(1)}" y="${H-12}" text-anchor="middle">${sx(label)}</text>`;
