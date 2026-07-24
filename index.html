@@ -112,6 +112,9 @@
   .pstat .l{color:var(--muted2);font-size:12px;margin-top:4px}
   .bigstat{font-size:34px;font-weight:700}
   .bigstat small{font-size:14px;color:var(--muted);font-weight:500}
+  .statline{display:flex;align-items:baseline;gap:12px;margin:2px 0 6px;min-width:0}
+  .statline .statdesc{color:var(--muted2);font-size:12px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+  .statline .statdesc b{color:var(--muted)}
   .statusbar{display:flex;height:14px;border-radius:5px;overflow:hidden;margin-top:4px}
   .defs td:first-child{font-weight:600;white-space:nowrap;color:var(--text)}
   .defs td:nth-child(2){color:var(--text)}
@@ -170,36 +173,33 @@
 
   <header class="top">
     <div>
-      <h1>Studio 크리에이터 대시보드 <span class="badge">가상 데이터 시안</span></h1>
-      <div class="sub">언제든 들어와서 현재 상태를 보는 스튜디오 상시 대시보드 · 정의 얼라인 시안</div>
+      <h1>Studio 크리에이터 대시보드 <span class="badge">가상 데이터</span></h1>
+      <div class="sub">언제든 들어와서 현재 상태를 보는 스튜디오 상시 대시보드</div>
     </div>
-    <div class="meta">기준일 2026-07-08 (예시)<br/>실제 데이터가 들어오면 이런 형태로 표시됩니다</div>
+    <div class="meta"><span id="metaDate"></span></div>
   </header>
 
   <div class="filters">
-    <span class="lbl">세그먼트</span>
+    <span class="lbl">크리에이터 관계</span>
     <div class="seg" id="seg">
       <button data-seg="all" class="on">전체</button>
-      <button data-seg="organic">Organic</button>
-      <button data-seg="paid">Paid</button>
+      <button data-seg="organic">일반</button>
+      <button data-seg="paid">Partner</button>
       <button data-seg="internal">내부</button>
     </div>
     <span class="pill">기간: 최근 6개월</span>
     <span class="pill">스프린트: 3주 단위 (S30~S38)</span>
-    <span class="pill" style="border-color:#3a4150;color:var(--muted)">Paid=구글시트 화이트리스트 · 내부=IP/이메일 도메인</span>
   </div>
 
   <div class="note" style="margin:-4px 0 22px">집계 기간 표기 규칙 — <b>90일</b>=오늘 기준 최근 90일 슬라이딩 · <b>누적</b>=서비스 시작~현재 · <b>코호트</b>=해당 월에 가입/퍼블리시한 집단 · <b>최근 월</b>=이번 달(부분 포함)</div>
 
-  <h2 class="q"><span class="qnum">Q0</span>지금 한눈에 보면, 저변·전환·품질은 어디쯤인가?</h2>
+  <h2 class="q"><span class="qnum">Q0</span>핵심 KPI 요약</h2>
   <div class="score" id="scorecard"></div>
-  <div class="note" style="margin-top:-8px;margin-bottom:22px">상단 스코어카드 = 자주 묻는 숫자 요약. 아래 질문별 차트에서 자세히 볼 수 있습니다. (가상 데이터)</div>
 
   <h2 class="q"><span class="qnum">Q1</span>현재 활성 창작 크리에이터는 몇 명인가?</h2>
-  <div class="mini-kpis" id="q1Kpis"></div>
   <div class="card">
     <h3>최근 90일 활성 창작 크리에이터 추세</h3>
-    <p class="cap">각 지점 = 해당 월 말일 기준 최근 90일 슬라이딩 값 (마지막 지점은 오늘 7/8 기준)</p>
+    <p class="cap">각 지점 = 해당 월 말일 기준 최근 90일 슬라이딩 값 (마지막 지점은 오늘 기준 · 점선 = 진행 중)</p>
     <div class="chartbox"><div class="webchart" id="activeTrend"></div></div>
   </div>
   <div class="row2" style="margin-top:14px">
@@ -228,7 +228,7 @@
     <div class="chead">
       <div>
         <h3>회원가입 → 스튜디오 로그인 → 에디터 진입 → 첫 편집 → 퍼블리싱 → 지속 작업</h3>
-        <p class="cap">회원가입=100% · 신규 크리에이터 온보딩 퍼널 (활성화는 퍼널 단계 아님)</p>
+        <p class="cap">회원가입 기준 100% · 신규 크리에이터 온보딩 퍼널</p>
       </div>
       <div class="seg" id="funnelTog">
         <button data-m="cum" class="on">전체 누적</button>
@@ -262,12 +262,11 @@
   <h2 class="q"><span class="qnum">Q5</span>창작 활동이 가장 활발한 크리에이터는 누구인가?</h2>
   <div class="card">
     <h3>크리에이터 리더보드 (최근 90일)</h3>
-    <p class="cap">편집 활동량 기준 상위 크리에이터 · 전체 세그먼트 기준(세그먼트 필터 미적용)</p>
+    <p class="cap">활동 시간 기준 상위 크리에이터 · 전체 세그먼트 기준(세그먼트 필터 미적용)</p>
     <div id="leaderboard"></div>
   </div>
 
   <h2 class="q"><span class="qnum">Q6</span>크리에이터의 퍼블리시 전환율은 얼마나 되는가?</h2>
-  <div class="mini-kpis" id="q6Kpis"></div>
   <div class="card">
     <h3>퍼블리싱 현황</h3>
     <p class="cap">퍼블리시한 <b>유니크 크리에이터</b>(1명이 10개 내도 1명) + 실제 퍼블리시 월드 수 · <b>Published</b>(배포 상태) / Update Required 구분 · Public≠Published</p>
@@ -276,7 +275,7 @@
   <div class="row2">
     <div class="card">
       <h3>월별 신규 퍼블리시 월드 (상태별)</h3>
-      <p class="cap">각 지점 = 해당 월 기준(마지막은 7월 1~8일) · <b>Published</b>(배포 완료) vs <b>Update Required</b>(운영 일시중지·접속불가) vs 기타 · ※ Public은 Access Setting(별도 축)</p>
+      <p class="cap">각 지점 = 해당 월 기준(마지막은 이번 달 부분 집계) · <b>Published</b>(배포 완료) vs <b>Update Required</b>(운영 일시중지·접속불가) vs 기타 · ※ Public은 Access Setting(별도 축)</p>
       <div class="chartbox sm"><div class="webchart" id="pubChart"></div></div>
     </div>
     <div class="card">
@@ -289,7 +288,7 @@
   <div class="row2" style="margin-top:14px">
     <div class="card">
       <h3>퍼블리시 월드 품질 티어 분포 (누적)</h3>
-      <p class="cap">월드 품질 기준(Tier 0~3) 적용 · 신규 방문자 수·D1 리텐션·세션 TS 기준</p>
+      <p class="cap">숫자가 낮을수록 상위 품질 (Tier0 최상)<br/>Tier3: 방문 700+·D1 12%+·4분+ · Tier2: 2,000+·15%+·6분+ · Tier1: 5,000+·20%+·8분+ · Tier0: 10,000+·24%+·10분+</p>
       <div class="chartbox sm"><div class="webchart" id="tierChart"></div></div>
       <div class="note">왼쪽(낮음) → 오른쪽(높음). 초기 단계 → Tier 3 → 2 → 1 → 0</div>
     </div>
@@ -300,10 +299,10 @@
     </div>
   </div>
 
-  <h2 class="q"><span class="qnum">Q7</span>크리에이터 저변은 순증하고 있는가? (유입 대비 이탈)</h2>
+  <h2 class="q"><span class="qnum">Q7</span>활동 크리에이터는 늘고 있는가? (유입 vs 이탈)</h2>
   <div class="card">
-    <h3>인 / 아웃 — 90일 활성 로스터 변화</h3>
-    <p class="cap">월말(마지막=오늘) 기준 · 90일 활성에 <b>새로 든 계정(진입)</b> − <b>빠진 계정(이탈)</b> = <b>순증</b>. 초록이면 저변 확대</p>
+    <h3>인 / 아웃 — 90일 활성 크리에이터 변화</h3>
+    <p class="cap">매달 말일에 "최근 90일 안에 한 번이라도 편집한 크리에이터 명단"을 만들어 직전 달 명단과 비교합니다 (마지막 지점은 오늘 기준).<br/><b>진입</b>=지난 명단에 없다가 새로 들어온 사람 · <b>이탈</b>=지난 명단에 있었지만 90일간 활동이 없어 빠진 사람 · <b>순증 = 진입 − 이탈</b></p>
     <div id="inoutKpis"></div>
     <div class="chartbox" style="height:260px"><div class="webchart" id="inoutChart"></div></div>
     <div class="legend" style="margin-top:10px">
@@ -339,7 +338,7 @@
       <div class="chartbox sm" style="height:170px;margin-top:8px"><div class="webchart" id="returnChart"></div></div>
     </div>
     <div class="card">
-      <h3>외주(Paid) 계약자 정착률</h3>
+      <h3>Partner(외주) 계약자 정착률</h3>
       <p class="cap">계약 완료일로부터 30일 내 5시간+ 재활동 · 단기 핵심 보조지표</p>
       <div id="paidRetStat"></div>
       <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="paidRetChart"></div></div>
@@ -349,49 +348,48 @@
   <h2 class="q"><span class="qnum">Q9</span>스프린트(배포 주기)별 크리에이터 유입은 어떻게 변화하는가?</h2>
   <div class="card">
     <h3>스프린트별 신규 크리에이터 유입 추이</h3>
-    <p class="cap">3주 스프린트 배포 주기 기준 신규 크리에이터 유입 추이 · 급증/급감의 배포·이벤트 원인은 실시간으로 자동 판별되지 않아, 필요 시 담당자가 수동으로 주석을 기록</p>
+    <p class="cap">3주 스프린트 배포 주기 기준 · 초록 막대 = 이벤트/배포가 있었던 스프린트</p>
     <div class="chartbox sm"><div class="webchart" id="sprintChart"></div></div>
     <div class="anno" id="sprintAnno"></div>
   </div>
 
   <h2 class="q"><span class="qnum">Q10</span>코어 크리에이터·고품질 월드는 얼마나 쌓이고 있는가?</h2>
-  <div class="mini-kpis" id="q11Kpis"></div>
   <div class="row2">
     <div class="card">
       <h3>코어 크리에이터 수 추이 (90일 슬라이딩)</h3>
-      <p class="cap">90일 내 10시간+ · <b>Tier 2 이상</b> 월드 보유 (장르 제한 없음 · 당분간 운영 정의)</p>
+      <p class="cap">기준: 90일 내 10시간+ 활동 · <b>Tier 2 이상</b> 월드 보유</p>
       <div class="chartbox sm"><div class="webchart" id="coreChart"></div></div>
     </div>
     <div class="card">
       <h3>Tier3+ / Tier2+ / Tier1+ 월드 수 추이</h3>
-      <p class="cap">누적 Live 기준 스냅샷 · Tier3+ ⊇ Tier2+ ⊇ Tier1+ (높을수록 상위 품질 포함)</p>
+      <p class="cap">숫자가 낮을수록 상위 품질 · Tier3+ ⊇ Tier2+ ⊇ Tier1+ · 누적 Live 스냅샷<br/>Tier3: 방문 700+·D1 12%+·4분+ · Tier2: 2,000+·15%+·6분+ · Tier1: 5,000+·20%+·8분+</p>
       <div class="chartbox sm"><div class="webchart" id="tierLeadChart"></div></div>
     </div>
   </div>
 
-  <h2 class="q"><span class="qnum">Q11</span>크리에이터 유입 경로는 어떻게 구성되는가? (Organic · Paid · 내부)</h2>
+  <h2 class="q"><span class="qnum">Q11</span>크리에이터 유입은 어떻게 구성되는가? (관계 축 × 채널 축)</h2>
+  <div class="note" style="margin:-4px 0 12px">두 축은 서로 독립입니다 — <b>관계(creator_type)</b>: Partner(외주·파트너십 계약) / 내부(사내) / 일반(Independent) · <b>채널(acquisition_channel)</b>: Paid(광고) / Discord / YouTube 등 어떤 경로로 들어왔는가 · <b>Partner(계약 관계) ≠ Paid(광고 유입)</b></div>
   <div class="card">
-    <h3>90일 활성 크리에이터 구성</h3>
-    <p class="cap">Organic / Paid / 내부 · 제외가 아니라 나눠서 조회</p>
+    <h3>관계(creator_type) 구성 — 90일 활성 크리에이터</h3>
+    <p class="cap">Partner=파트너십 시트 화이트리스트 · 내부=사내 IP 대역 · 나머지=일반(Independent)</p>
     <div class="chartbox sm"><div class="webchart" id="segChart"></div></div>
     <div class="legend" id="segLegend"></div>
   </div>
   <div class="card" style="margin-top:14px">
-    <h3>Hub 유입 소스별 회원가입 (누적)</h3>
-    <p class="cap">PAGE_LOCATION utm_source 기준 · Discord / YouTube / Organic / Referral / Direct / Unknown</p>
+    <h3>채널(acquisition_channel)별 회원가입 (누적)</h3>
+    <p class="cap">utm_source 우선, 없으면 referrer로 판정 · Paid=퍼포먼스 광고 · Referral=외부 사이트 링크 경유 · Untagged=UTM·referrer 모두 없음 (referrer 적재 전에는 Untagged 비중이 큼)</p>
     <div class="chartbox sm"><div class="webchart" id="utmChart"></div></div>
   </div>
 
   <h2 class="q"><span class="qnum">Q12</span>Studio Agent는 실제로 쓰이는가?</h2>
-  <div class="mini-kpis" id="q13KpisAgent"></div>
   <div class="card">
     <h3>Studio Agent 사용 크리에이터 비율 (90일)</h3>
-    <p class="cap">AI로 CRUD 1회+ 한 활성 크리에이터 비중</p>
-    <div class="chartbox sm"><div class="webchart" id="agentChart"></div></div>
+    <p class="cap">AI로 CRUD 1회+ 한 크리에이터 ÷ 최근 90일 활성 창작 크리에이터 · 막대 = 명수(왼쪽 축), 꺾은선 = 사용률 %(오른쪽 축)</p>
+    <div id="agentStat"></div>
+    <div class="chartbox" style="margin-top:8px"><div class="webchart" id="agentChart"></div></div>
   </div>
 
   <h2 class="q"><span class="qnum">Q13</span>커뮤니티(디스코드)는 살아 있는가?</h2>
-  <div class="mini-kpis" id="q12Kpis"></div>
   <div class="row2">
     <div class="card">
       <h3>디스코드 멤버 · 참여 크리에이터 추이</h3>
@@ -405,7 +403,7 @@
     </div>
   </div>
 
-  <h2 class="section">지표 정의 (얼라인용)</h2>
+  <h2 class="section">지표 정의</h2>
   <div class="card">
     <table class="defs">
       <thead><tr><th>지표</th><th>쉽게 말하면</th><th>계산 / 소스</th></tr></thead>
@@ -414,138 +412,27 @@
   </div>
 
   <footer>
-    본 대시보드는 <b>정의 얼라인용 시안이며 수치는 현실적인 범위의 가상 데이터</b>입니다. 실제 데이터가 반영되면 동일한 구조로 실측값이 채워집니다.
-    퍼블리싱 계열은 place↔world 매핑/모델링 반영 후 실측 연결됩니다.
+    현재 수치는 <b>가상 데이터</b>입니다. 실제 데이터 연결 시 동일한 구조로 실측값이 표시됩니다.
   </footer>
 
 </div>
 
+<script src="data.js"></script>
 <script>
-/* ============ 가상 데이터 (현실적 범위) ============ */
-const months = ["2/28","3/31","4/30","5/31","6/30","7/8(오늘)"]; // 각 지점=해당 월 말일 기준 스냅샷, 마지막은 오늘 기준
-const pubCohortMonths = ["4월","5월","6월"];
-const sprints = ["S30","S31","S32","S33","S34","S35","S36","S37","S38"];
-const weeks = ["W-7","W-6","W-5","W-4","W-3","W-2","W-1","이번주"];
-const utmNames = ["Discord","YouTube","Organic","Referral","Direct","Unknown"];
-const firstEditNames = ["오브젝트 배치","기술/물리","스크립트","이동/변형"];
-
-const seg = {
-  all:{active90:278, editConv:68, cumCreators:620, cumSignup:1150,
-       pubCreators90:118, pubCreatorsCum:210, pubWorlds90:132, pubWorldsCum:430, statusCum:[300,95,35], tierDist:[388,28,9,4,1],
-       retention:48, retention5h:38, continueRate:34, returnRate:12, inout:1.8,
-       activeTrend:[194,178,150,206,242,278], cumC:[300,360,430,510,560,620], cumS:[620,720,860,980,1060,1150], cumPub:[82,108,136,165,188,210],
-       sprintNew:[40,55,38,72,60,95,78,112,130], inflow:[70,64,58,96,88,120], outflow:[40,45,52,44,50,58],
-       pubWorlds:[31,21,53,34,58,74], segShare:[210,48,20],
-       cohort3h:[["4월",55,45,38],["5월",57,46,34],["6월",60,null,null]],
-       cohort5h:[["4월",42,34,28],["5월",44,35,25],["6월",47,null,null]],
-       continueByCohort:[38,33,30], returnCreators:[6,8,7,11,9,14],
-       weeklyNew:[18,22,19,28,31,35,42,38], mau:[210,198,175,230,255,290],
-       actRateByCohort:[62,65,68,64,66,70], firstEditMix:[32,18,22,28],
-       ttfpDays:[21,18,16,14,13,12], paidRetention:[55,58,52,60,57,62],
-       coreTrend:[7,9,12,16,20,25], tier3plus:[18,22,28,34,38,42], tier2plus:[8,10,14,18,22,26], tier1plus:[2,3,4,5,6,7],
-       earn10:18, earn100:4, earn1000:0, earnMedian:42, firstEarn60:[8,9,11,10,12,13],
-       discordMembers:[480,512,540,580,620,680], communityEngaged:[5,8,12,16,22,28],
-       ailabs:[4,7,12,18,26,35], referralCreators:[3,4,5,6,8,10], kFactor:[0.08,0.09,0.11,0.12,0.14,0.16],
-       agentUseRate:[12,15,18,22,28,34], featureUse:[45,28,22],
-       utmShare:[180,95,420,70,250,135], pubConv90:42, okrTarget:350, mauTarget:500,
-       editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
-       discordTarget:1000, communityTarget:300, ailabsTarget:100},
-  organic:{active90:210, editConv:66, cumCreators:470, cumSignup:980,
-       pubCreators90:88, pubCreatorsCum:155, pubWorlds90:96, pubWorldsCum:300, statusCum:[210,70,20], tierDist:[274,18,6,2,0],
-       retention:46, retention5h:36, continueRate:32, returnRate:11, inout:1.7,
-       activeTrend:[150,140,118,158,182,210], cumC:[230,275,325,385,425,470], cumS:[540,625,745,845,915,980], cumPub:[60,78,98,120,140,155],
-       sprintNew:[32,44,30,58,48,74,60,86,96], inflow:[55,50,46,74,68,92], outflow:[33,38,44,38,42,50],
-       pubWorlds:[24,16,40,26,44,56], segShare:[210,0,0],
-       cohort3h:[["4월",52,42,35],["5월",54,43,31],["6월",57,null,null]],
-       cohort5h:[["4월",40,32,26],["5월",42,33,24],["6월",45,null,null]],
-       continueByCohort:[36,31,29], returnCreators:[5,6,5,8,7,10],
-       weeklyNew:[14,17,15,22,24,28,32,29], mau:[160,150,132,175,195,220],
-       actRateByCohort:[60,63,66,62,64,68], firstEditMix:[34,16,20,30],
-       ttfpDays:[22,19,17,15,14,13], paidRetention:[0,0,0,0,0,0],
-       coreTrend:[5,7,9,12,15,18], tier3plus:[12,15,18,22,25,28], tier2plus:[5,7,9,12,15,18], tier1plus:[1,2,2,3,4,5],
-       earn10:12, earn100:2, earn1000:0, earnMedian:35, firstEarn60:[7,8,9,9,10,11],
-       discordMembers:[480,512,540,580,620,680], communityEngaged:[4,6,9,12,16,20],
-       ailabs:[3,5,9,14,20,26], referralCreators:[2,3,4,5,6,8], kFactor:[0.07,0.08,0.10,0.11,0.13,0.15],
-       agentUseRate:[10,13,16,20,25,30], featureUse:[42,25,20],
-       utmShare:[180,95,420,70,250,135], pubConv90:42, okrTarget:350, mauTarget:500,
-       editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
-       discordTarget:1000, communityTarget:300, ailabsTarget:100},
-  paid:{active90:48, editConv:62, cumCreators:110, cumSignup:150,
-       pubCreators90:22, pubCreatorsCum:40, pubWorlds90:22, pubWorldsCum:90, statusCum:[60,22,8], tierDist:[80,6,2,1,1],
-       retention:41, retention5h:33, continueRate:40, returnRate:15, inout:2.2,
-       activeTrend:[8,12,18,30,40,48], cumC:[30,50,72,90,100,110], cumS:[40,60,85,110,130,150], cumPub:[13,20,27,33,37,40],
-       sprintNew:[4,6,4,10,8,16,14,20,24], inflow:[10,10,9,18,16,24], outflow:[4,5,5,6,6,8],
-       pubWorlds:[4,3,9,6,11,14], segShare:[0,48,0],
-       cohort3h:[["4월",48,38,32],["5월",50,39,29],["6월",52,null,null]],
-       cohort5h:[["4월",36,28,22],["5월",38,29,20],["6월",40,null,null]],
-       continueByCohort:[44,38,34], returnCreators:[1,2,2,3,2,4],
-       weeklyNew:[2,3,2,4,5,5,7,6], mau:[30,35,40,48,55,62],
-       actRateByCohort:[70,72,75,71,74,78], firstEditMix:[28,22,25,25],
-       ttfpDays:[14,12,11,10,9,8], paidRetention:[55,58,52,60,57,62],
-       coreTrend:[2,2,3,4,5,6], tier3plus:[4,5,7,8,9,10], tier2plus:[2,3,4,5,6,7], tier1plus:[1,1,1,2,2,2],
-       earn10:5, earn100:2, earn1000:0, earnMedian:80, firstEarn60:[12,14,15,16,18,20],
-       discordMembers:[480,512,540,580,620,680], communityEngaged:[1,2,3,4,5,6],
-       ailabs:[1,2,3,4,5,7], referralCreators:[1,1,1,1,2,2], kFactor:[0.05,0.05,0.06,0.06,0.08,0.09],
-       agentUseRate:[20,24,28,32,38,42], featureUse:[55,40,30],
-       utmShare:[20,10,40,15,30,35], pubConv90:46, okrTarget:350, mauTarget:500,
-       editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
-       discordTarget:1000, communityTarget:300, ailabsTarget:100},
-  internal:{active90:20, editConv:90, cumCreators:40, cumSignup:20,
-       pubCreators90:12, pubCreatorsCum:20, pubWorlds90:14, pubWorldsCum:45, statusCum:[34,7,4], tierDist:[38,4,2,1,0],
-       retention:75, retention5h:66, continueRate:70, returnRate:20, inout:1.1,
-       activeTrend:[18,17,16,19,20,20], cumC:[34,36,37,38,39,40], cumS:[18,18,19,19,20,20], cumPub:[9,11,13,15,18,20],
-       sprintNew:[3,4,3,4,3,4,3,4,4], inflow:[4,3,3,4,3,4], outflow:[3,3,3,3,3,3],
-       pubWorlds:[6,4,7,5,8,9], segShare:[0,0,20],
-       cohort3h:[["4월",78,70,66],["5월",80,71,63],["6월",82,null,null]],
-       cohort5h:[["4월",66,58,54],["5월",68,59,52],["6월",70,null,null]],
-       continueByCohort:[75,72,70], returnCreators:[1,1,1,1,1,2],
-       weeklyNew:[1,1,1,1,1,1,1,1], mau:[18,17,16,19,20,20],
-       actRateByCohort:[88,90,92,90,91,93], firstEditMix:[20,25,30,25],
-       ttfpDays:[7,6,6,5,5,4], paidRetention:[0,0,0,0,0,0],
-       coreTrend:[1,1,1,2,2,2], tier3plus:[2,2,3,4,4,4], tier2plus:[1,1,2,2,2,2], tier1plus:[0,0,1,0,0,0],
-       earn10:1, earn100:0, earn1000:0, earnMedian:0, firstEarn60:[0,0,0,0,0,0],
-       discordMembers:[480,512,540,580,620,680], communityEngaged:[0,0,0,0,1,2],
-       ailabs:[0,0,0,0,1,2], referralCreators:[0,0,0,0,0,0], kFactor:[0,0,0,0,0,0],
-       agentUseRate:[40,45,50,55,60,65], featureUse:[70,55,40],
-       utmShare:[0,0,0,0,0,20], pubConv90:60, okrTarget:350, mauTarget:500,
-       editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
-       discordTarget:1000, communityTarget:300, ailabsTarget:100},
-};
 
 
-const sprintEvents = {"S33":"온보딩 튜토리얼 개편","S36":"디스코드 크리에이터 이벤트","S38":"템플릿 5종 추가 배포"};
-
-const defs = [
-  ["90일 슬라이딩 활성 창작 크리에이터","오늘 기준 최근 90일 안에 실제로 편집을 한 번이라도 한 순수 크리에이터 수 (매일 갱신)","최근 90일 · studio_log 편집 이벤트(world_modified) 유니크 계정"],
-  ["편집 전환율","최근 90일에 스튜디오에 들어온 사람 중 실제 편집까지 간 비율","최근 90일 · 편집 크리에이터 ÷ 스튜디오 활성"],
-  ["월간 Studio 활성 사용자(MAU)","퍼블리시 여부와 무관하게 Studio를 실제로 사용한 월간 유니크","월 단위 · studio_login/편집 유니크"],
-  ["주간 신규 크리에이터","최근 7일간 최초 편집 완료한 크리에이터 수","슬라이딩 7일 · world_modified 최초"],
-  ["누적 크리에이터 단계","서비스 시작~현재 가입·첫 편집·첫 퍼블리시를 각각 달성한 누적 인원","서비스 시작~현재 누적 · signup / first_edit_date / first_publish_date"],
-  ["활성화 (Activation)","가입 후 7일 내 스튜디오에서 누적 3시간+ 활동한 비율. 온보딩 퍼널 단계가 아니라 별도 Activation Rate 지표","가입 코호트 · TS 합 ≥ 3h"],
-  ["퍼블리시 크리에이터 (유니크)","실제로 월드를 퍼블리시한 '사람' 수. 누적/90일","퍼블리시 성공 로그 DISTINCT accountid"],
-  ["퍼블리시 월드 상태 (Publishing/Version Status)","Published=배포 완료(접속 가능). Update Required=운영 일시중지(접속 불가). Banned=운영 금지. ※ Public/Private/Pause는 Access Setting(노출 설정)으로 별도 축 — Public≠Published","상태값 문서 · World Publishing Status + World Version Status"],
-  ["Access Setting (노출 설정)","사용자가 설정하는 월드 노출: Public(앱 노출·접속) / Pause(노출·접속불가) / Private(비노출). Published 월드여도 Access가 Private이면 앱에 안 보임","상태값 문서 · Access Setting"],
-  ["퍼블리시 전환율","최근 90일 활성 창작 중 최근 90일 퍼블리시 유니크 비율","90일 퍼블리시 유니크 ÷ 90일 활성 창작"],
-  ["TTFP","가입 → 첫 퍼블리시까지 걸린 일수 중앙값","코호트별 중앙값"],
-  ["정착 리텐션 (Retained)","첫 퍼블리시 후 30일 내 누적 N시간+(3h/5h) 재활동 비율","퍼블리시 코호트 · TS"],
-  ["지속 작업 (Continued)","첫 퍼블리시 후 30일 내 동일 월드 v2+ 또는 다른 월드 신규 퍼블리시","퍼블리시 히스토리"],
-  ["외주 계약자 정착률","계약 완료일로부터 30일 내 5시간+ 재활동 · 단기 핵심 보조지표","Paid 화이트리스트 · 수동 계약일"],
-  ["코어 크리에이터","90일 내 10시간+ · Tier 2 이상 월드 보유 (장르 제한 없음). 당분간 운영 정의 — 이후 타겟 장르·Tier1+로 재강화 가능","슬라이딩 90일"],
-  ["Tier3+ / Tier2+ / Tier1+ 월드","누적 Live 월드 중 해당 티어 이상 품질을 충족한 수. Tier3+ ⊇ Tier2+ ⊇ Tier1+","월드 품질 티어 기준"],
-  ["커뮤니티 참여 크리에이터","30일 내 Discord/포럼 5회+ 활동","Discord/포럼 로그"],
-  ["디스코드 멤버 / AI_Labs","서버 멤버 누적 · #AI_Labs 결과물 공유 건수","Discord/포럼"],
-  ["Studio Agent 사용률","AI로 CRUD 1회+ 한 활성 크리에이터 비중","90일 활성 대비"],
-  ["Hub 유입 소스","utm_source 기준 회원가입 분포","PAGE_LOCATION UTM"],
-  ["인/아웃 순증","90일 활성 로스터 진입−이탈","월 스냅샷"],
-  ["이탈 후 복귀","마지막 스튜디오 로그인 30일+ 후 재로그인","studio_login LAG"],
-];
-
+/* 마지막 스냅샷 라벨·기준일은 오늘 날짜로 표기 (수치는 mock) */
+const _today = new Date();
+months[months.length-1] = `${_today.getMonth()+1}/${_today.getDate()}(오늘)`;
+document.getElementById('metaDate').textContent =
+  `기준일 ${_today.getFullYear()}-${String(_today.getMonth()+1).padStart(2,'0')}-${String(_today.getDate()).padStart(2,'0')} (가상 데이터)`;
 
 let current = "all";
 let retTh = "3h";
 const C = {accent:'#4c8dff',success:'#35c28a',warn:'#e0b341',danger:'#e05a5a',purple:'#a06bff',muted:'#6b7482',grid:'#222834',text:'#9aa4b2'};
 const splitStatus = arr => {
   // Publishing/Version Status 축 (Access Setting Public과 별개)
+  // TODO(실측 전환): 70/22/8 고정 비율은 mock 가정 — 월별 실제 상태 분포 집계로 대체할 것
   const published=arr.map(x=>Math.round(x*0.70)), ur=arr.map(x=>Math.round(x*0.22));
   return {published, ur, oth:arr.map((x,i)=>x-published[i]-ur[i])};
 };
@@ -563,47 +450,41 @@ const topCreators = [
 ];
 
 function renderLeaderboard(){
+  // 활동 시간 기준 정렬 · 표시 순서: 활동시간 > 편집 > 퍼블리시 월드(누적)
+  const ranked=[...topCreators].sort((a,b)=>b[3]-a[3]);
   document.getElementById('leaderboard').innerHTML =
-    `<table class="lb"><thead><tr><th class="rank">#</th><th>크리에이터</th><th>국가</th><th class="num">편집(최근 90일)</th><th class="num">활동시간(최근 90일)</th><th class="num">퍼블리시 월드(누적)</th></tr></thead><tbody>` +
-    topCreators.map((c,i)=>`<tr><td class="rank">${i+1}</td><td class="nm">${c[0]}</td><td>${c[1]}</td><td class="num">${c[2]}회</td><td class="num">${c[3]}h</td><td class="num">${c[4]}개</td></tr>`).join('') +
+    `<table class="lb"><thead><tr><th class="rank">#</th><th>크리에이터</th><th>국가</th><th class="num">활동시간(최근 90일)</th><th class="num">편집(최근 90일)</th><th class="num">퍼블리시 월드(누적)</th></tr></thead><tbody>` +
+    ranked.map((c,i)=>`<tr><td class="rank">${i+1}</td><td class="nm">${c[0]}</td><td>${c[1]}</td><td class="num">${c[3]}h</td><td class="num">${c[2]}회</td><td class="num">${c[4]}개</td></tr>`).join('') +
     `</tbody></table>`;
 }
 
 
 function renderPubStats(){
-  const d = seg[current], st=d.statusCum, tot=st[0]+st[1]+st[2]||1;
+  const d = seg[current];
   const stat=(v,l)=>`<div style="flex:1"><div class="v">${v.toLocaleString()}</div><div class="l">${l}</div></div>`;
-  const bar=(v,c)=>`<div style="width:${(v/tot*100).toFixed(1)}%;background:${c}"></div>`;
+  // 상태(Published/UR) 구성은 아래 "퍼블리시 월드 상태 구성" 도넛 카드에서만 표시 (중복 제거)
   document.getElementById('pubStats').innerHTML=`
     <div class="pstat" style="margin-bottom:14px">
       ${stat(d.pubCreatorsCum,'퍼블리시 크리에이터 (유니크) · 서비스 시작~현재 누적')}
       ${stat(d.pubCreators90,'퍼블리시 크리에이터 (유니크) · 최근 90일')}
     </div>
-    <div class="pstat" style="margin-bottom:18px">
+    <div class="pstat">
       ${stat(d.pubWorldsCum,'퍼블리시 월드 · 서비스 시작~현재 누적')}
       ${stat(d.pubWorlds90,'신규 퍼블리시 월드 · 최근 90일')}
-    </div>
-    <div style="color:var(--muted);font-size:12px">퍼블리시 월드 Publishing/Version Status (누적 ${tot}개) · Public(Access Setting)과 별개</div>
-    <div class="statusbar">${bar(st[0],C.success)}${bar(st[1],C.warn)}${bar(st[2],C.muted)}</div>
-    <div class="legend">
-      <span><span class="dot" style="background:${C.success}"></span>Published ${st[0]}</span>
-      <span><span class="dot" style="background:${C.warn}"></span>Update Required ${st[1]}</span>
-      <span><span class="dot" style="background:${C.muted}"></span>기타 ${st[2]}</span>
-    </div>
-    <div class="note" style="margin-top:8px">Published=배포 완료 · Update Required=운영 일시중지(접속 X) · 기타=Banned/Private 접근 등. <b>Public</b>은 사용자가 설정하는 Access Setting(노출)이며 이 차트 축이 아님.</div>`;
+    </div>`;
 }
 
 function renderContinueStat(){
   const d=seg[current], latest=d.continueByCohort[1]; // 5월(30일 완료된 최근 코호트)
   document.getElementById('continueStat').innerHTML =
-    `<span class="bigstat">${latest}<small>%</small></span>
-     <span style="color:var(--muted2);font-size:12px"><b>5월 코호트 기준</b>(30일 완료). 첫 퍼블리시 후 30일 내 재출시·업데이트한 비율 · 6월은 아직 측정 중</span>`;
+    `<div class="statline"><span class="bigstat">${latest}<small>%</small></span>
+     <span class="statdesc"><b>5월 코호트</b>(30일 완료) · 퍼블리시 후 30일 내 재출시·업데이트</span></div>`;
 }
 function renderReturnStat(){
   const d=seg[current], tot=d.returnCreators.reduce((a,b)=>a+b,0);
   document.getElementById('returnStat').innerHTML =
-    `<span class="bigstat">${tot}<small>명</small></span>
-     <span style="color:var(--muted2);font-size:12px">최근 6개월 <b>합계</b> · 복귀율 ${d.returnRate}% (30일+ 미접속자 중 재로그인 비율)</span>`;
+    `<div class="statline"><span class="bigstat">${tot}<small>명</small></span>
+     <span class="statdesc">최근 6개월 <b>합계</b> · 복귀율 ${d.returnRate}% (30일+ 미접속 후 재로그인)</span></div>`;
 }
 
 let funnelMode = 'cum';
@@ -624,15 +505,17 @@ function renderFunnel(){
   // 신규 크리에이터 온보딩 퍼널
   // 회원가입 → 스튜디오 로그인 → 에디터 진입 → 첫 편집 → 퍼블리싱 → 지속 작업
   // ※ 활성화(7일 3h+)·첫 경험은 퍼널 단계가 아님 (별도 Activation Rate)
+  // 회원가입 소스 = WEB_ACCOUNT_CREATE (Hub 웹로그 user_id는 커버리지 부족 — 7/22 분석 결론)
   if(funnelMode==='period'){
     const n=d.cumS.length;
     const signupDelta = Math.max(1, d.cumS[n-1]-d.cumS[n-2]);
+    // TODO(실측 전환): 단계 비율(rates)과 아래 0.72/0.62는 mock 가정 — 실제 단계별 유니크 집계로 대체할 것
     const rates=[1, 0.78, 0.68, 0.36, 0.18, 0.07];
     const names=["회원가입","스튜디오 로그인","에디터 진입","첫 편집","퍼블리싱","지속 작업"];
     const colors=[C.accent,'#5b9bff','#6f7dff',C.purple,C.success,'#2fa876'];
     steps = funnelSteps(names.map((name,i)=>[name, signupDelta*rates[i], colors[i]]));
     base = steps[0][1];
-    document.getElementById('funnelNote').textContent = '6월 한 달간 신규 가입 기준 · 회원가입=100% · 온보딩 퍼널 · 단조 감소';
+    document.getElementById('funnelNote').textContent = '6월 한 달간 신규 가입 기준 · 회원가입=100%';
   } else {
     base = d.cumSignup;
     const continued = Math.round(d.pubCreatorsCum * d.continueRate/100);
@@ -647,7 +530,7 @@ function renderFunnel(){
       ["지속 작업", continued, '#2fa876'],
     ]);
     base = steps[0][1];
-    document.getElementById('funnelNote').textContent = '서비스 시작~현재 누적 · 회원가입=100% · 온보딩 퍼널 · 단조 감소';
+    document.getElementById('funnelNote').textContent = '서비스 시작~현재 누적 · 회원가입=100%';
   }
   document.getElementById('funnel').innerHTML = steps.map((s,i)=>{
     const p = (s[1]/base*100);
@@ -675,19 +558,19 @@ function renderInout(){
   document.getElementById('inoutKpis').innerHTML = `
     <div class="inout-kpis">
       <div class="inout-kpi ${latestNet>=0?'up':'down'}">
-        <div class="l">이번 스냅샷 순증</div>
+        <div class="l">순증 (오늘 기준)</div>
         <div class="v">${latestNet>=0?'+':''}${latestNet}<small>명</small></div>
-        <div class="s">7/8(오늘) · 진입 ${latestIn} − 이탈 ${latestOut}</div>
+        <div class="s">지난달 말 대비 활성 크리에이터가 ${Math.abs(latestNet)}명 ${latestNet>=0?'늘었습니다':'줄었습니다'}</div>
       </div>
       <div class="inout-kpi">
         <div class="l">신규 진입</div>
         <div class="v" style="color:var(--success)">${latestIn}<small>명</small></div>
-        <div class="s">90일 활성에 새로 든 계정</div>
+        <div class="s">지난 명단에 없다가 새로 들어온 크리에이터</div>
       </div>
       <div class="inout-kpi">
         <div class="l">이탈</div>
         <div class="v" style="color:var(--danger)">${latestOut}<small>명</small></div>
-        <div class="s">90일 활성에서 빠진 계정</div>
+        <div class="s">90일간 활동이 없어 명단에서 빠진 크리에이터</div>
       </div>
       <div class="inout-kpi ${ratio>=1?'up':'down'}">
         <div class="l">진입÷이탈</div>
@@ -720,7 +603,7 @@ function renderCohort(){
   document.getElementById('cohort').innerHTML =
     `<div class="note" style="margin:0 0 8px">각 칸 = 첫 퍼블리시 후 그 시점까지 누적 <b>${retTh}+</b> 재활동한 크리에이터 비율(%)</div>
      <table><thead><tr><th>코호트</th><th class="num">7일 뒤</th><th class="num">14일 뒤</th><th class="num">30일 뒤</th></tr></thead><tbody>${rows}</tbody></table>
-     <div class="note">– = 아직 그 기간이 안 지난 코호트(측정 중) · 5시간은 문서 기준이나 다소 타이트해 <b>3시간을 기본</b>으로 baseline 관찰 권장</div>`;
+     <div class="note">– = 아직 그 기간이 안 지난 코호트(측정 중)</div>`;
 }
 
 
@@ -741,17 +624,10 @@ function renderScorecard(){
     kpiCard('편집 전환율', d.editConv, '%', '스튜디오 활성 대비 편집') +
     kpiCard('퍼블리시 전환(90일)', d.pubConv90, '%', `퍼블리시 ${d.pubCreators90} / 활성 ${d.active90}`) +
     kpiCard('MAU (Studio)', d.mau.at(-1), '명', '월간 Studio 활성') +
-    kpiCard('Tier3+ 월드', t3, '개', '품질 티어 누적') +
-    kpiCard('Tier2+ 월드', t2, '개', '품질 티어 누적') +
-    kpiCard('Tier1+ 월드', t1, '개', '품질 티어 누적') +
+    kpiCard('Tier3+ 월드', t3, '개', '신규 방문 700+ · D1 12%+ · 체류 4분+<br/>충족 월드 누적 (숫자 낮을수록 상위)') +
+    kpiCard('Tier2+ 월드', t2, '개', '신규 방문 2,000+ · D1 15%+ · 체류 6분+<br/>충족 월드 누적') +
+    kpiCard('Tier1+ 월드', t1, '개', '신규 방문 5,000+ · D1 20%+ · 체류 8분+<br/>충족 월드 누적') +
     kpiCard('코어 크리에이터', d.coreTrend.at(-1), '명', '90일 슬라이딩');
-}
-function renderQ1Kpis(){
-  const d=seg[current];
-  document.getElementById('q1Kpis').innerHTML =
-    mini('90일 활성 창작', `${d.active90}명`, `편집 전환율 ${d.editConv}%`) +
-    mini('주간 신규 (이번주)', `${d.weeklyNew.at(-1)}명`, '최근 7일 최초 편집') +
-    mini('Studio MAU', `${d.mau.at(-1)}명`, '월간 Studio 활성');
 }
 function renderQ2Kpis(){
   const d=seg[current];
@@ -760,46 +636,24 @@ function renderQ2Kpis(){
     mini('② 누적 첫 편집', `${d.cumC.at(-1).toLocaleString()}명`, `가입 대비 ${pct(d.cumC.at(-1),d.cumS.at(-1))}%`) +
     mini('③ 누적 퍼블리시', `${d.cumPub.at(-1).toLocaleString()}명`, `첫 편집 대비 ${pct(d.cumPub.at(-1),d.cumC.at(-1))}%`);
 }
-function renderQ6Kpis(){
-  const d=seg[current];
-  document.getElementById('q6Kpis').innerHTML =
-    mini('90일 퍼블리시 전환', `${d.pubConv90}%`, `${d.pubCreators90}명 / 활성 ${d.active90}`) +
-    mini('TTFP 중앙값', `${d.ttfpDays.at(-1)}일`, '가입 → 첫 퍼블리시') +
-    mini('누적 퍼블리시 크리에이터', `${d.pubCreatorsCum}명`, '서비스 시작~현재');
-}
-function renderQ11Kpis(){
-  const d=seg[current];
-  document.getElementById('q11Kpis').innerHTML =
-    mini('코어 크리에이터', `${d.coreTrend.at(-1)}명`, '90일 슬라이딩') +
-    mini('Tier3+ / Tier2+', `${d.tier3plus.at(-1)} / ${d.tier2plus.at(-1)}개`, '누적 Live') +
-    mini('Tier1+ 월드', `${d.tier1plus.at(-1)}개`, '누적 Live');
-}
-function renderQ12Kpis(){
-  const d=seg[current];
-  document.getElementById('q12Kpis').innerHTML =
-    mini('디스코드 멤버', `${d.discordMembers.at(-1)}명`, '서버 멤버 누적') +
-    mini('참여 크리에이터(30일 5회+)', `${d.communityEngaged.at(-1)}명`, 'Discord/포럼 활동') +
-    mini('AI_Labs 결과물', `${d.ailabs.at(-1)}건`, '누적 공유');
-}
-function renderQ13KpisAgent(){
-  const d=seg[current];
-  document.getElementById('q13KpisAgent').innerHTML =
-    mini('Agent 사용률(90일)', `${d.agentUseRate.at(-1)}%`, 'AI CRUD 1회+') +
-    mini('추세', `${d.agentUseRate[0]}% → ${d.agentUseRate.at(-1)}%`, '최근 6개월') +
-    mini('90일 활성 대비', `${Math.round(d.active90*d.agentUseRate.at(-1)/100)}명`, '추정 사용 인원');
-}
 function renderActStat(){
   const d=seg[current], latest=d.actRateByCohort.at(-1);
   document.getElementById('actStat').innerHTML =
-    `<span class="bigstat">${latest}<small>%</small></span>
-     <span style="color:var(--muted2);font-size:12px">최근 가입 코호트 · 7일 내 3시간+ 활성화율</span>`;
+    `<div class="statline"><span class="bigstat">${latest}<small>%</small></span>
+     <span class="statdesc">최근 가입 코호트 · 7일 내 3시간+ 활성화율</span></div>`;
 }
 function renderPaidRetStat(){
   const d=seg[current], latest=d.paidRetention.at(-1);
   const show = current==='organic' || current==='internal' ? '—' : latest;
   document.getElementById('paidRetStat').innerHTML =
-    `<span class="bigstat">${show}${show==='—'?'': '<small>%</small>'}</span>
-     <span style="color:var(--muted2);font-size:12px">계약 완료 후 30일 내 5시간+ · Paid 세그먼트에서 의미 있음</span>`;
+    `<div class="statline"><span class="bigstat">${show}${show==='—'?'': '<small>%</small>'}</span>
+     <span class="statdesc">계약 완료 후 30일 내 5시간+ 재활동 · Partner 세그먼트 기준</span></div>`;
+}
+function renderAgentStat(){
+  const d=seg[current], rate=d.agentUseRate.at(-1), users=Math.round(d.active90*rate/100);
+  document.getElementById('agentStat').innerHTML =
+    `<div class="statline"><span class="bigstat">${rate}<small>%</small></span>
+     <span class="statdesc">90일 활성 창작 <b>${d.active90}명</b> 중 <b>${users}명</b>이 Agent 사용</span></div>`;
 }
 
 function renderDefs(){
@@ -810,388 +664,6 @@ function renderSprintAnno(){
     "예시 주석(수동 기록 필요): " + Object.entries(sprintEvents).map(([s,e])=>`<b>${s}</b> ${e}`).join(" · ");
 }
 
-
-/* ===== Chart perf: create-once lazy init, fixed canvas, no destroy ===== */
-if(false){
-try{
-  Chart.defaults.animation = false;
-  if(Chart.defaults.transitions?.active?.animation) Chart.defaults.transitions.active.animation.duration = 0;
-  Chart.defaults.responsive = false;
-  Chart.defaults.maintainAspectRatio = false;
-  Chart.defaults.devicePixelRatio = 1;
-  Chart.defaults.events = [];
-  Chart.defaults.plugins.tooltip.enabled = false;
-}catch(e){}
-
-const chartFactories = {};
-let chartIO = null;
-const DPR = 1;
-const pendingCharts = new Set();
-let chartIdleHandle = null;
-let scrolling = false;
-let scrollEndTimer = null;
-const scheduleIdle = window.requestIdleCallback
-  ? callback=>window.requestIdleCallback(callback, {timeout:500})
-  : callback=>setTimeout(()=>callback({didTimeout:true,timeRemaining:()=>0}), 16);
-
-function baseOpts(){
-  return {
-    responsive:false,
-    maintainAspectRatio:false,
-    animation:false,
-    devicePixelRatio: DPR,
-    events:[],
-    plugins:{
-      legend:{labels:{color:C.text,boxWidth:12,font:{size:11}}},
-      tooltip:{enabled:false}
-    },
-    scales:{
-      x:{ticks:{color:C.text,maxRotation:0,autoSkip:true},grid:{color:C.grid}},
-      y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true}
-    }
-  };
-}
-
-function fitCanvas(canvas){
-  const box = canvas.closest('.chartbox') || canvas.parentElement;
-  if(!box) return {w:0,h:0};
-  const w = Math.max(1, Math.round(box.clientWidth));
-  const h = Math.max(1, Math.round(box.clientHeight || 210));
-  // Only rewrite backing store when size actually changes (avoids flicker)
-  const bw = w, bh = h;
-  if(canvas.width !== bw || canvas.height !== bh){
-    canvas.width = bw;
-    canvas.height = bh;
-  }
-  canvas.style.width = w + 'px';
-  canvas.style.height = h + 'px';
-  return {w,h};
-}
-
-function ensureChart(id){
-  if(charts[id] || !chartFactories[id]) return charts[id] || null;
-  const canvas = document.getElementById(id);
-  if(!canvas) return null;
-  const {w,h} = fitCanvas(canvas);
-  if(w < 8 || h < 8) return null; // layout not ready
-  charts[id] = chartFactories[id]();
-  try{ charts[id].resize(); }catch(e){}
-  return charts[id];
-}
-
-function requestChartDrain(){
-  if(chartIdleHandle != null || scrolling || pendingCharts.size === 0) return;
-  const run = deadline=>{
-    chartIdleHandle = null;
-    if(scrolling) return;
-
-    const id = pendingCharts.values().next().value;
-    if(id){
-      pendingCharts.delete(id);
-      ensureChart(id);
-    }
-
-    if(pendingCharts.size > 0 && (deadline.didTimeout || deadline.timeRemaining() > 3)){
-      requestChartDrain();
-    }else if(pendingCharts.size > 0){
-      chartIdleHandle = scheduleIdle(run);
-    }
-  };
-  chartIdleHandle = scheduleIdle(run);
-}
-
-function queueChart(id){
-  if(!id || charts[id]) return;
-  pendingCharts.add(id);
-  requestChartDrain();
-}
-
-addEventListener('scroll', ()=>{
-  scrolling = true;
-  clearTimeout(scrollEndTimer);
-  scrollEndTimer = setTimeout(()=>{
-    scrolling = false;
-    requestChartDrain();
-  }, 120);
-}, {passive:true});
-
-function registerChart(id, factory){
-  chartFactories[id] = factory;
-  const el = document.getElementById(id);
-  if(!el) return;
-  const box = el.closest('.chartbox') || el.parentElement;
-  box.dataset.chartId = id;
-  if(chartIO) chartIO.observe(box);
-}
-
-function drawStatusLegend(){
-  const d=seg[current], names=['Published','Update Required','기타'], cols=[C.success,C.warn,C.muted];
-  const el=document.getElementById('statusLegend');
-  if(el) el.innerHTML = names.map((n,i)=>
-    `<span><span class="dot" style="background:${cols[i]}"></span>${n} ${d.statusCum[i]}</span>`).join('');
-}
-
-function makeCharts(){
-  if(!chartIO){
-    chartIO = new IntersectionObserver((entries)=>{
-      for(const en of entries){
-        if(!en.isIntersecting) continue;
-        const id = en.target.dataset.chartId;
-        if(id) queueChart(id);
-      }
-    }, {root:null, rootMargin:'600px 0px', threshold:0});
-  }
-
-  registerChart('activeTrend', ()=>{
-    const dd=seg[current];
-    return new Chart(activeTrend,{type:'line',
-      data:{labels:months,datasets:[{label:'활성 창작',data:dd.activeTrend,borderColor:C.accent,backgroundColor:'rgba(76,141,255,.12)',fill:true,tension:.25,pointRadius:0,pointHoverRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('cumChart', ()=>{
-    const dd=seg[current];
-    return new Chart(cumChart,{type:'line',
-      data:{labels:months,datasets:[
-        {label:'누적 가입',data:dd.cumS,borderColor:C.muted,tension:.25,pointRadius:0,fill:false},
-        {label:'누적 크리에이터(첫 편집)',data:dd.cumC,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',tension:.25,pointRadius:0,pointHoverRadius:3,fill:true}]},
-      options:baseOpts()});
-  });
-
-  registerChart('sprintChart', ()=>{
-    const dd=seg[current];
-    return new Chart(sprintChart,{type:'bar',
-      data:{labels:sprints,datasets:[{label:'신규 크리에이터',data:dd.sprintNew,backgroundColor:sprints.map(s=>sprintEvents[s]?C.success:C.accent),borderRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('inoutChart', ()=>{
-    const dd=seg[current];
-    return new Chart(inoutChart,{type:'bar',
-      data:{labels:months,datasets:[
-        {label:'순증/순감',data:dd.inflow.map((v,i)=>v-dd.outflow[i]),
-          backgroundColor:dd.inflow.map((v,i)=>(v-dd.outflow[i])>=0?C.success:C.danger),
-          borderRadius:3,barPercentage:0.65,categoryPercentage:0.7}]},
-      options:Object.assign(baseOpts(),{
-        plugins:{legend:{display:false},
-          tooltip:{callbacks:{
-            afterBody:(items)=>{
-              const i=items[0].dataIndex;
-              const inn=seg[current].inflow[i], out=seg[current].outflow[i];
-              return [`진입 ${inn}명 · 이탈 ${out}명`,`배수 ${(inn/out).toFixed(2)}`];
-            }}}},
-        scales:{
-          x:{ticks:{color:C.text,font:{size:12},maxRotation:0,autoSkip:true},grid:{color:C.grid}},
-          y:{ticks:{color:C.text,font:{size:12},callback:v=>(v>0?'+':'')+v},
-             grid:{color:C.grid},
-             title:{display:true,text:'순증 명수 (진입 − 이탈)',color:C.muted,font:{size:12}}}}})});
-  });
-
-  registerChart('continueChart', ()=>{
-    const dd=seg[current];
-    return new Chart(continueChart,{type:'bar',
-      data:{labels:pubCohortMonths.map((m,i)=>i===2?m+" (측정중)":m),datasets:[{label:'지속 작업률',data:dd.continueByCohort,backgroundColor:pubCohortMonths.map((m,i)=>i===2?C.muted:C.purple),borderRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
-  });
-
-  registerChart('returnChart', ()=>{
-    const dd=seg[current];
-    return new Chart(returnChart,{type:'bar',
-      data:{labels:months,datasets:[{label:'복귀 크리에이터',data:dd.returnCreators,backgroundColor:C.accent,borderRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('pubChart', ()=>{
-    const dd=seg[current]; const ps=splitStatus(dd.pubWorlds);
-    return new Chart(pubChart,{type:'bar',
-      data:{labels:months,datasets:[
-        {label:'Published',data:ps.published,backgroundColor:C.success,stack:'s',borderRadius:2},
-        {label:'Update Required',data:ps.ur,backgroundColor:C.warn,stack:'s',borderRadius:2},
-        {label:'기타',data:ps.oth,backgroundColor:C.muted,stack:'s',borderRadius:2}]},
-      options:Object.assign(baseOpts(),{scales:{
-        x:{stacked:true,ticks:{color:C.text},grid:{color:C.grid}},
-        y:{stacked:true,ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true}}})});
-  });
-
-  registerChart('statusChart', ()=>{
-    const dd=seg[current];
-    const ch=new Chart(statusChart,{type:'doughnut',
-      data:{labels:['Published','Update Required','기타'],datasets:[{data:dd.statusCum,backgroundColor:[C.success,C.warn,C.muted],borderColor:'#171a21',borderWidth:2}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{}})});
-    drawStatusLegend();
-    return ch;
-  });
-
-  registerChart('tierChart', ()=>{
-    const dd=seg[current];
-    return new Chart(tierChart,{type:'bar',
-      data:{labels:['초기 단계','Tier 3','Tier 2','Tier 1','Tier 0'],datasets:[{label:'월드 수',data:dd.tierDist,
-        backgroundColor:[C.muted,C.success,C.purple,C.accent,C.warn],borderRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('segChart', ()=>{
-    const segColors=[C.accent,C.warn,C.purple], segNames=['Organic','Paid','내부'];
-    const ch=new Chart(segChart,{type:'doughnut',
-      data:{labels:segNames,datasets:[{data:seg.all.segShare,backgroundColor:segColors,borderColor:'#171a21',borderWidth:2}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{}})});
-    document.getElementById('segLegend').innerHTML = segNames.map((n,i)=>
-      `<span><span class="dot" style="background:${segColors[i]}"></span>${n} ${seg.all.segShare[i]}명</span>`).join('');
-    return ch;
-  });
-
-  registerChart('countryChart', ()=>{
-    return new Chart(countryChart,{type:'bar',
-      data:{labels:country.map(c=>c[0]),datasets:[{label:'활성 창작 크리에이터',data:country.map(c=>c[1]),
-        backgroundColor:[C.accent,C.success,C.warn,C.purple,C.danger,C.muted],borderRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('weeklyNewChart', ()=>{
-    const dd=seg[current];
-    return new Chart(weeklyNewChart,{type:'bar',
-      data:{labels:weeks,datasets:[{label:'주간 신규',data:dd.weeklyNew,backgroundColor:C.accent,borderRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('mauChart', ()=>{
-    const dd=seg[current];
-    return new Chart(mauChart,{type:'line',
-      data:{labels:months,datasets:[{label:'MAU',data:dd.mau,borderColor:C.success,backgroundColor:'rgba(53,194,138,.12)',fill:true,tension:.25,pointRadius:0,pointHoverRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('firstEditMixChart', ()=>{
-    const dd=seg[current];
-    return new Chart(firstEditMixChart,{type:'doughnut',
-      data:{labels:firstEditNames,datasets:[{data:dd.firstEditMix,backgroundColor:[C.accent,C.warn,C.purple,C.success],borderColor:'#171a21',borderWidth:2}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{position:'bottom',labels:{color:C.text,boxWidth:10,font:{size:11}}}},scales:{}})});
-  });
-
-  registerChart('actChart', ()=>{
-    const dd=seg[current];
-    return new Chart(actChart,{type:'bar',
-      data:{labels:months,datasets:[{label:'활성화율',data:dd.actRateByCohort,backgroundColor:C.warn,borderRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
-  });
-
-  registerChart('ttfpChart', ()=>{
-    const dd=seg[current];
-    return new Chart(ttfpChart,{type:'line',
-      data:{labels:months,datasets:[{label:'TTFP 중앙값(일)',data:dd.ttfpDays,borderColor:C.purple,tension:.25,pointRadius:0,pointHoverRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('paidRetChart', ()=>{
-    const dd=seg[current];
-    return new Chart(paidRetChart,{type:'bar',
-      data:{labels:months,datasets:[{label:'외주 정착률',data:dd.paidRetention,backgroundColor:C.warn,borderRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
-  });
-
-  registerChart('utmChart', ()=>{
-    const dd=seg[current];
-    return new Chart(utmChart,{type:'bar',
-      data:{labels:utmNames,datasets:[{label:'회원가입',data:dd.utmShare,backgroundColor:[C.accent,C.danger,C.success,C.purple,C.warn,C.muted],borderRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('coreChart', ()=>{
-    const dd=seg[current];
-    return new Chart(coreChart,{type:'line',
-      data:{labels:months,datasets:[{label:'코어',data:dd.coreTrend,borderColor:C.warn,backgroundColor:'rgba(224,179,65,.15)',fill:true,tension:.25,pointRadius:0,pointHoverRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('tierLeadChart', ()=>{
-    const dd=seg[current];
-    return new Chart(tierLeadChart,{type:'line',
-      data:{labels:months,datasets:[
-        {label:'Tier3+',data:dd.tier3plus,borderColor:C.success,tension:.25,pointRadius:0,pointHoverRadius:3},
-        {label:'Tier2+',data:dd.tier2plus,borderColor:C.purple,tension:.25,pointRadius:0,pointHoverRadius:3},
-        {label:'Tier1+',data:dd.tier1plus,borderColor:C.accent,tension:.25,pointRadius:0,pointHoverRadius:3}]},
-      options:baseOpts()});
-  });
-
-  registerChart('discordChart', ()=>{
-    const dd=seg[current];
-    return new Chart(discordChart,{type:'line',
-      data:{labels:months,datasets:[
-        {label:'디스코드 멤버',data:dd.discordMembers,borderColor:C.accent,tension:.25,pointRadius:0,pointHoverRadius:3,yAxisID:'y'},
-        {label:'참여 크리에이터',data:dd.communityEngaged,borderColor:C.success,tension:.25,pointRadius:0,pointHoverRadius:3,yAxisID:'y1'}]},
-      options:Object.assign(baseOpts(),{scales:{
-        x:{ticks:{color:C.text},grid:{color:C.grid}},
-        y:{ticks:{color:C.text},grid:{color:C.grid},beginAtZero:true},
-        y1:{position:'right',ticks:{color:C.success},grid:{display:false},beginAtZero:true}}})});
-  });
-
-  registerChart('ailabsChart', ()=>{
-    const dd=seg[current];
-    return new Chart(ailabsChart,{type:'bar',
-      data:{labels:months,datasets:[{label:'AI_Labs 누적',data:dd.ailabs,backgroundColor:C.purple,borderRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})});
-  });
-
-  registerChart('agentChart', ()=>{
-    const dd=seg[current];
-    return new Chart(agentChart,{type:'line',
-      data:{labels:months,datasets:[{label:'Agent 사용률',data:dd.agentUseRate,borderColor:C.purple,backgroundColor:'rgba(160,107,255,.12)',fill:true,tension:.25,pointRadius:0,pointHoverRadius:3}]},
-      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},beginAtZero:true,suggestedMax:100}}})});
-  });
-
-  // Warm every remaining chart one at a time while the browser is idle.
-  // Scrolling pauses this queue, so chart construction never competes with scroll frames.
-  Object.keys(chartFactories).forEach(queueChart);
-}
-
-function updateCharts(){
-  const d = seg[current];
-  const none='none';
-  if(charts.activeTrend){ charts.activeTrend.data.datasets[0].data=d.activeTrend; charts.activeTrend.update(none); }
-  if(charts.cumChart){ charts.cumChart.data.datasets[0].data=d.cumS; charts.cumChart.data.datasets[1].data=d.cumC; charts.cumChart.update(none); }
-  if(charts.sprintChart){ charts.sprintChart.data.datasets[0].data=d.sprintNew; charts.sprintChart.update(none); }
-  if(charts.inoutChart){
-    charts.inoutChart.data.datasets[0].data=d.inflow.map((v,i)=>v-d.outflow[i]);
-    charts.inoutChart.data.datasets[0].backgroundColor=d.inflow.map((v,i)=>(v-d.outflow[i])>=0?C.success:C.danger);
-    charts.inoutChart.update(none);
-  }
-  renderInout();
-  if(charts.continueChart){ charts.continueChart.data.datasets[0].data=d.continueByCohort; charts.continueChart.update(none); }
-  if(charts.returnChart){ charts.returnChart.data.datasets[0].data=d.returnCreators; charts.returnChart.update(none); }
-  if(charts.pubChart){
-    const ps=splitStatus(d.pubWorlds);
-    charts.pubChart.data.datasets[0].data=ps.published; charts.pubChart.data.datasets[1].data=ps.ur; charts.pubChart.data.datasets[2].data=ps.oth; charts.pubChart.update(none);
-  }
-  if(charts.statusChart){ charts.statusChart.data.datasets[0].data=d.statusCum; charts.statusChart.update(none); drawStatusLegend(); }
-  if(charts.tierChart){ charts.tierChart.data.datasets[0].data=d.tierDist; charts.tierChart.update(none); }
-  if(charts.weeklyNewChart){ charts.weeklyNewChart.data.datasets[0].data=d.weeklyNew; charts.weeklyNewChart.update(none); }
-  if(charts.mauChart){ charts.mauChart.data.datasets[0].data=d.mau; charts.mauChart.update(none); }
-  if(charts.firstEditMixChart){ charts.firstEditMixChart.data.datasets[0].data=d.firstEditMix; charts.firstEditMixChart.update(none); }
-  if(charts.actChart){ charts.actChart.data.datasets[0].data=d.actRateByCohort; charts.actChart.update(none); }
-  if(charts.ttfpChart){ charts.ttfpChart.data.datasets[0].data=d.ttfpDays; charts.ttfpChart.update(none); }
-  if(charts.paidRetChart){ charts.paidRetChart.data.datasets[0].data=d.paidRetention; charts.paidRetChart.update(none); }
-  if(charts.utmChart){ charts.utmChart.data.datasets[0].data=d.utmShare; charts.utmChart.update(none); }
-  if(charts.coreChart){ charts.coreChart.data.datasets[0].data=d.coreTrend; charts.coreChart.update(none); }
-  if(charts.tierLeadChart){ charts.tierLeadChart.data.datasets[0].data=d.tier3plus; charts.tierLeadChart.data.datasets[1].data=d.tier2plus; charts.tierLeadChart.data.datasets[2].data=d.tier1plus; charts.tierLeadChart.update(none); }
-  if(charts.discordChart){ charts.discordChart.data.datasets[0].data=d.discordMembers; charts.discordChart.data.datasets[1].data=d.communityEngaged; charts.discordChart.update(none); }
-  if(charts.ailabsChart){ charts.ailabsChart.data.datasets[0].data=d.ailabs; charts.ailabsChart.update(none); }
-  if(charts.agentChart){ charts.agentChart.data.datasets[0].data=d.agentUseRate; charts.agentChart.update(none); }
-}
-
-function resizeLiveCharts(){
-  Object.keys(charts).forEach(id=>{
-    const canvas=document.getElementById(id);
-    if(!canvas || !charts[id]) return;
-    fitCanvas(canvas);
-    try{ charts[id].resize(); }catch(e){}
-  });
-}
-let _chartResizeT=null;
-addEventListener('resize', ()=>{
-  clearTimeout(_chartResizeT);
-  _chartResizeT=setTimeout(resizeLiveCharts, 180);
-}, {passive:true});
-}
 
 /* ===== Native web charts: responsive SVG + CSS, no canvas/Chart.js ===== */
 const svgM={l:52,r:30,t:30,b:34};
@@ -1258,10 +730,12 @@ function svgMount(id,title,body,W,H){
   el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${sx(title)}">${body}</svg>`;
 }
 
+// CJK 글자는 라틴보다 넓어서 글자수 기반 추정 시 범례가 겹침 — 문자폭 가중 추정
+const estTextW=s=>[...s].reduce((w,ch)=>w+(ch.charCodeAt(0)>0x2E7F?11.5:6.8),0);
 function legendSvg(sets,W){
   if(sets.length<2) return '';
   // right-align legend so it never collides with the y-axis labels
-  const widths=sets.map(s=>28+s.label.length*7.2);
+  const widths=sets.map(s=>34+estTextW(s.label));
   const totalW=widths.reduce((a,b)=>a+b,0);
   let x=Math.max(svgM.l, W-svgM.r-totalW);
   return sets.map((s,i)=>{
@@ -1295,12 +769,20 @@ function lineChart(id,title,labels,sets,opt={}){
   sets.forEach(set=>{
     const max=set.right?maxR:maxL;
     const points=set.data.map((v,i)=>[xp(i),yp(v,max)]);
-    const path=points.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+    const pt=p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+    const path=points.map((p,i)=>`${i?'L':'M'}${pt(p)}`).join(' ');
     if(set.fill){
       body+=`<path d="${path} L${points.at(-1)[0].toFixed(1)},${svgM.t+ph} L${points[0][0].toFixed(1)},${svgM.t+ph} Z" fill="${set.color}" opacity=".12"/>`;
     }
-    body+=`<path class="series-line" d="${path}" stroke="${set.color}"/>`;
-    body+=points.map(p=>`<circle class="dot-mark" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${set.color}"/>`).join('');
+    // partialLast: 마지막 포인트가 진행 중인 부분 기간이면 마지막 구간을 점선으로 구분
+    if(opt.partialLast && points.length>1){
+      const solid=points.slice(0,-1).map((p,i)=>`${i?'L':'M'}${pt(p)}`).join(' ');
+      body+=`<path class="series-line" d="${solid}" stroke="${set.color}"/>`;
+      body+=`<path class="series-line" d="M${pt(points.at(-2))} L${pt(points.at(-1))}" stroke="${set.color}" stroke-dasharray="5 4" opacity=".75"/>`;
+    }else{
+      body+=`<path class="series-line" d="${path}" stroke="${set.color}"/>`;
+    }
+    body+=points.map((p,i)=>`<circle class="dot-mark" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${set.color}"${opt.partialLast&&i===points.length-1?' opacity=".75"':''}/>`).join('');
   });
   // index-mode hover columns: one tooltip listing every series at that x
   const colW=pw/Math.max(1,labels.length);
@@ -1338,9 +820,10 @@ function barChart(id,title,labels,sets,opt={}){
     labels.forEach((label,i)=>{
       let acc=0;
       const bx=svgM.l+groupW*i+(groupW-outerW)/2;
+      const fade=opt.partialLast&&i===labels.length-1?' fill-opacity=".55"':'';
       sets.forEach(set=>{
         const v=set.data[i]||0, y=yp(acc+v), h=Math.max(0,yp(acc)-y);
-        body+=`<rect class="bar" x="${bx.toFixed(1)}" y="${y.toFixed(1)}" width="${outerW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${colorAt(set,i)}"/>`;
+        body+=`<rect class="bar" x="${bx.toFixed(1)}" y="${y.toFixed(1)}" width="${outerW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${colorAt(set,i)}"${fade}/>`;
         acc+=v;
       });
       const total=sets.reduce((n,s)=>n+(s.data[i]||0),0);
@@ -1354,9 +837,67 @@ function barChart(id,title,labels,sets,opt={}){
       const x=svgM.l+groupW*i+(groupW-outerW)/2+bw*j;
       const head=sets.length>1?`${sx(label)} · ${sx(set.label)}`:sx(label);
       const tip=`<div class="tip-h">${head}</div><div class="tip-row"><span><span class="tip-dot" style="background:${colorAt(set,i)}"></span>${sx(set.label)}</span><b>${fmtVal(v,opt)}</b></div>`;
-      body+=`<rect class="bar hitbar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(2,bw-3).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${colorAt(set,i)}" data-tip="${sx(tip)}"/>`;
+      const fade=opt.partialLast&&i===labels.length-1?' fill-opacity=".55"':'';
+      body+=`<rect class="bar hitbar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(2,bw-3).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${colorAt(set,i)}"${fade} data-tip="${sx(tip)}"/>`;
     }));
   }
+  svgMount(id,title,body,W,H);
+}
+
+/* 모수(명수) 막대 + 비율(%) 꺾은선 이중 축 콤보 차트
+   totals 막대 위에 parts 막대를 겹쳐 "전체 중 얼마"가 한눈에 보이게 함 */
+function comboChart(id,title,labels,cfg,opt={}){
+  const {W,H}=chartDims(id);
+  const pw=W-svgM.l-svgM.r, ph=H-svgM.t-svgM.b;
+  const maxL=niceMax(Math.max(1,...cfg.totals.data));
+  const maxR=100;
+  const ypL=v=>svgM.t+ph-(v/maxL)*ph;
+  const ypR=v=>svgM.t+ph-(v/maxR)*ph;
+  const groupW=pw/labels.length, outerW=Math.min(groupW*.6,56), innerW=Math.max(8,outerW*.5);
+  const items=[cfg.totals,cfg.parts,cfg.rate];
+  // legend: bar swatch 2개 + line swatch 1개 (right-aligned)
+  const widths=items.map(s=>34+estTextW(s.label));
+  let lx=Math.max(svgM.l, W-svgM.r-widths.reduce((a,b)=>a+b,0));
+  let body='';
+  items.forEach((s,i)=>{
+    body+=i<2
+      ?`<rect x="${lx}" y="6" width="12" height="12" rx="2" fill="${s.color}"/>`
+      :`<line x1="${lx}" y1="12" x2="${lx+14}" y2="12" stroke="${s.color}" stroke-width="3"/>`;
+    body+=`<text class="legend-text" x="${lx+18}" y="16">${sx(s.label)}</text>`;
+    lx+=widths[i];
+  });
+  for(let i=0;i<=4;i++){
+    const y=svgM.t+i*ph/4;
+    body+=`<line class="grid-line" x1="${svgM.l}" y1="${y}" x2="${W-svgM.r}" y2="${y}"/>
+      <text class="axis-text" x="${svgM.l-8}" y="${y+4}" text-anchor="end">${fmtAxis(maxL*(1-i/4),false)}</text>
+      <text class="axis-text" x="${W-svgM.r+8}" y="${y+4}" style="fill:${cfg.rate.color}">${Math.round(maxR*(1-i/4))}%</text>`;
+  }
+  labels.forEach((label,i)=>{
+    body+=`<text class="axis-text" x="${(svgM.l+groupW*(i+.5)).toFixed(1)}" y="${H-12}" text-anchor="middle">${sx(label)}</text>`;
+  });
+  labels.forEach((label,i)=>{
+    const fade=opt.partialLast&&i===labels.length-1?' fill-opacity=".55"':'';
+    const cx=svgM.l+groupW*(i+.5);
+    const tv=cfg.totals.data[i]||0, pv=cfg.parts.data[i]||0;
+    body+=`<rect class="bar" x="${(cx-outerW/2).toFixed(1)}" y="${ypL(tv).toFixed(1)}" width="${outerW.toFixed(1)}" height="${Math.max(1,svgM.t+ph-ypL(tv)).toFixed(1)}" rx="3" fill="${cfg.totals.color}"${fade}/>`;
+    body+=`<rect class="bar" x="${(cx-innerW/2).toFixed(1)}" y="${ypL(pv).toFixed(1)}" width="${innerW.toFixed(1)}" height="${Math.max(1,svgM.t+ph-ypL(pv)).toFixed(1)}" rx="3" fill="${cfg.parts.color}"${fade}/>`;
+  });
+  const pts=cfg.rate.data.map((v,i)=>[svgM.l+groupW*(i+.5), ypR(v)]);
+  const pt=p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+  if(opt.partialLast&&pts.length>1){
+    body+=`<path class="series-line" d="${pts.slice(0,-1).map((p,i)=>`${i?'L':'M'}${pt(p)}`).join(' ')}" stroke="${cfg.rate.color}"/>`;
+    body+=`<path class="series-line" d="M${pt(pts.at(-2))} L${pt(pts.at(-1))}" stroke="${cfg.rate.color}" stroke-dasharray="5 4" opacity=".75"/>`;
+  }else{
+    body+=`<path class="series-line" d="${pts.map((p,i)=>`${i?'L':'M'}${pt(p)}`).join(' ')}" stroke="${cfg.rate.color}"/>`;
+  }
+  body+=pts.map((p,i)=>`<circle class="dot-mark" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${cfg.rate.color}"${opt.partialLast&&i===pts.length-1?' opacity=".75"':''}/>`).join('');
+  labels.forEach((label,i)=>{
+    const tip=`<div class="tip-h">${sx(label)}</div>`
+      +`<div class="tip-row"><span><span class="tip-dot" style="background:${cfg.totals.color}"></span>${sx(cfg.totals.label)}</span><b>${(cfg.totals.data[i]||0).toLocaleString()}명</b></div>`
+      +`<div class="tip-row"><span><span class="tip-dot" style="background:${cfg.parts.color}"></span>${sx(cfg.parts.label)}</span><b>${(cfg.parts.data[i]||0).toLocaleString()}명</b></div>`
+      +`<div class="tip-row"><span><span class="tip-dot" style="background:${cfg.rate.color}"></span>${sx(cfg.rate.label)}</span><b>${cfg.rate.data[i]}%</b></div>`;
+    body+=`<rect class="hitcol" x="${(svgM.l+groupW*i).toFixed(1)}" y="${svgM.t}" width="${groupW.toFixed(1)}" height="${ph}" data-tip="${sx(tip)}"/>`;
+  });
   svgMount(id,title,body,W,H);
 }
 
@@ -1388,16 +929,16 @@ function drawStatusLegend(){
 
 function renderCharts(){
   const d=seg[current], ps=splitStatus(d.pubWorlds);
-  lineChart('activeTrend','최근 90일 활성 창작 크리에이터',months,[{label:'활성 창작',data:d.activeTrend,color:C.accent,fill:true}],{unit:'명'});
-  barChart('weeklyNewChart','주간 신규 크리에이터',weeks,[{label:'주간 신규',data:d.weeklyNew,color:C.accent}],{legend:false,unit:'명'});
-  lineChart('mauChart','월간 Studio 활성 사용자',months,[{label:'MAU',data:d.mau,color:C.success,fill:true}],{unit:'명'});
+  lineChart('activeTrend','최근 90일 활성 창작 크리에이터',months,[{label:'활성 창작',data:d.activeTrend,color:C.accent,fill:true}],{unit:'명',partialLast:true});
+  barChart('weeklyNewChart','주간 신규 크리에이터',weeks,[{label:'주간 신규',data:d.weeklyNew,color:C.accent}],{legend:false,unit:'명',partialLast:true});
+  lineChart('mauChart','월간 Studio 활성 사용자',months,[{label:'MAU',data:d.mau,color:C.success,fill:true}],{unit:'명',partialLast:true});
   lineChart('cumChart','누적 크리에이터 단계별 현황',months,[
     {label:'가입',data:d.cumS,color:C.muted},
     {label:'첫 편집',data:d.cumC,color:C.purple},
     {label:'퍼블리시',data:d.cumPub,color:C.success}
-  ],{unit:'명'});
+  ],{unit:'명',partialLast:true});
   donutChart('firstEditMixChart','첫 편집 액션 유형 비중',firstEditNames,d.firstEditMix,[C.accent,C.warn,C.purple,C.success]);
-  barChart('actChart','가입 코호트 활성화율',months,[{label:'활성화율',data:d.actRateByCohort,color:C.warn}],{legend:false,max:100,percent:true});
+  barChart('actChart','가입 코호트 활성화율',months,[{label:'활성화율',data:d.actRateByCohort,color:C.warn}],{legend:false,max:100,percent:true,partialLast:true});
   barChart('countryChart','국가별 활성 창작 크리에이터',country.map(v=>v[0]),[
     {label:'활성 창작',data:country.map(v=>v[1]),colors:[C.accent,C.success,C.warn,C.purple,C.danger,C.muted]}
   ],{legend:false,unit:'명'});
@@ -1405,41 +946,46 @@ function renderCharts(){
     {label:'Published',data:ps.published,color:C.success},
     {label:'Update Required',data:ps.ur,color:C.warn},
     {label:'기타',data:ps.oth,color:C.muted}
-  ],{stacked:true,unit:'개'});
+  ],{stacked:true,unit:'개',partialLast:true});
   donutChart('statusChart','퍼블리시 월드 상태 구성',['Published','Update Required','기타'],d.statusCum,[C.success,C.warn,C.muted]);
   drawStatusLegend();
   barChart('tierChart','퍼블리시 월드 품질 티어 분포',['초기','Tier 3','Tier 2','Tier 1','Tier 0'],[
     {label:'월드 수',data:d.tierDist,colors:[C.muted,C.success,C.purple,C.accent,C.warn]}
   ],{legend:false,unit:'개'});
-  lineChart('ttfpChart','TTFP 중앙값 추이',months,[{label:'중앙값',data:d.ttfpDays,color:C.purple}],{unit:'일'});
+  lineChart('ttfpChart','TTFP 중앙값 추이',months,[{label:'중앙값',data:d.ttfpDays,color:C.purple}],{unit:'일',partialLast:true});
   const nets=d.inflow.map((v,i)=>v-d.outflow[i]);
   barChart('inoutChart','90일 활성 로스터 순증',months,[
     {label:'순증/순감',data:nets,colors:nets.map(v=>v>=0?C.success:C.danger)}
-  ],{legend:false,unit:'명'});
+  ],{legend:false,unit:'명',partialLast:true});
   barChart('continueChart','지속 작업률',pubCohortMonths.map((m,i)=>i===2?`${m}*`:m),[
     {label:'지속 작업률',data:d.continueByCohort,colors:[C.purple,C.purple,C.muted]}
   ],{legend:false,max:100,percent:true});
-  barChart('returnChart','이탈 후 복귀 크리에이터',months,[{label:'복귀',data:d.returnCreators,color:C.accent}],{legend:false,unit:'명'});
-  barChart('paidRetChart','외주 계약자 정착률',months,[{label:'정착률',data:d.paidRetention,color:C.warn}],{legend:false,max:100,percent:true});
+  barChart('returnChart','이탈 후 복귀 크리에이터',months,[{label:'복귀',data:d.returnCreators,color:C.accent}],{legend:false,unit:'명',partialLast:true});
+  barChart('paidRetChart','Partner(외주) 계약자 정착률',months,[{label:'정착률',data:d.paidRetention,color:C.warn}],{legend:false,max:100,percent:true,partialLast:true});
   barChart('sprintChart','스프린트별 신규 크리에이터',sprints,[
     {label:'신규 크리에이터',data:d.sprintNew,colors:sprints.map(s=>sprintEvents[s]?C.success:C.accent)}
   ],{legend:false,unit:'명'});
-  donutChart('segChart','90일 활성 크리에이터 구성',['Organic','Paid','내부'],seg.all.segShare,[C.accent,C.warn,C.purple]);
-  document.getElementById('segLegend').innerHTML=['Organic','Paid','내부'].map((n,i)=>
+  donutChart('segChart','관계(creator_type) 구성',['일반(Independent)','Partner','내부'],seg.all.segShare,[C.accent,C.warn,C.purple]);
+  document.getElementById('segLegend').innerHTML=['일반(Independent)','Partner','내부'].map((n,i)=>
     `<span><span class="dot" style="background:${[C.accent,C.warn,C.purple][i]}"></span>${n} ${seg.all.segShare[i]}명</span>`).join('');
-  barChart('utmChart','Hub 유입 소스별 회원가입',utmNames,[{label:'회원가입',data:d.utmShare,colors:[C.accent,C.danger,C.success,C.purple,C.warn,C.muted]}],{legend:false,unit:'명'});
-  lineChart('coreChart','90일 코어 크리에이터',months,[{label:'코어',data:d.coreTrend,color:C.warn,fill:true}],{unit:'명'});
+  barChart('utmChart','채널별 회원가입',utmNames,[{label:'회원가입',data:d.utmShare,colors:[C.danger,C.accent,C.success,C.purple,'#5b9bff',C.warn,C.muted]}],{legend:false,unit:'명'});
+  lineChart('coreChart','90일 코어 크리에이터',months,[{label:'코어',data:d.coreTrend,color:C.warn,fill:true}],{unit:'명',partialLast:true});
   lineChart('tierLeadChart','품질 티어 월드 추이',months,[
     {label:'Tier3+',data:d.tier3plus,color:C.success},
     {label:'Tier2+',data:d.tier2plus,color:C.purple},
     {label:'Tier1+',data:d.tier1plus,color:C.accent}
-  ],{unit:'개'});
-  lineChart('agentChart','Studio Agent 사용률',months,[{label:'사용률',data:d.agentUseRate,color:C.purple,fill:true}],{max:100,percent:true});
+  ],{unit:'개',partialLast:true});
+  const agentUsers=d.activeTrend.map((v,i)=>Math.round(v*d.agentUseRate[i]/100));
+  comboChart('agentChart','Studio Agent 사용 현황',months,{
+    totals:{label:'90일 활성 창작',data:d.activeTrend,color:'#3d4557'},
+    parts:{label:'Agent 사용',data:agentUsers,color:C.purple},
+    rate:{label:'사용률(%)',data:d.agentUseRate,color:C.success}
+  },{partialLast:true});
   lineChart('discordChart','디스코드 멤버와 참여 크리에이터',months,[
     {label:'디스코드 멤버',data:d.discordMembers,color:C.accent},
     {label:'참여 크리에이터',data:d.communityEngaged,color:C.success,right:true}
-  ],{unit:'명'});
-  barChart('ailabsChart','AI_Labs 누적 결과물',months,[{label:'AI_Labs',data:d.ailabs,color:C.purple}],{legend:false,unit:'건'});
+  ],{unit:'명',partialLast:true});
+  barChart('ailabsChart','AI_Labs 누적 결과물',months,[{label:'AI_Labs',data:d.ailabs,color:C.purple}],{legend:false,unit:'건',partialLast:true});
 }
 
 function makeCharts(){renderCharts()}
@@ -1455,7 +1001,7 @@ addEventListener('resize',()=>{
 }, {passive:true});
 
 
-function renderAll(){ renderScorecard(); renderQ1Kpis(); renderQ2Kpis(); renderQ6Kpis(); renderQ11Kpis(); renderQ12Kpis(); renderQ13KpisAgent(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); }
+function renderAll(){ renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); renderAgentStat(); }
 
 document.getElementById('seg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
