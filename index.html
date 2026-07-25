@@ -381,12 +381,25 @@
     <div class="chartbox sm"><div class="webchart" id="utmChart"></div></div>
   </div>
 
-  <h2 class="q"><span class="qnum">Q12</span>Studio Agent는 실제로 쓰이는가?</h2>
+  <h2 class="q"><span class="qnum">Q12</span>Studio Agent는 실제로 쓰이는가? 문제없이 도는가?</h2>
   <div class="card">
     <h3>Studio Agent 사용 크리에이터 비율 (90일)</h3>
     <p class="cap">AI로 CRUD 1회+ 한 크리에이터 ÷ 최근 90일 활성 창작 크리에이터 · 막대 = 명수(왼쪽 축), 꺾은선 = 사용률 %(오른쪽 축)</p>
     <div id="agentStat"></div>
     <div class="chartbox" style="margin-top:8px"><div class="webchart" id="agentChart"></div></div>
+  </div>
+  <div class="row2" style="margin-top:14px">
+    <div class="card">
+      <h3>Agent 세션 오류율</h3>
+      <p class="cap">실행 오류(런처·도구 실패, 타임아웃)로 끝난 세션 비율 · 막대 = 세션 수, 꺾은선 = 오류율 %</p>
+      <div id="agentErrStat"></div>
+      <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="agentErrChart"></div></div>
+    </div>
+    <div class="card">
+      <h3>Agent 버그 제보 유형 (최근 90일)</h3>
+      <p class="cap">studio-ai 채널 제보 스레드 분류 · 인앱 리포트 제보(로그 export 포함) 기능 출시 후 자동 집계로 전환 예정</p>
+      <div class="chartbox sm"><div class="webchart" id="agentBugChart"></div></div>
+    </div>
   </div>
 
   <h2 class="q"><span class="qnum">Q13</span>커뮤니티(디스코드)는 살아 있는가?</h2>
@@ -655,6 +668,12 @@ function renderAgentStat(){
     `<div class="statline"><span class="bigstat">${rate}<small>%</small></span>
      <span class="statdesc">90일 활성 창작 <b>${d.active90}명</b> 중 <b>${users}명</b>이 Agent 사용</span></div>`;
 }
+function renderAgentErrStat(){
+  const rate=agentErrRate.at(-1), total=agentSessions.at(-1), errs=Math.round(total*rate/100);
+  document.getElementById('agentErrStat').innerHTML =
+    `<div class="statline"><span class="bigstat">${rate}<small>%</small></span>
+     <span class="statdesc">이번 달(진행 중) 세션 <b>${total.toLocaleString()}건</b> 중 <b>${errs}건</b>에서 실행 오류</span></div>`;
+}
 
 function renderDefs(){
   document.getElementById('defs').innerHTML = defs.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
@@ -851,9 +870,9 @@ function barChart(id,title,labels,sets,opt={}){
 function comboChart(id,title,labels,cfg,opt={}){
   const {W,H}=chartDims(id);
   const maxL=niceMax(Math.max(1,...cfg.totals.data));
-  const maxR=100;
-  // 오른쪽 % 축 라벨("100%")이 잘리지 않게 여백을 라벨 폭만큼 확보
-  const mR=Math.max(svgM.r,8+estTextW('100%')+10);
+  const maxR=opt.maxR||niceMax(Math.max(1,...cfg.rate.data));
+  // 오른쪽 % 축 라벨(예: "100%")이 잘리지 않게 여백을 라벨 폭만큼 확보
+  const mR=Math.max(svgM.r,8+estTextW(`${Math.round(maxR)}%`)+10);
   const pw=W-svgM.l-mR, ph=H-svgM.t-svgM.b;
   const ypL=v=>svgM.t+ph-(v/maxL)*ph;
   const ypR=v=>svgM.t+ph-(v/maxR)*ph;
@@ -895,10 +914,11 @@ function comboChart(id,title,labels,cfg,opt={}){
     body+=`<path class="series-line" d="${pts.map((p,i)=>`${i?'L':'M'}${pt(p)}`).join(' ')}" stroke="${cfg.rate.color}"/>`;
   }
   body+=pts.map((p,i)=>`<circle class="dot-mark" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${cfg.rate.color}"${opt.partialLast&&i===pts.length-1?' opacity=".75"':''}/>`).join('');
+  const unit=opt.unit||'명';
   labels.forEach((label,i)=>{
     const tip=`<div class="tip-h">${sx(label)}</div>`
-      +`<div class="tip-row"><span><span class="tip-dot" style="background:${cfg.totals.color}"></span>${sx(cfg.totals.label)}</span><b>${(cfg.totals.data[i]||0).toLocaleString()}명</b></div>`
-      +`<div class="tip-row"><span><span class="tip-dot" style="background:${cfg.parts.color}"></span>${sx(cfg.parts.label)}</span><b>${(cfg.parts.data[i]||0).toLocaleString()}명</b></div>`
+      +`<div class="tip-row"><span><span class="tip-dot" style="background:${cfg.totals.color}"></span>${sx(cfg.totals.label)}</span><b>${(cfg.totals.data[i]||0).toLocaleString()}${unit}</b></div>`
+      +`<div class="tip-row"><span><span class="tip-dot" style="background:${cfg.parts.color}"></span>${sx(cfg.parts.label)}</span><b>${(cfg.parts.data[i]||0).toLocaleString()}${unit}</b></div>`
       +`<div class="tip-row"><span><span class="tip-dot" style="background:${cfg.rate.color}"></span>${sx(cfg.rate.label)}</span><b>${cfg.rate.data[i]}%</b></div>`;
     body+=`<rect class="hitcol" x="${(svgM.l+groupW*i).toFixed(1)}" y="${svgM.t}" width="${groupW.toFixed(1)}" height="${ph}" data-tip="${sx(tip)}"/>`;
   });
@@ -984,7 +1004,14 @@ function renderCharts(){
     totals:{label:'90일 활성 창작',data:d.activeTrend,color:'#3d4557'},
     parts:{label:'Agent 사용',data:agentUsers,color:C.purple},
     rate:{label:'사용률(%)',data:d.agentUseRate,color:C.success}
-  },{partialLast:true});
+  },{partialLast:true,maxR:100});
+  const agentErrs=agentSessions.map((v,i)=>Math.round(v*agentErrRate[i]/100));
+  comboChart('agentErrChart','Agent 세션 오류율',months,{
+    totals:{label:'Agent 세션',data:agentSessions,color:'#3d4557'},
+    parts:{label:'오류 세션',data:agentErrs,color:C.danger},
+    rate:{label:'오류율(%)',data:agentErrRate,color:C.warn}
+  },{partialLast:true,unit:'건'});
+  donutChart('agentBugChart','Agent 버그 제보 유형',agentBugNames,agentBugCounts,[C.danger,C.warn,C.purple,C.accent,C.muted]);
   lineChart('discordChart','디스코드 멤버와 참여 크리에이터',months,[
     {label:'디스코드 멤버',data:d.discordMembers,color:C.accent},
     {label:'참여 크리에이터',data:d.communityEngaged,color:C.success,right:true}
@@ -1005,7 +1032,7 @@ addEventListener('resize',()=>{
 }, {passive:true});
 
 
-function renderAll(){ renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); renderAgentStat(); }
+function renderAll(){ renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); renderAgentStat(); renderAgentErrStat(); }
 
 document.getElementById('seg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;

@@ -94,6 +94,16 @@ const seg = {
 
 const sprintEvents = {"S33":"온보딩 튜토리얼 개편","S36":"디스코드 크리에이터 이벤트","S38":"템플릿 5종 추가 배포"};
 
+/* ===== Agent 안정성 (Q12) — 세그먼트 공통 ===== */
+// 월별 Agent 세션 수와 실행 오류 세션 비율(%)
+const agentSessions = [420,560,700,860,980,1120];
+const agentErrRate = [11.0,9.5,8.2,7.0,6.1,5.4];
+// 최근 90일 버그 제보 유형 — studio-ai 채널 제보 스레드 분류 기준
+// (실행·런처: binary 누락/초기화 실패 · 편집 반영: ApplyJson 상속/CFrame 미이동/커스텀 응답 리셋
+//  응답 잘림·오류: 프롬프트 잘림/Compaction/413 · 지연: HTTP timeout/모델 응답속도)
+const agentBugNames = ["실행·런처 오류","편집 반영 안 됨","응답 잘림·오류","응답 지연·타임아웃","기타"];
+const agentBugCounts = [18,12,9,7,5];
+
 const defs = [
   ["온보딩 퍼널 단계 소스","회원가입 → 스튜디오 로그인 → 에디터 진입 → 첫 편집 → 퍼블리싱 → 지속 작업","회원가입=WEB_ACCOUNT_CREATE (Hub 웹로그 user_id는 studio login 유저의 45% 미포착 — 7/22 분석 결론) · 로그인=studio_login · 에디터 진입=로깅 확인 필요 · 첫 편집=world_modified"],
   ["90일 슬라이딩 활성 창작 크리에이터","오늘 기준 최근 90일 안에 실제로 편집을 한 번이라도 한 순수 크리에이터 수 (매일 갱신)","최근 90일 · studio_log 편집 이벤트(world_modified) 유니크 계정"],
@@ -117,6 +127,8 @@ const defs = [
   ["커뮤니티 참여 크리에이터","30일 내 Discord/포럼 5회+ 활동","Discord/포럼 로그"],
   ["디스코드 멤버 / AI_Labs","서버 멤버 누적 · #AI_Labs 결과물 공유 건수","Discord/포럼"],
   ["Studio Agent 사용률","AI로 CRUD 1회+ 한 크리에이터가 90일 활성 창작 크리에이터 중 몇 명인지","AI CRUD 1회+ 유니크 ÷ 최근 90일 활성 창작 크리에이터"],
+  ["Agent 세션 오류율","Agent 세션 중 실행 오류(런처·초기화 실패, 도구 실행 실패, 타임아웃)로 끝난 세션 비율","세션 로그 오류 이벤트 ÷ 전체 Agent 세션 · 월별"],
+  ["Agent 버그 제보","크리에이터·내부에서 제보된 Agent 버그 건수와 유형 분포","현재 studio-ai 채널 스레드 수동 분류 → 인앱 리포트 제보(로그 export 포함) 기능 출시 후 자동 집계 전환"],
   ["채널별 회원가입","유입 채널(acquisition_channel) 기준 회원가입 분포","PAGE_LOCATION utm_source + referrer"],
   ["인/아웃 순증","90일 활성 로스터 진입−이탈","월 스냅샷"],
   ["이탈 후 복귀","마지막 스튜디오 로그인 30일+ 후 재로그인","studio_login LAG"],
