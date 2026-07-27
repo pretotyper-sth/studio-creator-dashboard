@@ -312,7 +312,7 @@
       <h3>퍼블리시 월드 품질 티어 분포 (누적)</h3>
       <p class="cap">숫자가 낮을수록 상위 품질 (Tier0 최상)<br/>Tier3: 방문 700+·D1 12%+·4분+ · Tier2: 2,000+·15%+·6분+ · Tier1: 5,000+·20%+·8분+ · Tier0: 10,000+·24%+·10분+</p>
       <div class="chartbox sm"><div class="webchart" id="tierChart"></div></div>
-      <div class="note">왼쪽(낮음) → 오른쪽(높음). 기준 미달 → Tier 3 → 2 → 1 → 0<br/>기준 미달 = Tier3 문턱을 넘지 못한 월드. 퍼블리시 시점과 무관하게 현재 성과 기준</div>
+      <div class="note"><b>관측 대기</b>(퍼블리시 30일 미만)는 아직 판단할 데이터가 없는 구간으로 품질 축 밖에 있습니다. 품질 순서는 그 다음부터 — 기준 미달 → Tier 3 → 2 → 1 → 0<br/><b>기준 미달</b> = 30일이 지났는데도 Tier3 문턱을 넘지 못한 월드. 신규 여부와 무관한 성과 기준<br/>관측 대기와 기준 미달의 비율 변화를 같이 보면, 퍼블리시가 활발한 것과 품질이 안 나오는 것을 구분할 수 있습니다</div>
     </div>
     <div class="card">
       <h3>TTFP 중앙값 추이 (가입 → 첫 퍼블리시)</h3>
@@ -1067,8 +1067,8 @@ function renderCharts(){
   ],{stacked:true,unit:'개',partialLast:true});
   donutChart('statusChart','퍼블리시 월드 상태 구성',['Published','Update Required','기타'],d.statusCum,[C.success,C.warn,C.muted]);
   drawStatusLegend();
-  barChart('tierChart','퍼블리시 월드 품질 티어 분포',['기준 미달','Tier 3','Tier 2','Tier 1','Tier 0'],[
-    {label:'월드 수',data:d.tierDist,colors:[C.muted,C.success,C.purple,C.accent,C.warn]}
+  barChart('tierChart','퍼블리시 월드 품질 티어 분포',['관측 대기','기준 미달','Tier 3','Tier 2','Tier 1','Tier 0'],[
+    {label:'월드 수',data:d.tierDist,colors:['#3d4557',C.muted,C.success,C.purple,C.accent,C.warn]}
   ],{legend:false,unit:'개'});
   lineChart('ttfpChart','TTFP 중앙값 추이',M,[{label:'중앙값',data:mc(d.ttfpDays),color:C.purple}],{unit:'일',partialLast:true});
   const nets=mc(d.inflow.map((v,i)=>v-d.outflow[i]));
