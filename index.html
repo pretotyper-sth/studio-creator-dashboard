@@ -6,7 +6,7 @@
 <title>Studio Creator Dashboard (Prototype)</title>
 <style>
   :root{
-    --bg:#0f1115; --panel:#171a21; --panel2:#1c2029; --border:#262b36;
+    --bg:#0c0e12; --panel:#171a21; --panel2:#1e232d; --border:#333b4a;
     --text:#e6e8ec; --muted:#9aa4b2; --muted2:#6b7482;
     --accent:#4c8dff; --success:#35c28a; --warn:#e0b341; --danger:#e05a5a; --purple:#a06bff;
     --grid:#222834;
@@ -19,8 +19,9 @@
   .sub{color:var(--muted);font-size:13px}
   .badge{display:inline-block;font-size:11px;font-weight:600;color:#111;background:var(--warn);border-radius:4px;padding:2px 7px;margin-left:8px;vertical-align:middle}
   .meta{color:var(--muted2);font-size:12px;text-align:right}
-  .filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0 22px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px}
-  .filters .lbl{color:var(--muted);font-size:12px;margin-right:2px}
+  .filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0 0;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px}
+  .filters .lbl{color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase;margin:0 2px 0 8px}
+  .filters .lbl:first-child{margin-left:0}
   .seg{display:inline-flex;gap:3px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:3px;align-self:flex-start;width:fit-content;flex:0 0 auto;margin-bottom:10px}
   .seg button{background:transparent;border:0;color:var(--muted);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap;line-height:1.2}
   .seg button.on{background:var(--accent);color:#fff;font-weight:600}
@@ -32,7 +33,7 @@
   .grid{display:grid;gap:14px}
   .kpis{grid-template-columns:repeat(4,1fr)}
   @media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 16px 14px;display:flex;flex-direction:column}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 16px 14px;display:flex;flex-direction:column;box-shadow:0 2px 10px rgba(0,0,0,.35)}
   .kpi .klabel{color:var(--muted);font-size:12px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
   .kpi .kval{font-size:28px;font-weight:700;letter-spacing:-.01em}
   .kpi .kunit{font-size:14px;color:var(--muted);font-weight:500;margin-left:3px}
@@ -166,6 +167,14 @@
   .mini-kpi .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
   .mini-kpi .s{font-size:11px;color:var(--muted2);margin-top:4px}
   .src{display:inline-block;font-size:10px;color:var(--muted2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
+  /* 목적별 탭 */
+  .tabs{display:flex;gap:2px;flex-wrap:wrap;margin:16px 0 4px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:50;padding-top:10px}
+  .tabs button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:8px 14px 10px;cursor:pointer;font-size:13.5px;font-weight:600;white-space:nowrap}
+  .tabs button:hover{color:var(--text)}
+  .tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
+  .filter-sel{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 30px 7px 10px;font-size:13px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239aa4b2' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+  /* 탭 숨김 — .row2의 display:grid !important 보다 뒤에 선언해 인라인보다 확실히 이기게 함 */
+  .tab-hidden{display:none !important}
 </style>
 </head>
 <body>
@@ -174,26 +183,39 @@
   <header class="top">
     <div>
       <h1>Studio 크리에이터 대시보드 <span class="badge">가상 데이터</span></h1>
-      <div class="sub">언제든 들어와서 현재 상태를 보는 스튜디오 상시 대시보드</div>
     </div>
     <div class="meta"><span id="metaDate"></span></div>
   </header>
 
+  <!-- Superset 네이티브 필터 바 대응 — "라벨 + 컨트롤" 쌍이 한 줄, 모든 탭 공통 적용 -->
   <div class="filters">
+    <span class="lbl">기간</span>
+    <select id="periodSel" class="filter-sel">
+      <option value="6" selected>최근 6개월</option>
+      <option value="3">최근 3개월</option>
+    </select>
     <span class="lbl">크리에이터 관계</span>
-    <div class="seg" id="seg">
-      <button data-seg="all" class="on">전체</button>
-      <button data-seg="organic">일반</button>
-      <button data-seg="paid">Partner</button>
-      <button data-seg="internal">내부</button>
-    </div>
-    <span class="pill">기간: 최근 6개월</span>
-    <span class="pill">스프린트: 3주 단위 (S30~S38)</span>
+    <select id="segSel" class="filter-sel">
+      <option value="all">전체</option>
+      <option value="organic">일반</option>
+      <option value="paid">Partner</option>
+      <option value="internal">내부</option>
+    </select>
   </div>
 
-  <div class="note" style="margin:-4px 0 22px">집계 기간 표기 규칙 — <b>90일</b>=오늘 기준 최근 90일 슬라이딩 · <b>누적</b>=서비스 시작~현재 · <b>코호트</b>=해당 월에 가입/퍼블리시한 집단 · <b>최근 월</b>=이번 달(부분 포함)</div>
+  <!-- Superset Tabs 컴포넌트 대응 — 필터 바 바로 아래, 한 번에 한 탭만 표시 -->
+  <div class="tabs" id="tabs">
+    <button data-tab="overview" class="on">요약</button>
+    <button data-tab="acq">유입·온보딩</button>
+    <button data-tab="size">활동 규모</button>
+    <button data-tab="ret">리텐션·이탈</button>
+    <button data-tab="output">퍼블리시·품질</button>
+    <button data-tab="agent">Agent</button>
+    <button data-tab="community">커뮤니티</button>
+    <button data-tab="defs">지표 정의</button>
+  </div>
 
-  <h2 class="q"><span class="qnum">Q0</span>핵심 KPI 요약</h2>
+  <h2 class="q"><span class="qnum">Q0</span>핵심 KPI는 지금 어떤 상태인가?</h2>
   <div class="score" id="scorecard"></div>
 
   <h2 class="q"><span class="qnum">Q1</span>현재 활성 창작 크리에이터는 몇 명인가?</h2>
@@ -339,7 +361,7 @@
     </div>
     <div class="card">
       <h3>Partner(외주) 계약자 정착률</h3>
-      <p class="cap">계약 완료일로부터 30일 내 5시간+ 재활동 · 단기 핵심 보조지표</p>
+      <p class="cap">계약 완료 후 30일 내 5시간+ <b>자발 재활동</b> · 후속 계약이 잡힌 기간은 제외 — 계약과 무관하게 플랫폼에 남는지를 봄</p>
       <div id="paidRetStat"></div>
       <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="paidRetChart"></div></div>
     </div>
@@ -367,8 +389,15 @@
     </div>
   </div>
 
+  <h2 class="q"><span class="qnum">Q15</span>만든 월드는 실제로 소비되고 있는가?</h2>
+  <div class="card">
+    <h3>퍼블리시 월드 월간 방문</h3>
+    <p class="cap">Live 상태 월드에 유저가 입장한 세션 수(월간 합계) · 같은 유저가 다시 들어와도 각각 집계 · 클라이언트 방문 로그 기준</p>
+    <div id="visitStat"></div>
+    <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="visitChart"></div></div>
+  </div>
+
   <h2 class="q"><span class="qnum">Q11</span>크리에이터 유입은 어떻게 구성되는가? (관계 축 × 채널 축)</h2>
-  <div class="note" style="margin:-4px 0 12px">두 축은 서로 독립입니다 — <b>관계(creator_type)</b>: Partner(외주·파트너십 계약) / 내부(사내) / 일반(Independent) · <b>채널(acquisition_channel)</b>: Paid(광고) / Discord / YouTube 등 어떤 경로로 들어왔는가 · <b>Partner(계약 관계) ≠ Paid(광고 유입)</b></div>
   <div class="card">
     <h3>관계(creator_type) 구성 — 90일 활성 크리에이터</h3>
     <p class="cap">Partner=파트너십 시트 화이트리스트 · 내부=사내 IP 대역 · 나머지=일반(Independent)</p>
@@ -402,6 +431,20 @@
     </div>
   </div>
 
+  <h2 class="q"><span class="qnum">Q16</span>Agent를 쓰면 더 빨리 만들고, 만든 월드도 더 잘 되는가?</h2>
+  <div class="row2">
+    <div class="card">
+      <h3>크리에이터 비교 — 더 빨리, 더 꾸준히 만드는가</h3>
+      <p class="cap">최근 90일 활성 창작 크리에이터를 <b>Agent 사용(AI CRUD 1회+) / 미사용</b> 두 그룹으로 나눠 같은 기간 비교 · 상관관계 참고용(Agent 덕분이라고 단정할 수는 없음)</p>
+      <div id="agentCompare"></div>
+    </div>
+    <div class="card">
+      <h3>월드 비교 — 품질과 실제 소비도 나은가</h3>
+      <p class="cap">Live 퍼블리시 월드를 <b>제작 중 Agent 사용(AI CRUD 1회+) / 미사용</b>으로 나눠 비교 · 상관관계 참고용</p>
+      <div id="agentWorldCompare"></div>
+    </div>
+  </div>
+
   <h2 class="q"><span class="qnum">Q13</span>커뮤니티(디스코드)는 살아 있는가?</h2>
   <div class="row2">
     <div class="card">
@@ -416,13 +459,9 @@
     </div>
   </div>
 
-  <h2 class="section">지표 정의</h2>
-  <div class="card">
-    <table class="defs">
-      <thead><tr><th>지표</th><th>쉽게 말하면</th><th>계산 / 소스</th></tr></thead>
-      <tbody id="defs"></tbody>
-    </table>
-  </div>
+  <h2 class="q"><span class="qnum">Q14</span>각 지표는 정확히 무엇을 의미하는가?</h2>
+  <div class="note" style="margin:0 0 12px">집계 기간 표기 규칙 — <b>90일</b>=오늘 기준 최근 90일 슬라이딩 · <b>누적</b>=서비스 시작~현재 · <b>코호트</b>=해당 월에 가입/퍼블리시한 집단 · <b>최근 월</b>=이번 달(부분 포함)</div>
+  <div id="defsWrap"></div>
 
   <footer>
     현재 수치는 <b>가상 데이터</b>입니다. 실제 데이터 연결 시 동일한 구조로 실측값이 표시됩니다.
@@ -491,7 +530,7 @@ function renderContinueStat(){
   const d=seg[current], latest=d.continueByCohort[1]; // 5월(30일 완료된 최근 코호트)
   document.getElementById('continueStat').innerHTML =
     `<div class="statline"><span class="bigstat">${latest}<small>%</small></span>
-     <span class="statdesc"><b>5월 코호트</b>(30일 완료) · 퍼블리시 후 30일 내 재출시·업데이트</span></div>`;
+     <span class="statdesc"><b>${pubCohortMonths[1]}에 퍼블리시한 크리에이터</b> 중 30일 내 재출시·업데이트한 비율 · ${pubCohortMonths[2]} 그룹은 아직 30일이 안 지나 측정 중</span></div>`;
 }
 function renderReturnStat(){
   const d=seg[current], tot=d.returnCreators.reduce((a,b)=>a+b,0);
@@ -636,6 +675,7 @@ function renderScorecard(){
     kpiCard('90일 활성 창작', d.active90, '명', '최근 90일 슬라이딩') +
     kpiCard('편집 전환율', d.editConv, '%', '스튜디오 활성 대비 편집') +
     kpiCard('퍼블리시 전환(90일)', d.pubConv90, '%', `퍼블리시 ${d.pubCreators90} / 활성 ${d.active90}`) +
+    kpiCard('지속 작업률', d.continueByCohort[1], '%', `퍼블리시 후 30일 내 재출시·업데이트<br/>30일이 다 지난 최근 그룹(${pubCohortMonths[1]} 퍼블리시) 기준`) +
     kpiCard('MAU (Studio)', d.mau.at(-1), '명', '월간 Studio 활성') +
     kpiCard('Tier3+ 월드', t3, '개', '신규 방문 700+ · D1 12%+ · 체류 4분+<br/>충족 월드 누적 (숫자 낮을수록 상위)') +
     kpiCard('Tier2+ 월드', t2, '개', '신규 방문 2,000+ · D1 15%+ · 체류 6분+<br/>충족 월드 누적') +
@@ -660,13 +700,43 @@ function renderPaidRetStat(){
   const show = current==='organic' || current==='internal' ? '—' : latest;
   document.getElementById('paidRetStat').innerHTML =
     `<div class="statline"><span class="bigstat">${show}${show==='—'?'': '<small>%</small>'}</span>
-     <span class="statdesc">계약 완료 후 30일 내 5시간+ 재활동 · Partner 세그먼트 기준</span></div>`;
+     <span class="statdesc">계약 없는 상태에서 30일 내 5시간+ 자발 재활동 · 후속 계약자는 집계 제외</span></div>`;
 }
 function renderAgentStat(){
   const d=seg[current], rate=d.agentUseRate.at(-1), users=Math.round(d.active90*rate/100);
   document.getElementById('agentStat').innerHTML =
     `<div class="statline"><span class="bigstat">${rate}<small>%</small></span>
      <span class="statdesc">90일 활성 창작 <b>${d.active90}명</b> 중 <b>${users}명</b>이 Agent 사용</span></div>`;
+}
+function renderVisitStat(){
+  const d=seg[current], cur=d.worldVisits.at(-1), prevFull=d.worldVisits.at(-2);
+  document.getElementById('visitStat').innerHTML =
+    `<div class="statline"><span class="bigstat">${cur.toLocaleString()}<small>건</small></span>
+     <span class="statdesc">이번 달(진행 중) 방문 세션 · 지난달 전체는 <b>${prevFull.toLocaleString()}건</b></span></div>`;
+}
+function cmpRow(name,calc,a,b,unit,lowerBetter){
+  const good=lowerBetter? a<b : a>b;
+  const diff=Math.round((lowerBetter? b-a : a-b)*10)/10;
+  return `<tr><td>${name}<div class="note" style="margin:2px 0 0">${calc}</div></td>
+    <td class="num"><b>${a.toLocaleString()}${unit}</b></td><td class="num">${b.toLocaleString()}${unit}</td>
+    <td class="num" style="color:${good?'var(--success)':'var(--danger)'}">${lowerBetter?`-${diff}${unit} 빠름`:`+${diff.toLocaleString()}${unit === '%' ? '%p' : unit} 높음`}</td></tr>`;
+}
+function cmpTable(headA,rows){
+  return `<table class="defs"><thead><tr><th>지표</th><th class="num">${headA}</th><th class="num">미사용</th><th class="num">차이</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function renderAgentCompare(){
+  const v=seg[current].agentVs;
+  document.getElementById('agentCompare').innerHTML = cmpTable('Agent 사용',[
+    cmpRow('첫 퍼블리시까지 걸린 시간 (TTFP 중앙값)','가입일 → 첫 퍼블리시까지 일수의 중앙값',v.ttfp[0],v.ttfp[1],'일',true),
+    cmpRow('퍼블리시 전환율','90일 내 퍼블리시한 크리에이터 ÷ 그룹 전체',v.pubConv[0],v.pubConv[1],'%',false),
+    cmpRow('지속 작업률','퍼블리시 후 30일 내 재출시·업데이트한 비율',v.cont[0],v.cont[1],'%',false)
+  ]);
+  const w=seg[current].agentWorldVs;
+  document.getElementById('agentWorldCompare').innerHTML = cmpTable('Agent 제작',[
+    cmpRow('Tier3+ 도달률','Tier3 기준(방문 700+·D1 12%+·체류 4분+) 달성 월드 ÷ 그룹 전체 월드',w.tier3Rate[0],w.tier3Rate[1],'%',false),
+    cmpRow('월드당 월간 방문 (중앙값)','월드 1개가 한 달에 받는 방문 세션의 중앙값',w.visitsMed[0],w.visitsMed[1],'건',false),
+    cmpRow('D1 재방문율','첫 방문 유저 중 다음 날 다시 온 비율 · 그룹 평균',w.d1[0],w.d1[1],'%',false)
+  ]);
 }
 function renderAgentErrStat(){
   const rate=agentErrRate.at(-1), total=agentSessions.at(-1), errs=Math.round(total*rate/100);
@@ -676,7 +746,15 @@ function renderAgentErrStat(){
 }
 
 function renderDefs(){
-  document.getElementById('defs').innerHTML = defs.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+  const groups=[['acq','유입·온보딩'],['size','활동 규모'],['ret','리텐션·이탈'],['output','퍼블리시·품질'],['agent','Agent'],['community','커뮤니티']];
+  document.getElementById('defsWrap').innerHTML = groups.map(([k,name])=>{
+    const rows=defs.filter(r=>r[3]===k);
+    if(!rows.length) return '';
+    return `<div class="card"><h3>${name}</h3><table class="defs">
+      <thead><tr><th>지표</th><th>쉽게 말하면</th><th>계산 / 소스</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody>
+    </table></div>`;
+  }).join('');
 }
 function renderSprintAnno(){
   document.getElementById('sprintAnno').innerHTML =
@@ -951,41 +1029,43 @@ function drawStatusLegend(){
   if(el) el.innerHTML=names.map((n,i)=>`<span><span class="dot" style="background:${cols[i]}"></span>${n} ${d.statusCum[i]}</span>`).join('');
 }
 
+let periodN=6; // 상단 "기간" 필터 — 월 단위 차트에서 최근 N개월만 표시
 function renderCharts(){
   const d=seg[current], ps=splitStatus(d.pubWorlds);
-  lineChart('activeTrend','최근 90일 활성 창작 크리에이터',months,[{label:'활성 창작',data:d.activeTrend,color:C.accent,fill:true}],{unit:'명',partialLast:true});
+  const mc=a=>a.slice(-periodN), M=mc(months);
+  lineChart('activeTrend','최근 90일 활성 창작 크리에이터',M,[{label:'활성 창작',data:mc(d.activeTrend),color:C.accent,fill:true}],{unit:'명',partialLast:true});
   barChart('weeklyNewChart','주간 신규 크리에이터',weeks,[{label:'주간 신규',data:d.weeklyNew,color:C.accent}],{legend:false,unit:'명',partialLast:true});
-  lineChart('mauChart','월간 Studio 활성 사용자',months,[{label:'MAU',data:d.mau,color:C.success,fill:true}],{unit:'명',partialLast:true});
-  lineChart('cumChart','누적 크리에이터 단계별 현황',months,[
-    {label:'가입',data:d.cumS,color:C.muted},
-    {label:'첫 편집',data:d.cumC,color:C.purple},
-    {label:'퍼블리시',data:d.cumPub,color:C.success}
+  lineChart('mauChart','월간 Studio 활성 사용자',M,[{label:'MAU',data:mc(d.mau),color:C.success,fill:true}],{unit:'명',partialLast:true});
+  lineChart('cumChart','누적 크리에이터 단계별 현황',M,[
+    {label:'가입',data:mc(d.cumS),color:C.muted},
+    {label:'첫 편집',data:mc(d.cumC),color:C.purple},
+    {label:'퍼블리시',data:mc(d.cumPub),color:C.success}
   ],{unit:'명',partialLast:true});
   donutChart('firstEditMixChart','첫 편집 액션 유형 비중',firstEditNames,d.firstEditMix,[C.accent,C.warn,C.purple,C.success]);
-  barChart('actChart','가입 코호트 활성화율',months,[{label:'활성화율',data:d.actRateByCohort,color:C.warn}],{legend:false,max:100,percent:true,partialLast:true});
+  barChart('actChart','가입 코호트 활성화율',M,[{label:'활성화율',data:mc(d.actRateByCohort),color:C.warn}],{legend:false,max:100,percent:true,partialLast:true});
   barChart('countryChart','국가별 활성 창작 크리에이터',country.map(v=>v[0]),[
     {label:'활성 창작',data:country.map(v=>v[1]),colors:[C.accent,C.success,C.warn,C.purple,C.danger,C.muted]}
   ],{legend:false,unit:'명'});
-  barChart('pubChart','월별 신규 퍼블리시 월드',months,[
-    {label:'Published',data:ps.published,color:C.success},
-    {label:'Update Required',data:ps.ur,color:C.warn},
-    {label:'기타',data:ps.oth,color:C.muted}
+  barChart('pubChart','월별 신규 퍼블리시 월드',M,[
+    {label:'Published',data:mc(ps.published),color:C.success},
+    {label:'Update Required',data:mc(ps.ur),color:C.warn},
+    {label:'기타',data:mc(ps.oth),color:C.muted}
   ],{stacked:true,unit:'개',partialLast:true});
   donutChart('statusChart','퍼블리시 월드 상태 구성',['Published','Update Required','기타'],d.statusCum,[C.success,C.warn,C.muted]);
   drawStatusLegend();
   barChart('tierChart','퍼블리시 월드 품질 티어 분포',['초기','Tier 3','Tier 2','Tier 1','Tier 0'],[
     {label:'월드 수',data:d.tierDist,colors:[C.muted,C.success,C.purple,C.accent,C.warn]}
   ],{legend:false,unit:'개'});
-  lineChart('ttfpChart','TTFP 중앙값 추이',months,[{label:'중앙값',data:d.ttfpDays,color:C.purple}],{unit:'일',partialLast:true});
-  const nets=d.inflow.map((v,i)=>v-d.outflow[i]);
-  barChart('inoutChart','90일 활성 로스터 순증',months,[
+  lineChart('ttfpChart','TTFP 중앙값 추이',M,[{label:'중앙값',data:mc(d.ttfpDays),color:C.purple}],{unit:'일',partialLast:true});
+  const nets=mc(d.inflow.map((v,i)=>v-d.outflow[i]));
+  barChart('inoutChart','90일 활성 로스터 순증',M,[
     {label:'순증/순감',data:nets,colors:nets.map(v=>v>=0?C.success:C.danger)}
   ],{legend:false,unit:'명',partialLast:true});
   barChart('continueChart','지속 작업률',pubCohortMonths.map((m,i)=>i===2?`${m}*`:m),[
     {label:'지속 작업률',data:d.continueByCohort,colors:[C.purple,C.purple,C.muted]}
   ],{legend:false,max:100,percent:true});
-  barChart('returnChart','이탈 후 복귀 크리에이터',months,[{label:'복귀',data:d.returnCreators,color:C.accent}],{legend:false,unit:'명',partialLast:true});
-  barChart('paidRetChart','Partner(외주) 계약자 정착률',months,[{label:'정착률',data:d.paidRetention,color:C.warn}],{legend:false,max:100,percent:true,partialLast:true});
+  barChart('returnChart','이탈 후 복귀 크리에이터',M,[{label:'복귀',data:mc(d.returnCreators),color:C.accent}],{legend:false,unit:'명',partialLast:true});
+  barChart('paidRetChart','Partner(외주) 계약자 정착률',M,[{label:'정착률',data:mc(d.paidRetention),color:C.warn}],{legend:false,max:100,percent:true,partialLast:true});
   barChart('sprintChart','스프린트별 신규 크리에이터',sprints,[
     {label:'신규 크리에이터',data:d.sprintNew,colors:sprints.map(s=>sprintEvents[s]?C.success:C.accent)}
   ],{legend:false,unit:'명'});
@@ -993,30 +1073,31 @@ function renderCharts(){
   document.getElementById('segLegend').innerHTML=['일반(Independent)','Partner','내부'].map((n,i)=>
     `<span><span class="dot" style="background:${[C.accent,C.warn,C.purple][i]}"></span>${n} ${seg.all.segShare[i]}명</span>`).join('');
   barChart('utmChart','채널별 회원가입',utmNames,[{label:'회원가입',data:d.utmShare,colors:[C.danger,C.accent,C.success,C.purple,'#5b9bff',C.warn,C.muted]}],{legend:false,unit:'명'});
-  lineChart('coreChart','90일 코어 크리에이터',months,[{label:'코어',data:d.coreTrend,color:C.warn,fill:true}],{unit:'명',partialLast:true});
-  lineChart('tierLeadChart','품질 티어 월드 추이',months,[
-    {label:'Tier3+',data:d.tier3plus,color:C.success},
-    {label:'Tier2+',data:d.tier2plus,color:C.purple},
-    {label:'Tier1+',data:d.tier1plus,color:C.accent}
+  lineChart('coreChart','90일 코어 크리에이터',M,[{label:'코어',data:mc(d.coreTrend),color:C.warn,fill:true}],{unit:'명',partialLast:true});
+  lineChart('tierLeadChart','품질 티어 월드 추이',M,[
+    {label:'Tier3+',data:mc(d.tier3plus),color:C.success},
+    {label:'Tier2+',data:mc(d.tier2plus),color:C.purple},
+    {label:'Tier1+',data:mc(d.tier1plus),color:C.accent}
   ],{unit:'개',partialLast:true});
   const agentUsers=d.activeTrend.map((v,i)=>Math.round(v*d.agentUseRate[i]/100));
-  comboChart('agentChart','Studio Agent 사용 현황',months,{
-    totals:{label:'90일 활성 창작',data:d.activeTrend,color:'#3d4557'},
-    parts:{label:'Agent 사용',data:agentUsers,color:C.purple},
-    rate:{label:'사용률(%)',data:d.agentUseRate,color:C.success}
+  comboChart('agentChart','Studio Agent 사용 현황',M,{
+    totals:{label:'90일 활성 창작',data:mc(d.activeTrend),color:'#3d4557'},
+    parts:{label:'Agent 사용',data:mc(agentUsers),color:C.purple},
+    rate:{label:'사용률(%)',data:mc(d.agentUseRate),color:C.success}
   },{partialLast:true,maxR:100});
   const agentErrs=agentSessions.map((v,i)=>Math.round(v*agentErrRate[i]/100));
-  comboChart('agentErrChart','Agent 세션 오류율',months,{
-    totals:{label:'Agent 세션',data:agentSessions,color:'#3d4557'},
-    parts:{label:'오류 세션',data:agentErrs,color:C.danger},
-    rate:{label:'오류율(%)',data:agentErrRate,color:C.warn}
+  comboChart('agentErrChart','Agent 세션 오류율',M,{
+    totals:{label:'Agent 세션',data:mc(agentSessions),color:'#3d4557'},
+    parts:{label:'오류 세션',data:mc(agentErrs),color:C.danger},
+    rate:{label:'오류율(%)',data:mc(agentErrRate),color:C.warn}
   },{partialLast:true,unit:'건'});
   donutChart('agentBugChart','Agent 버그 제보 유형',agentBugNames,agentBugCounts,[C.danger,C.warn,C.purple,C.accent,C.muted]);
-  lineChart('discordChart','디스코드 멤버와 참여 크리에이터',months,[
-    {label:'디스코드 멤버',data:d.discordMembers,color:C.accent},
-    {label:'참여 크리에이터',data:d.communityEngaged,color:C.success,right:true}
+  lineChart('discordChart','디스코드 멤버와 참여 크리에이터',M,[
+    {label:'디스코드 멤버',data:mc(d.discordMembers),color:C.accent},
+    {label:'참여 크리에이터',data:mc(d.communityEngaged),color:C.success,right:true}
   ],{unit:'명',partialLast:true});
-  barChart('ailabsChart','AI_Labs 누적 결과물',months,[{label:'AI_Labs',data:d.ailabs,color:C.purple}],{legend:false,unit:'건',partialLast:true});
+  barChart('ailabsChart','AI_Labs 누적 결과물',M,[{label:'AI_Labs',data:mc(d.ailabs),color:C.purple}],{legend:false,unit:'건',partialLast:true});
+  barChart('visitChart','퍼블리시 월드 월간 방문',M,[{label:'방문 세션',data:mc(d.worldVisits),color:C.success}],{legend:false,unit:'건',partialLast:true});
 }
 
 function makeCharts(){renderCharts()}
@@ -1032,13 +1113,15 @@ addEventListener('resize',()=>{
 }, {passive:true});
 
 
-function renderAll(){ renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); renderAgentStat(); renderAgentErrStat(); }
+function renderAll(){ renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); renderAgentStat(); renderAgentErrStat(); renderVisitStat(); renderAgentCompare(); }
 
-document.getElementById('seg').addEventListener('click',e=>{
-  const b=e.target.closest('button'); if(!b) return;
-  current=b.dataset.seg;
-  [...document.querySelectorAll('#seg button')].forEach(x=>x.classList.toggle('on',x===b));
+document.getElementById('segSel').addEventListener('change',e=>{
+  current=e.target.value;
   renderAll(); updateCharts();
+});
+document.getElementById('periodSel').addEventListener('change',e=>{
+  periodN=+e.target.value;
+  updateCharts();
 });
 document.getElementById('retTog').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
@@ -1055,6 +1138,46 @@ document.getElementById('funnelTog').addEventListener('click',e=>{
 
 renderDefs(); renderSprintAnno(); renderAll();
 try{ makeCharts(); }catch(err){ console.error('chart load failed',err); }
+
+/* ===== 목적별 탭 (Superset Tabs 대응: 한 번에 한 탭만) =====
+   h2와 다음 h2 전까지의 형제 요소를 같은 탭으로 묶음 */
+const tabOfQ={0:'overview',1:'size',2:'size',3:'acq',4:'size',5:'size',6:'output',7:'ret',8:'ret',9:'acq',10:'output',11:'acq',12:'agent',13:'community',14:'defs',15:'output',16:'agent'};
+(function initTabs(){
+  document.querySelectorAll('h2.q').forEach(h=>{
+    const n=parseInt(h.querySelector('.qnum').textContent.replace('Q',''),10);
+    if(Number.isNaN(n)) return;
+    const tab=tabOfQ[n];
+    let el=h;
+    while(el){
+      el.dataset.tab=tab;
+      el=el.nextElementSibling;
+      if(!el||el.matches('h2.q, footer')) break;
+    }
+  });
+  // 탭 안에서 질문 번호를 Q1부터 다시 매김 (전역 번호의 빈 구간 제거)
+  const qCount={};
+  document.querySelectorAll('h2.q').forEach(h=>{
+    const t=h.dataset.tab; if(!t) return;
+    qCount[t]=(qCount[t]||0)+1;
+    h.querySelector('.qnum').textContent='Q'+qCount[t];
+  });
+  const bar=document.getElementById('tabs');
+  function apply(t){
+    document.querySelectorAll('[data-tab]').forEach(el=>{
+      if(el.closest('#tabs')) return;
+      el.classList.toggle('tab-hidden',el.dataset.tab!==t);
+    });
+    [...bar.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+    try{renderCharts();}catch(e){} // 숨김 상태에서 그려진 차트 크기 보정
+  }
+  bar.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    apply(b.dataset.tab);
+    history.replaceState(null,'','#'+b.dataset.tab);
+  });
+  const init=location.hash.slice(1);
+  apply(bar.querySelector(`button[data-tab="${CSS.escape(init)}"]`)?init:'overview');
+})();
 </script>
 </body>
 </html>
