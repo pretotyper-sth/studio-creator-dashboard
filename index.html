@@ -391,10 +391,23 @@
 
   <h2 class="q"><span class="qnum">Q15</span>만든 월드는 실제로 소비되고 있는가?</h2>
   <div class="card">
-    <h3>퍼블리시 월드 월간 방문</h3>
-    <p class="cap">Live 상태 월드에 유저가 입장한 세션 수(월간 합계) · 같은 유저가 다시 들어와도 각각 집계 · 클라이언트 방문 로그 기준</p>
+    <h3>소비되는 월드 비율</h3>
+    <p class="cap">월간 방문을 1건이라도 받은 Live 월드 비율 · 막대 = Live 월드 수와 그중 방문받은 월드, 꺾은선 = 비율<br/><b>이 블록만 실측값</b> (2026-02 ~ 07-26, fct_world_analytics) · 월드↔크리에이터 관계 매핑이 없어 세그먼트 분해 미지원이라 상단 필터와 무관하게 전체 기준</p>
     <div id="visitStat"></div>
-    <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="visitChart"></div></div>
+    <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="visitCovChart"></div></div>
+    <div class="note">분모는 생성된 Live 월드 전체로, 노출 설정이 Private·Pause여서 앱에 보이지 않는 월드도 포함됨. Public만으로 좁히면 비율은 이보다 높아짐</div>
+  </div>
+  <div class="row2" style="margin-top:14px">
+    <div class="card">
+      <h3>월드당 월간 방문 중앙값</h3>
+      <p class="cap">방문을 받은 월드만 대상 · 중앙값이라 히트작에 흔들리지 않음. 전형적인 월드가 받는 방문량</p>
+      <div class="chartbox sm"><div class="webchart" id="visitMedChart"></div></div>
+    </div>
+    <div class="card">
+      <h3>상위 10% 월드의 방문 점유율</h3>
+      <p class="cap">방문받은 월드 중 상위 10%가 전체 방문에서 차지하는 비중 · 높을수록 소수 히트작 의존</p>
+      <div class="chartbox sm"><div class="webchart" id="visitConcChart"></div></div>
+    </div>
   </div>
 
   <h2 class="q"><span class="qnum">Q11</span>크리에이터 유입은 어떻게 구성되는가? (관계 축 × 채널 축)</h2>
@@ -709,10 +722,11 @@ function renderAgentStat(){
      <span class="statdesc">90일 활성 창작 <b>${d.active90}명</b> 중 <b>${users}명</b>이 Agent 사용</span></div>`;
 }
 function renderVisitStat(){
-  const d=seg[current], cur=d.worldVisits.at(-1), prevFull=d.worldVisits.at(-2);
+  const i=visitedShare.length-1;
   document.getElementById('visitStat').innerHTML =
-    `<div class="statline"><span class="bigstat">${cur.toLocaleString()}<small>건</small></span>
-     <span class="statdesc">이번 달(진행 중) 방문 세션 · 지난달 전체는 <b>${prevFull.toLocaleString()}건</b></span></div>`;
+    `<div class="statline"><span class="bigstat">${visitedShare[i]}<small>%</small></span>
+     <span class="statdesc">이번 달(진행 중) Live 월드 <b>${liveWorlds[i]}개</b> 중 <b>${visitedWorlds[i]}개</b>만 방문을 받음<br/>
+     총 방문 <b>${worldVisitsTotal[i].toLocaleString()}건</b> · 방문받은 월드의 중앙값 <b>${visitMedian[i].toLocaleString()}건</b></span></div>`;
 }
 function cmpRow(name,calc,a,b,unit,lowerBetter){
   const good=lowerBetter? a<b : a>b;
@@ -1097,7 +1111,13 @@ function renderCharts(){
     {label:'참여 크리에이터',data:mc(d.communityEngaged),color:C.success,right:true}
   ],{unit:'명',partialLast:true});
   barChart('ailabsChart','AI_Labs 누적 결과물',M,[{label:'AI_Labs',data:mc(d.ailabs),color:C.purple}],{legend:false,unit:'건',partialLast:true});
-  barChart('visitChart','퍼블리시 월드 월간 방문',M,[{label:'방문 세션',data:mc(d.worldVisits),color:C.success}],{legend:false,unit:'건',partialLast:true});
+  comboChart('visitCovChart','소비되는 월드 비율',M,{
+    totals:{label:'Live 월드',data:mc(liveWorlds),color:'#3d4557'},
+    parts:{label:'방문받은 월드',data:mc(visitedWorlds),color:C.success},
+    rate:{label:'비율(%)',data:mc(visitedShare),color:C.warn}
+  },{partialLast:true,unit:'개'});
+  lineChart('visitMedChart','월드당 월간 방문 중앙값',M,[{label:'중앙값',data:mc(visitMedian),color:C.accent}],{unit:'건',partialLast:true});
+  lineChart('visitConcChart','상위 10% 월드 방문 점유율',M,[{label:'점유율',data:mc(visitTop10Share),color:C.danger}],{unit:'%',partialLast:true,max:100});
 }
 
 function makeCharts(){renderCharts()}

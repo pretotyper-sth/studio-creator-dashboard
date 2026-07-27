@@ -1,6 +1,6 @@
 /* 가상(mock) 데이터 — 실측 전환 시 이 파일만 쿼리 파이프라인 출력으로 교체 */
 /* ============ 가상 데이터 (현실적 범위) ============ */
-const months = ["2/28","3/31","4/30","5/31","6/30","7/8(오늘)"]; // 각 지점=해당 월 말일 기준 스냅샷, 마지막은 오늘 기준
+const months = ["2/28","3/31","4/30","5/31","6/30","7/8(오늘)"]; // 각 지점=해당 월 말일 기준 스냅샷, 마지막 라벨은 스크립트가 오늘 날짜로 덮어씀
 const pubCohortMonths = ["4월","5월","6월"];
 const sprints = ["S30","S31","S32","S33","S34","S35","S36","S37","S38"];
 const weeks = ["W-7","W-6","W-5","W-4","W-3","W-2","W-1","이번주"];
@@ -26,7 +26,6 @@ const seg = {
        discordMembers:[480,512,540,580,620,680], communityEngaged:[5,8,12,16,22,28],
        ailabs:[4,7,12,18,26,35], referralCreators:[3,4,5,6,8,10], kFactor:[0.08,0.09,0.11,0.12,0.14,0.16],
        agentUseRate:[12,15,18,22,28,34], featureUse:[45,28,22],
-       worldVisits:[5200,6900,8600,10800,13200,9400],
        agentVs:{ttfp:[9,15], pubConv:[41,27], cont:[42,29]},
        agentWorldVs:{tier3Rate:[14,8], visitsMed:[220,140], d1:[12,8]},
        utmShare:[90,180,95,160,70,250,305], pubConv90:42, okrTarget:350, mauTarget:500,
@@ -49,7 +48,6 @@ const seg = {
        discordMembers:[480,512,540,580,620,680], communityEngaged:[4,6,9,12,16,20],
        ailabs:[3,5,9,14,20,26], referralCreators:[2,3,4,5,6,8], kFactor:[0.07,0.08,0.10,0.11,0.13,0.15],
        agentUseRate:[10,13,16,20,25,30], featureUse:[42,25,20],
-       worldVisits:[3800,5000,6300,7900,9700,6900],
        agentVs:{ttfp:[10,16], pubConv:[39,25], cont:[40,27]},
        agentWorldVs:{tier3Rate:[13,7], visitsMed:[200,125], d1:[11,7]},
        utmShare:[80,165,85,140,60,215,235], pubConv90:42, okrTarget:350, mauTarget:500,
@@ -72,7 +70,6 @@ const seg = {
        discordMembers:[480,512,540,580,620,680], communityEngaged:[1,2,3,4,5,6],
        ailabs:[1,2,3,4,5,7], referralCreators:[1,1,1,1,2,2], kFactor:[0.05,0.05,0.06,0.06,0.08,0.09],
        agentUseRate:[20,24,28,32,38,42], featureUse:[55,40,30],
-       worldVisits:[900,1300,1600,2100,2600,1800],
        agentVs:{ttfp:[7,11], pubConv:[50,38], cont:[48,36]},
        agentWorldVs:{tier3Rate:[18,11], visitsMed:[300,190], d1:[14,10]},
        utmShare:[0,10,5,5,10,60,60], pubConv90:46, okrTarget:350, mauTarget:500,
@@ -95,7 +92,6 @@ const seg = {
        discordMembers:[480,512,540,580,620,680], communityEngaged:[0,0,0,0,1,2],
        ailabs:[0,0,0,0,1,2], referralCreators:[0,0,0,0,0,0], kFactor:[0,0,0,0,0,0],
        agentUseRate:[40,45,50,55,60,65], featureUse:[70,55,40],
-       worldVisits:[500,600,700,800,900,700],
        agentVs:{ttfp:[4,6], pubConv:[65,55], cont:[74,66]},
        agentWorldVs:{tier3Rate:[25,18], visitsMed:[380,260], d1:[16,12]},
        utmShare:[0,0,0,0,0,0,20], pubConv90:60, okrTarget:350, mauTarget:500,
@@ -115,6 +111,17 @@ const agentErrRate = [11.0,9.5,8.2,7.0,6.1,5.4];
 //  응답 잘림·오류: 프롬프트 잘림/Compaction/413 · 지연: HTTP timeout/모델 응답속도)
 const agentBugNames = ["실행·런처 오류","편집 반영 안 됨","응답 잘림·오류","응답 지연·타임아웃","기타"];
 const agentBugCounts = [18,12,9,7,5];
+
+/* ===== 월드 소비 (Q15) — 실측값, 세그먼트 공통 =====
+   출처: MART_PROD.APP.FCT_WORLD_ANALYTICS (namespace='live'), 2026-02 ~ 2026-07 월별 집계
+   월드→creator_type 매핑이 없어 관계·채널 세그먼트 분해는 미지원 (상단 필터와 무관한 전체 기준)
+   분모 주의: 생성된 Live 월드 전체라 노출 설정이 Private·Pause인 월드도 포함 */
+const liveWorlds      = [843,862,917,964,1039,1154];              // 집계 대상 Live 월드 수
+const visitedWorlds   = [51,51,87,92,114,153];                    // 월간 방문 1건 이상 받은 월드
+const visitedShare    = [6.0,5.9,9.5,9.5,11.0,13.3];              // 소비되는 월드 비율(%)
+const visitMedian     = [809,681,430,346,335,218];                // 방문 받은 월드의 월간 방문 중앙값
+const visitTop10Share = [80.0,72.8,72.8,74.8,87.7,84.3];          // 상위 10% 월드의 방문 점유율(%)
+const worldVisitsTotal= [183764,124694,126761,141899,486051,252556]; // 총 방문 세션(보조 지표)
 
 // 4번째 값 = 목적 그룹 (acq=유입·온보딩 / size=활동 규모 / ret=리텐션·이탈 / output=퍼블리시·품질 / agent=Agent / community=커뮤니티)
 const defs = [
@@ -141,7 +148,10 @@ const defs = [
   ["코어 크리에이터","90일 내 10시간+ · Tier 2 이상 월드 보유 (장르 제한 없음). 당분간 운영 정의 — 이후 타겟 장르·Tier1+로 재강화 가능","슬라이딩 90일","output"],
   ["Tier3+ / Tier2+ / Tier1+ 월드","누적 Live 월드 중 해당 티어 이상 품질을 충족한 수. Tier3+ ⊇ Tier2+ ⊇ Tier1+","Tier3: 방문 700+·D1 12%+·4분+ / Tier2: 2,000+·15%+·6분+ / Tier1: 5,000+·20%+·8분+ / Tier0: 10,000+·24%+·10분+","output"],
   ["기준 미달 월드","가장 낮은 티어(Tier3)의 문턱조차 넘지 못한 Live 월드. 퍼블리시한 지 오래됐어도 현재 성과가 기준에 못 미치면 여기에 들어감 — 신규·초기 여부와 무관한 성과 기준 구간","Live 월드 − Tier3+ 월드","output"],
-  ["퍼블리시 월드 방문","크리에이터가 만든 Live 월드에 유저가 실제로 들어간 횟수(월간)","월드 입장 세션 합계 · 같은 유저가 다시 들어와도 각각 집계 · 클라이언트 방문 로그","output"],
+  ["소비되는 월드 비율","만든 월드가 실제로 플레이되는지 보는 핵심 지표. 월간 방문을 1건이라도 받은 Live 월드의 비율 — 총 방문량은 플랫폼 트래픽에 따라 움직이므로 크리에이터 쪽 성과는 비율로 봐야 함","월간 방문 1건+ 월드 ÷ 집계 대상 Live 월드 · fct_world_analytics(namespace=live) · 분모에 노출 설정 Private·Pause 월드 포함 — Public만으로 좁히면 비율은 상승","output"],
+  ["월드당 월간 방문 중앙값","전형적인 월드가 받는 방문량. 방문을 받은 월드만 대상으로 하며, 평균이 아닌 중앙값이라 히트작 한두 개에 흔들리지 않음. 평균과 벌어질수록 쏠림이 심하다는 뜻","방문 1건+ 월드의 월간 방문 수 중앙값","output"],
+  ["상위 10% 월드 방문 점유율","소비가 소수 히트작에 얼마나 쏠려 있는지. 방문을 받은 월드 중 상위 10%가 전체 방문에서 차지하는 비중으로, 높을수록 생태계가 몇 개 월드에 의존","상위 10% 월드 방문 합 ÷ 전체 방문 합 · 방문 1건+ 월드 기준","output"],
+  ["총 방문 세션 (보조)","Live 월드 입장 세션의 월간 합계. 플랫폼 수요·마케팅·추천 배분에 따라 움직여 크리에이터 성과를 분리하지 못하므로 보조 지표로만 사용","월드 입장 세션 합계 · 같은 유저가 다시 들어와도 각각 집계","output"],
   ["Studio Agent 사용률","AI로 CRUD 1회+ 한 크리에이터가 90일 활성 창작 크리에이터 중 몇 명인지","AI CRUD 1회+ 유니크 ÷ 최근 90일 활성 창작 크리에이터","agent"],
   ["Agent 성과 비교 (크리에이터)","Agent를 쓰는 크리에이터가 안 쓰는 크리에이터보다 더 빨리·더 많이 퍼블리시하는지","90일 활성 창작을 AI CRUD 1회+ 여부로 두 그룹으로 나눠 각각 집계 · 상관관계 참고용(인과 아님)","agent"],
   ["Agent 성과 비교 (월드)","Agent로 만든 월드가 품질(Tier3+)과 소비(방문·재방문)에서도 나은지","Live 월드를 제작 중 AI CRUD 1회+ 여부로 나눠 Tier3+ 도달률·월드당 월간 방문 중앙값·D1 재방문율 비교","agent"],
