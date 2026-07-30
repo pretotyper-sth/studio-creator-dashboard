@@ -7,8 +7,8 @@
 | `/` | 가상(mock) 데이터 | 지표 정의 얼라인 — 모든 차트가 채워진 상태로 보임 |
 | `/snapshot/` | 실측 데이터 (2026-07-29 기준 1회성 스냅샷) | 현황 공유 — 지금 실제로 볼 수 있는 것과 없는 것을 구분해 보여줌 |
 
-- 배포: https://pretotyper-sth.github.io/studio-creator-dashboard/
-- 실측 스냅샷: https://pretotyper-sth.github.io/studio-creator-dashboard/snapshot/
+- 배포: https://studio-creator-dashboard.pages.dev/
+- 실측 스냅샷: https://studio-creator-dashboard.pages.dev/snapshot/
 
 ## 실측 스냅샷 (`/snapshot/`)
 
@@ -51,4 +51,13 @@ python3 -m http.server 8787
 
 ## 배포
 
-`main` 푸시 시 GitHub Pages 자동 배포 (`.github/workflows/pages.yml`, 저장소 루트를 그대로 업로드)
+Cloudflare Pages 직접 업로드입니다. `dist/`를 만들어 올립니다.
+
+```bash
+rm -rf dist && mkdir -p dist/snapshot
+cp index.html data.js dist/
+cp snapshot/index.html snapshot/data.js dist/snapshot/
+npx wrangler pages deploy dist --project-name=studio-creator-dashboard --branch=main
+```
+
+`dist/`는 gitignore 대상이라 배포 때마다 위 명령으로 다시 만들어야 합니다.
