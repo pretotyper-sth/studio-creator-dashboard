@@ -1,19 +1,54 @@
-# Studio Creator Dashboard (Prototype)
+# Studio Creator Dashboard
 
-지표 정의 얼라인용 정적 FE 시안. 맥북 서버 없이 GitHub Pages로 상시 조회 가능.
+같은 화면의 두 버전을 각각 배포합니다.
 
-- 데이터: 가상(mock) — `data.js`로 분리. 실측 전환 시 이 파일만 쿼리 파이프라인 출력으로 교체
+| 경로 | 내용 | 용도 |
+| --- | --- | --- |
+| `/` | 가상(mock) 데이터 | 지표 정의 얼라인 — 모든 차트가 채워진 상태로 보임 |
+| `/snapshot/` | 실측 데이터 (2026-07-29 기준 1회성 스냅샷) | 현황 공유 — 지금 실제로 볼 수 있는 것과 없는 것을 구분해 보여줌 |
+
+- 배포: https://pretotyper-sth.github.io/studio-creator-dashboard/
+- 실측 스냅샷: https://pretotyper-sth.github.io/studio-creator-dashboard/snapshot/
+
+## 실측 스냅샷 (`/snapshot/`)
+
+2026-07-30에 Snowflake `MART_PROD`를 조회해 만든 **정지 화면**입니다. 자동 갱신되지 않으며,
+갱신하려면 쿼리를 다시 돌려 `snapshot/data.js`를 교체해야 합니다.
+
+지표 32개를 세 단계로 분류해 표시합니다.
+
+- **실측 7개** — 대시보드 정의 그대로 집계
+- **주의 10개** — 정의를 대체했거나 표본·커버리지 한계가 있음. 노란 배너 + △ 배지
+- **불가 17개** — 현재 로그·테이블로 측정 불가. 딤드 처리 + ✕ 오버레이
+
+△·✕ 배지나 블록에 마우스를 올리면 무엇이 한계인지, 어디까지 믿어도 되는지, 대신 무엇을
+보면 되는지, 정확히 보려면 어떤 로깅·DW·운영 작업이 필요한지가 나옵니다.
+
+"상위 10% 월드의 방문 점유율" 카드에는 구성 월드 16개를 월드명 × 점유율로 보여주는
+목록 툴팁이 붙어 있습니다.
+
+### 알려진 정의 이슈
+
+- **Live 월드**: `fct_world_analytics`의 `namespace`는 전 구간 `'live'` 단일값이라 필터가 되지
+  않고, 이 테이블은 방문이 0인 날에도 행을 남깁니다. 따라서 "행이 있는 월드 수"는 누적 등재
+  수이지 서비스 중인 월드가 아닙니다. 비율 지표를 내리고 방문받은 월드의 절대 수로 대체했습니다.
+- **회원가입 단계**: 웹로그 `user_id` 커버리지 부족(63%)으로 퍼널에서 제외. 스튜디오 로그인을
+  100% 기준선으로 사용합니다.
+
+## 구조
+
+- 데이터: `data.js`로 분리 — 갱신 시 이 파일만 교체
 - 차트: 의존성 없는 네이티브 SVG (`index.html` 인라인 스크립트)
-- 퍼널 회원가입 소스: `WEB_ACCOUNT_CREATE` 기준 (Hub 웹로그 user_id는 커버리지 부족 — 7/22 분석 결론)
-- 월 추이 차트의 마지막 포인트(오늘 기준 부분 집계)는 점선/반투명으로 표시
+- 월 추이 차트의 마지막 포인트(부분 집계)는 점선/반투명 표시
 
 ## 로컬 실행
 
 ```bash
 python3 -m http.server 8787
-# http://localhost:8787
+# mock      → http://localhost:8787
+# 실측 스냅샷 → http://localhost:8787/snapshot/
 ```
 
 ## 배포
 
-`main` 푸시 시 GitHub Pages 자동 배포 (`.github/workflows/pages.yml`)
+`main` 푸시 시 GitHub Pages 자동 배포 (`.github/workflows/pages.yml`, 저장소 루트를 그대로 업로드)
