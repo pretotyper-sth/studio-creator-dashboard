@@ -19,6 +19,18 @@
   .sub{color:var(--muted);font-size:13px}
   .badge{display:inline-block;font-size:11px;font-weight:600;color:#111;background:var(--warn);border-radius:4px;padding:2px 7px;margin-left:8px;vertical-align:middle}
   .meta{color:var(--muted2);font-size:12px;text-align:right}
+  /* 가상 데이터 페이지에서 실측 스냅샷으로 넘어가는 진입점 */
+  .topright{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+  .pagelink{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#fff;
+    background:var(--accent);border-radius:8px;padding:8px 14px;text-decoration:none;white-space:nowrap;
+    box-shadow:0 2px 8px rgba(76,141,255,.28)}
+  .pagelink:hover{filter:brightness(1.12)}
+  .pagelink .arw{font-size:14px;line-height:1}
+  /* 헤더가 줄바꿈되면 오른쪽 정렬이 어중간해지므로 본문 왼쪽 선에 맞춘다 */
+  @media (max-width:640px){
+    .topright{width:100%;align-items:flex-start}
+    .meta{text-align:left}
+  }
   .filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0 0;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px}
   .filters .lbl{color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase;margin:0 2px 0 8px}
   .filters .lbl:first-child{margin-left:0}
@@ -197,7 +209,11 @@
     <div>
       <h1>Studio 크리에이터 대시보드 <span class="badge">가상 데이터</span></h1>
     </div>
-    <div class="meta"><span id="metaDate"></span></div>
+    <div class="topright">
+      <a class="pagelink" href="./snapshot/#overview"
+         title="현재 웨어하우스 실측값으로 채운 스냅샷 페이지로 이동합니다">실측 스냅샷 보기 <span class="arw" aria-hidden="true">→</span></a>
+      <div class="meta"><span id="metaDate"></span></div>
+    </div>
   </header>
 
   <!-- Superset 네이티브 필터 바 대응 — "라벨 + 컨트롤" 쌍이 한 줄, 모든 탭 공통 적용 -->
