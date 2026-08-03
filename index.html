@@ -20,15 +20,16 @@
   .badge{display:inline-block;font-size:11px;font-weight:600;color:#111;background:var(--warn);border-radius:4px;padding:2px 7px;margin-left:8px;vertical-align:middle}
   .meta{color:var(--muted2);font-size:12px;text-align:right}
   /* 가상 데이터 ↔ 실측 스냅샷 전환. 필터의 .seg 세그먼트 컨트롤을 링크로 쓴다 */
-  .topright{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+  /* 메타 텍스트를 토글 왼쪽에 붙여 헤더를 한 줄로 유지한다 */
+  .topright{display:flex;align-items:center;gap:14px}
   .pagetoggle{display:inline-flex;gap:3px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:3px}
   .pagetoggle a{color:var(--muted);font-size:12px;line-height:1.2;padding:6px 11px;border-radius:6px;text-decoration:none;white-space:nowrap}
   .pagetoggle a:hover{background:var(--panel);color:var(--text)}
   /* 활성 색은 옆 배지와 맞춘다 — 노랑=가상, 초록=실측이 색만으로 읽히게 */
   .pagetoggle a[aria-current]{background:var(--warn);color:#171009;font-weight:600;pointer-events:none}
-  /* 헤더가 줄바꿈되면 오른쪽 정렬이 어중간해지므로 본문 왼쪽 선에 맞춘다 */
+  /* 좁은 화면에서는 나란히 두면 메타가 끼여 줄바꿈되므로 토글을 위로 올려 쌓는다 */
   @media (max-width:640px){
-    .topright{width:100%;align-items:flex-start}
+    .topright{width:100%;flex-direction:column-reverse;align-items:flex-start;gap:8px}
     .meta{text-align:left}
   }
   .filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0 0;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px}
@@ -210,11 +211,11 @@
       <h1>Studio 크리에이터 대시보드 <span class="badge">가상 데이터</span></h1>
     </div>
     <div class="topright">
+      <div class="meta"><span id="metaDate"></span></div>
       <div class="pagetoggle" role="group" aria-label="데이터 소스 전환">
         <a href="./#overview" aria-current="page" title="지금 보고 있는 페이지 — 구조 확인용 가상 데이터">가상 데이터</a>
         <a class="xpage" href="./snapshot/#overview" title="현재 웨어하우스 실측값으로 채운 스냅샷">실측 스냅샷</a>
       </div>
-      <div class="meta"><span id="metaDate"></span></div>
     </div>
   </header>
 
