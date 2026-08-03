@@ -8,6 +8,11 @@ const weeks = ["W-7","W-6","W-5","W-4","W-3","W-2","W-1","이번주"];
 const utmNames = ["Paid(광고)","Discord","YouTube","Organic(검색)","Referral","Direct","Untagged"];
 const firstEditNames = ["오브젝트 배치","기술/물리","스크립트","이동/변형"];
 
+/* 제작 방식 = Agent 편집 턴 ÷ (Agent 턴 + 수동 편집 턴) 기준 5구간.
+   각 행 = [월드 수, 퍼블리시 도달률%, Tier3+ 도달률%, 방문 중앙값, D1%, 30일 업데이트율%] */
+const AGENT_MIX_LABELS = ["에디터 100% (Agent 0%)","에디터 위주 (Agent 1~25%)","혼합 (Agent 25~50%)","Agent 위주 (Agent 50~75%)","Agent 대부분 (Agent 75~100%)"];
+const mixBuckets = rows => rows.map((r,i)=>[AGENT_MIX_LABELS[i],...r]);
+
 const seg = {
   all:{active90:278, editConv:68, cumCreators:620, cumSignup:1150,
        pubCreators90:118, pubCreatorsCum:210, pubWorlds90:132, pubWorldsCum:430, statusCum:[300,95,35], tierDist:[45,343,28,9,4,1],
@@ -28,6 +33,8 @@ const seg = {
        agentUseRate:[12,15,18,22,28,34], featureUse:[45,28,22],
        agentVs:{ttfp:[9,15], pubConv:[41,27], cont:[42,29]},
        agentWorldVs:{tier3Rate:[14,8], visitsMed:[220,140], d1:[12,8]},
+       agentShareBuckets: mixBuckets([[148,42,17,268,13.5,37],[112,49,21,312,14.8,41],[78,55,15,214,11.9,32],[56,63,10,148,9.6,23],[36,71,5,86,7.2,14]]),
+       agentShareWithin:{tier3:[19,11], visitMed:[246,163], updRate:[35,24]},
        utmShare:[90,180,95,160,70,250,305], pubConv90:42, okrTarget:350, mauTarget:500,
        editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
        discordTarget:1000, communityTarget:300, ailabsTarget:100},
@@ -50,6 +57,8 @@ const seg = {
        agentUseRate:[10,13,16,20,25,30], featureUse:[42,25,20],
        agentVs:{ttfp:[10,16], pubConv:[39,25], cont:[40,27]},
        agentWorldVs:{tier3Rate:[13,7], visitsMed:[200,125], d1:[11,7]},
+       agentShareBuckets: mixBuckets([[108,40,15,242,12.8,35],[78,47,19,284,14.0,39],[54,53,13,196,11.2,30],[38,61,9,134,9.0,22],[22,69,4,78,6.8,13]]),
+       agentShareWithin:{tier3:[17,10], visitMed:[224,148], updRate:[33,22]},
        utmShare:[80,165,85,140,60,215,235], pubConv90:42, okrTarget:350, mauTarget:500,
        editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
        discordTarget:1000, communityTarget:300, ailabsTarget:100},
@@ -72,6 +81,8 @@ const seg = {
        agentUseRate:[20,24,28,32,38,42], featureUse:[55,40,30],
        agentVs:{ttfp:[7,11], pubConv:[50,38], cont:[48,36]},
        agentWorldVs:{tier3Rate:[18,11], visitsMed:[300,190], d1:[14,10]},
+       agentShareBuckets: mixBuckets([[32,45,19,330,14.2,39],[23,52,24,386,15.6,44],[16,58,17,262,12.4,34],[12,66,11,178,10.1,25],[7,74,6,104,7.6,16]]),
+       agentShareWithin:{tier3:[22,13], visitMed:[302,198], updRate:[38,26]},
        utmShare:[0,10,5,5,10,60,60], pubConv90:46, okrTarget:350, mauTarget:500,
        editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
        discordTarget:1000, communityTarget:300, ailabsTarget:100},
@@ -94,6 +105,8 @@ const seg = {
        agentUseRate:[40,45,50,55,60,65], featureUse:[70,55,40],
        agentVs:{ttfp:[4,6], pubConv:[65,55], cont:[74,66]},
        agentWorldVs:{tier3Rate:[25,18], visitsMed:[380,260], d1:[16,12]},
+       agentShareBuckets: mixBuckets([[18,58,26,402,16.4,52],[11,64,31,458,17.8,57],[8,70,22,318,14.2,45],[5,76,15,216,11.5,34],[3,82,9,128,8.8,22]]),
+       agentShareWithin:{tier3:[29,18], visitMed:[372,244], updRate:[50,35]},
        utmShare:[0,0,0,0,0,0,20], pubConv90:60, okrTarget:350, mauTarget:500,
        editConvTarget:70, tier3Target:100, tier1Target:30, earnTarget:30, coreTarget:10,
        discordTarget:1000, communityTarget:300, ailabsTarget:100},
@@ -156,6 +169,7 @@ const defs = [
   ["Studio Agent 사용률","AI로 CRUD 1회+ 한 크리에이터가 90일 활성 창작 크리에이터 중 몇 명인지","AI CRUD 1회+ 유니크 ÷ 최근 90일 활성 창작 크리에이터","agent"],
   ["Agent 성과 비교 (크리에이터)","Agent를 쓰는 크리에이터가 안 쓰는 크리에이터보다 더 빨리·더 많이 퍼블리시하는지","90일 활성 창작을 AI CRUD 1회+ 여부로 두 그룹으로 나눠 각각 집계 · 상관관계 참고용(인과 아님)","agent"],
   ["Agent 성과 비교 (월드)","Agent로 만든 월드가 품질(Tier3+)과 소비(방문·재방문)에서도 나은지","Live 월드를 제작 중 AI CRUD 1회+ 여부로 나눠 Tier3+ 도달률·월드당 월간 방문 중앙값·D1 재방문율 비교","agent"],
+  ["제작 방식별 결과물 비교","에디터 위주로 만든 월드와 Agent 위주로 만든 월드의 완주·품질·소비·지속 차이","Agent 비중 = Agent 편집 턴 ÷ (Agent 턴 + 수동 편집 턴)으로 월드를 5구간으로 나눠 비교 · 교란 통제는 양쪽을 모두 만든 크리에이터로 한정 · 턴 단위라 절대값은 인용하지 않고 구간 간 상대 순위만 사용","agent"],
   ["Agent 세션 오류율","Agent 세션 중 실행 오류(런처·초기화 실패, 도구 실행 실패, 타임아웃)로 끝난 세션 비율","세션 로그 오류 이벤트 ÷ 전체 Agent 세션 · 월별","agent"],
   ["Agent 버그 제보","크리에이터·내부에서 제보된 Agent 버그 건수와 유형 분포","현재 studio-ai 채널 스레드 수동 분류 → 인앱 리포트 제보(로그 export 포함) 기능 출시 후 자동 집계 전환","agent"],
   ["커뮤니티 참여 크리에이터","30일 내 Discord/포럼 5회+ 활동","Discord/포럼 로그","community"],

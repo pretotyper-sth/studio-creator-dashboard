@@ -101,6 +101,19 @@
   .fpct{min-width:0;width:auto;font-size:12px;color:var(--muted);flex-shrink:0;line-height:1.25;display:flex;flex-direction:column;justify-content:center;gap:2px}
   .fpct b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
   .fpct .fdrop{font-size:11px;color:var(--muted2);white-space:nowrap}
+  /* 두 그룹 비교 — 지표마다 단위가 달라 각 행을 그 행의 최대값으로 정규화한 가로 막대 */
+  .cmpb-row{padding:11px 0;border-bottom:1px solid var(--border)}
+  .cmpb-row:last-child{border-bottom:0;padding-bottom:2px}
+  .cmpb-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .cmpb-n{font-size:13px;font-weight:600}
+  .cmpb-d{font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0}
+  .cmpb-c{font-size:11px;color:var(--muted2);margin-top:3px;line-height:1.5}
+  .cmpb-lo{font-size:10px;font-weight:500;color:var(--muted2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:2px}
+  .cmpb-b{display:flex;align-items:center;gap:9px;margin-top:6px}
+  .cmpb-lb{width:76px;flex:none;font-size:11px;color:var(--muted)}
+  .cmpb-tr{flex:1;min-width:0;height:15px;background:var(--panel2);border-radius:4px;overflow:hidden}
+  .cmpb-f{height:100%;border-radius:4px}
+  .cmpb-v{width:66px;flex:none;text-align:right;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
   table{width:100%;border-collapse:collapse;font-size:13px}
   th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border)}
   th{color:var(--muted);font-weight:600;font-size:12px}
@@ -457,6 +470,11 @@
       <div id="agentWorldCompare"></div>
     </div>
   </div>
+  <div class="card" style="margin-top:14px">
+    <h3>제작 방식별 결과물 비교</h3>
+    <p class="cap">퍼블리시 월드를 <b>Agent 비중 = Agent 편집 턴 ÷ (Agent 턴 + 수동 편집 턴)</b> 기준 5개 구간으로 나눠 완주·품질·소비·지속을 비교 · 아래쪽 비교는 <b>양쪽을 모두 만든 크리에이터</b>만 추려 숙련도 차이를 제거한 결과 · 상관관계 참고용</p>
+    <div id="agentShareTable"></div>
+  </div>
 
   <h2 class="q"><span class="qnum">Q13</span>커뮤니티(디스코드)는 살아 있는가?</h2>
   <div class="row2">
@@ -728,29 +746,65 @@ function renderVisitStat(){
      <span class="statdesc">이번 달(진행 중) Live 월드 <b>${liveWorlds[i]}개</b> 중 <b>${visitedWorlds[i]}개</b>만 방문을 받음<br/>
      총 방문 <b>${worldVisitsTotal[i].toLocaleString()}건</b> · 방문받은 월드의 중앙값 <b>${visitMedian[i].toLocaleString()}건</b></span></div>`;
 }
-function cmpRow(name,calc,a,b,unit,lowerBetter){
-  const good=lowerBetter? a<b : a>b;
-  const diff=Math.round((lowerBetter? b-a : a-b)*10)/10;
-  return `<tr><td>${name}<div class="note" style="margin:2px 0 0">${calc}</div></td>
-    <td class="num"><b>${a.toLocaleString()}${unit}</b></td><td class="num">${b.toLocaleString()}${unit}</td>
-    <td class="num" style="color:${good?'var(--success)':'var(--danger)'}">${lowerBetter?`-${diff}${unit} 빠름`:`+${diff.toLocaleString()}${unit === '%' ? '%p' : unit} 높음`}</td></tr>`;
-}
-function cmpTable(headA,rows){
-  return `<table class="defs"><thead><tr><th>지표</th><th class="num">${headA}</th><th class="num">미사용</th><th class="num">차이</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+/* 두 그룹 비교를 가로 막대 쌍으로 그린다. 지표마다 단위(%·일·건)가 달라 축을 공유할 수
+   없으므로, 각 행을 그 행의 두 값 중 큰 쪽으로 정규화해 행 안에서만 길이를 비교한다.
+   따라서 서로 다른 행의 막대 길이끼리는 비교하면 안 된다. */
+function cmpBars(headA,headB,rows){
+  return rows.map(([name,calc,a,b,unit,lowerBetter])=>{
+    const good=lowerBetter? a<b : a>b;
+    const diff=Math.round((lowerBetter? b-a : a-b)*10)/10;
+    const max=Math.max(a,b,1);
+    const bar=(v,color)=>`<div class="cmpb-tr"><div class="cmpb-f" style="width:${Math.max(v/max*100,1.5).toFixed(1)}%;background:${color}"></div></div>`;
+    return `<div class="cmpb-row">
+      <div class="cmpb-h"><span class="cmpb-n">${name}${lowerBetter?'<span class="cmpb-lo">낮을수록 좋음</span>':''}</span>
+        <span class="cmpb-d" style="color:${good?'var(--success)':'var(--danger)'}">${lowerBetter?`${diff}${unit} 빠름`:`+${diff.toLocaleString()}${unit==='%'?'%p':unit} 높음`}</span></div>
+      <div class="cmpb-c">${calc}</div>
+      <div class="cmpb-b"><span class="cmpb-lb">${headA}</span>${bar(a,C.purple)}<span class="cmpb-v">${a.toLocaleString()}${unit}</span></div>
+      <div class="cmpb-b"><span class="cmpb-lb">${headB}</span>${bar(b,C.muted)}<span class="cmpb-v">${b.toLocaleString()}${unit}</span></div>
+    </div>`;
+  }).join('');
 }
 function renderAgentCompare(){
   const v=seg[current].agentVs;
-  document.getElementById('agentCompare').innerHTML = cmpTable('Agent 사용',[
-    cmpRow('첫 퍼블리시까지 걸린 시간 (TTFP 중앙값)','가입일 → 첫 퍼블리시까지 일수의 중앙값',v.ttfp[0],v.ttfp[1],'일',true),
-    cmpRow('퍼블리시 전환율','90일 내 퍼블리시한 크리에이터 ÷ 그룹 전체',v.pubConv[0],v.pubConv[1],'%',false),
-    cmpRow('지속 작업률','퍼블리시 후 30일 내 재출시·업데이트한 비율',v.cont[0],v.cont[1],'%',false)
+  document.getElementById('agentCompare').innerHTML = cmpBars('Agent 사용','미사용',[
+    ['첫 퍼블리시까지 걸린 시간 (TTFP 중앙값)','가입일 → 첫 퍼블리시까지 일수의 중앙값',v.ttfp[0],v.ttfp[1],'일',true],
+    ['퍼블리시 전환율','90일 내 퍼블리시한 크리에이터 ÷ 그룹 전체',v.pubConv[0],v.pubConv[1],'%',false],
+    ['지속 작업률','퍼블리시 후 30일 내 재출시·업데이트한 비율',v.cont[0],v.cont[1],'%',false]
   ]);
   const w=seg[current].agentWorldVs;
-  document.getElementById('agentWorldCompare').innerHTML = cmpTable('Agent 제작',[
-    cmpRow('Tier3+ 도달률','Tier3 기준(방문 700+·D1 12%+·체류 4분+) 달성 월드 ÷ 그룹 전체 월드',w.tier3Rate[0],w.tier3Rate[1],'%',false),
-    cmpRow('월드당 월간 방문 (중앙값)','월드 1개가 한 달에 받는 방문 세션의 중앙값',w.visitsMed[0],w.visitsMed[1],'건',false),
-    cmpRow('D1 재방문율','첫 방문 유저 중 다음 날 다시 온 비율 · 그룹 평균',w.d1[0],w.d1[1],'%',false)
+  document.getElementById('agentWorldCompare').innerHTML = cmpBars('Agent 제작','미사용',[
+    ['Tier3+ 도달률','Tier3 기준(방문 700+·D1 12%+·체류 4분+) 달성 월드 ÷ 그룹 전체 월드',w.tier3Rate[0],w.tier3Rate[1],'%',false],
+    ['월드당 월간 방문 (중앙값)','월드 1개가 한 달에 받는 방문 세션의 중앙값',w.visitsMed[0],w.visitsMed[1],'건',false],
+    ['D1 재방문율','첫 방문 유저 중 다음 날 다시 온 비율 · 그룹 평균',w.d1[0],w.d1[1],'%',false]
   ]);
+  renderAgentShare();
+}
+/* 제작 방식(에디터 위주 ↔ Agent 위주) × 결과물 지표.
+   아래쪽 비교는 교란 통제용 — 같은 크리에이터가 양쪽을 다 만든 경우만 비교하면
+   숙련도가 상수가 되므로 도구 차이만 남는다. */
+function renderAgentShare(){
+  const rows = (seg[current].agentShareBuckets||[]).map(([name,n,pub,tier,visit,d1,upd])=>
+    `<tr><td>${name}</td><td class="num">${n}</td><td class="num">${pub}%</td><td class="num">${tier}%</td>
+     <td class="num">${visit}건</td><td class="num">${d1}%</td><td class="num">${upd}%</td></tr>`).join('');
+  const w = seg[current].agentShareWithin || {};
+  const within = cmpBars('에디터 위주','Agent 위주', [
+    ['Tier3+ 도달률','같은 크리에이터의 에디터 위주 월드 vs Agent 위주 월드',w.tier3[0],w.tier3[1],'%',false],
+    ['월드당 월간 방문 (중앙값)','동일 크리에이터 내 비교라 숙련도 차이가 제거됨',w.visitMed[0],w.visitMed[1],'건',false],
+    ['30일 내 업데이트율','만든 뒤에도 계속 돌보는지 — 급조 여부를 가른다',w.updRate[0],w.updRate[1],'%',false]
+  ]);
+  document.getElementById('agentShareTable').innerHTML =
+    `<div class="row2" style="margin-bottom:14px">
+       <div class="chartbox sm"><div class="webchart" id="mixCountChart"></div></div>
+       <div class="chartbox sm"><div class="webchart" id="mixPerfChart"></div></div>
+     </div>
+     <table class="defs"><thead><tr><th>제작 방식</th><th class="num">월드 수</th>
+     <th class="num">퍼블리시 도달률</th><th class="num">Tier3+ 도달률</th><th class="num">월드당 방문 (중앙값)</th>
+     <th class="num">D1 재방문율</th><th class="num">30일 내 업데이트율</th></tr></thead>
+     <tbody>${rows}</tbody></table>
+     <div style="margin:20px 0 2px;font-size:14px;font-weight:600;border-top:1px solid var(--border);padding-top:16px">같은 크리에이터 안에서 비교</div>
+     <p class="cap" style="margin-top:4px">에디터 위주 월드와 Agent 위주 월드를 <b>모두 만든 크리에이터</b>만 대상 · 숙련도가 상수가 되어 도구 차이만 남음</p>
+     ${within}
+     <div class="note" style="margin-top:10px">Agent 턴 1회가 오브젝트 여러 개를 만들 수 있어 비중의 <b>절대값은 인용하지 않고</b> 구간 간 상대 순위만 사용합니다.</div>`;
 }
 function renderAgentErrStat(){
   const rate=agentErrRate.at(-1), total=agentSessions.at(-1), errs=Math.round(total*rate/100);
@@ -1106,6 +1160,21 @@ function renderCharts(){
     rate:{label:'오류율(%)',data:mc(agentErrRate),color:C.warn}
   },{partialLast:true,unit:'건'});
   donutChart('agentBugChart','Agent 버그 제보 유형',agentBugNames,agentBugCounts,[C.danger,C.warn,C.purple,C.accent,C.muted]);
+  /* 제작 방식 스펙트럼 — 5구간 고정이라 월 시리즈와 무관.
+     완주(퍼블리시 도달률)는 오르는데 결과물(Tier3+·방문)은 내려가는지를 한 화면에서 본다.
+     차트 div는 renderAgentShare()가 만들므로 없을 수 있어 방어한다. */
+  const ab=d.agentShareBuckets||[];
+  if(ab.length && document.getElementById('mixCountChart')){
+    const abL=ab.map(r=>r[0].replace(/\s*\(.*\)$/,''));
+    barChart('mixCountChart','제작 방식 구간별 월드 수',abL,[
+      {label:'월드 수',data:ab.map(r=>r[1]),color:C.accent}
+    ],{legend:false,unit:'개'});
+    lineChart('mixPerfChart','구간별 완주와 결과물',abL,[
+      {label:'퍼블리시 도달률(%)',data:ab.map(r=>r[2]),color:C.success},
+      {label:'Tier3+ 도달률(%)',data:ab.map(r=>r[3]),color:C.purple},
+      {label:'방문 중앙값(건)',data:ab.map(r=>r[4]),color:C.accent,right:true}
+    ],{});
+  }
   lineChart('discordChart','디스코드 멤버와 참여 크리에이터',M,[
     {label:'디스코드 멤버',data:mc(d.discordMembers),color:C.accent},
     {label:'참여 크리에이터',data:mc(d.communityEngaged),color:C.success,right:true}
