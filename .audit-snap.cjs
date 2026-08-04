@@ -1,7 +1,7 @@
 /* 실측 스냅샷 내부 정합성 감사 — 파생 비율·누적 단조성·합계·레지스트리 짝 */
 const fs = require('fs');
 const box = {};
-new Function('g', fs.readFileSync('snapshot/data.js', 'utf8') + '\nObject.assign(g,{seg,AVAIL,DETAIL,defs,registryWorlds,visitedWorlds,visitMedian,visitTop10Share,worldVisitsTotal,dailyVisitedAvg,dailyVisitedMax,worldBaseCheck,top10Worlds,medianDecomp,months,SNAPSHOT});')(box);
+new Function('g', fs.readFileSync('snapshot/data.js', 'utf8') + '\nObject.assign(g,{seg,AVAIL,DETAIL,defs,registryWorlds,visitedWorlds,visitMedian,visitTop10Share,worldVisitsTotal,dailyVisitedAvg,dailyVisitedMax,worldBaseCheck,top10Worlds,months,SNAPSHOT});')(box);
 const { seg, AVAIL, DETAIL, defs, registryWorlds, visitedWorlds, dailyVisitedAvg, dailyVisitedMax, worldBaseCheck, months } = box;
 const d = seg.all, out = [];
 const P = (label, cond, msg) => { if (!cond) out.push(`${label}: ${msg}`); };

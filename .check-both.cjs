@@ -1,7 +1,7 @@
 const { chromium } = require('/Users/jungsoo.kim/.claude/skills/gstack/node_modules/playwright-core');
 (async () => {
   const b = await chromium.launch();
-  for (const [name, url] of [['mock', 'http://127.0.0.1:8795/'], ['snapshot', 'http://127.0.0.1:8795/snapshot/']]) {
+  for (const [name, url] of [['mock', 'http://127.0.0.1:8796/'], ['snapshot', 'http://127.0.0.1:8796/snapshot/']]) {
     const p = await b.newPage();
     const errs = [];
     p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
