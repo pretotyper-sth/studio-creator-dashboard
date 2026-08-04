@@ -71,11 +71,11 @@
   .card + .grid, .grid + .card, .card + .row2, .row2 + .card, :not(.row2) > .card + .card{margin-top:14px}
   .card h3{margin:0 0 2px;font-size:15px}
   .card .cap{color:var(--muted2);font-size:12px;margin:0 0 12px}
+  /* 2열에서 짝이 되는 카드의 설명 높이를 맞춘다 — --caph는 JS(alignRowBodies)가 쌍마다 계산해 넣는다.
+     차트에 margin-top:auto를 걸어 바닥 정렬하던 방식은 설명과 차트 사이가 벌어져서 버렸다. */
+  .row2 > .card > .cap{min-height:var(--caph,auto)}
   .row2 > .card .chartbox,
-  .row2 > .card .chartbox.sm{
-    margin-top:auto;
-    flex:0 0 auto;
-  }
+  .row2 > .card .chartbox.sm{flex:0 0 auto}
   .chead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
   .chartbox{position:relative;width:100%;height:240px;overflow:hidden;contain:layout paint}
   .chartbox.sm{height:210px}
@@ -432,12 +432,12 @@
   <div class="row2" style="margin-top:14px">
     <div class="card">
       <h3>월드당 월간 방문 중앙값</h3>
-      <p class="cap">방문을 받은 월드만 대상 · 중앙값이라 히트작에 흔들리지 않음. 전형적인 월드가 받는 방문량</p>
+      <p class="cap">한 번이라도 플레이된 월드만 대상 · 중앙값이라 히트작에 흔들리지 않음. 전형적인 월드가 받는 방문량<br/>대상 월드 수가 매달 늘어나므로 고정 집합 비교가 아닙니다</p>
       <div class="chartbox sm"><div class="webchart" id="visitMedChart"></div></div>
     </div>
     <div class="card">
       <h3>상위 10% 월드의 방문 점유율</h3>
-      <p class="cap">한 번이라도 플레이된 월드 중 상위 10%가 전체 방문에서 차지하는 비중 · 높을수록 소수 히트작 의존</p>
+      <p class="cap">한 번이라도 플레이된 월드 중 상위 10%가 전체 방문에서 차지하는 비중 · 높을수록 소수 히트작 의존<br/>실측 스냅샷 페이지에서는 상위 월드를 월드명 × 점유율로 볼 수 있습니다</p>
       <div class="chartbox sm"><div class="webchart" id="visitConcChart"></div></div>
     </div>
   </div>
@@ -1218,9 +1218,37 @@ addEventListener('resize',()=>{
   if(innerWidth===_lastW) return;
   _lastW=innerWidth;
   clearTimeout(_reflowT);
-  _reflowT=setTimeout(()=>{ try{renderCharts();}catch(e){} }, 150);
+  _reflowT=setTimeout(()=>{ try{renderCharts();}catch(e){} alignRowBodies(); }, 150);
 }, {passive:true});
 
+
+/* 2열로 놓인 카드 쌍의 «본문 시작 높이»를 맞춘다.
+   카드마다 설명 줄 수와 스탯 한 줄 유무가 달라서 그냥 흘려두면 두 차트가 서로 다른
+   높이에서 시작해 어긋나 보인다. 설명 높이를 먼저 통일하고, 그래도 남는 차이는
+   차트 위 여백으로 흡수한다. 폭이 바뀌면 줄바꿈 수가 달라지므로 매번 다시 잰다. */
+function alignRowBodies(){
+  document.querySelectorAll('.row2').forEach(row=>{
+    const cards=[...row.children].filter(c=>c.classList.contains('card'));
+    if(cards.length<2) return;
+    const caps=cards.map(c=>c.querySelector(':scope > .cap'));
+    const boxes=cards.map(c=>c.querySelector('.chartbox'));
+    caps.forEach(c=>c&&c.style.removeProperty('--caph'));
+    boxes.forEach(b=>b&&b.style.removeProperty('margin-top'));
+    // 한 열로 접히면(모바일) 맞출 대상이 없다
+    if(getComputedStyle(row).gridTemplateColumns.split(' ').length<2) return;
+    if(caps.every(Boolean)){
+      const h=Math.max(...caps.map(c=>c.getBoundingClientRect().height));
+      caps.forEach(c=>c.style.setProperty('--caph', h+'px'));
+    }
+    if(!boxes.every(Boolean)) return;
+    const off=boxes.map((b,i)=>b.getBoundingClientRect().top-cards[i].getBoundingClientRect().top);
+    const target=Math.max(...off);
+    boxes.forEach((b,i)=>{
+      const d=target-off[i];
+      if(d>0.5) b.style.marginTop=((parseFloat(getComputedStyle(b).marginTop)||0)+d)+'px';
+    });
+  });
+}
 
 function renderAll(){ renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); renderAgentStat(); renderAgentErrStat(); renderVisitStat(); renderAgentCompare(); }
 
@@ -1247,6 +1275,7 @@ document.getElementById('funnelTog').addEventListener('click',e=>{
 
 renderDefs(); renderSprintAnno(); renderAll();
 try{ makeCharts(); }catch(err){ console.error('chart load failed',err); }
+alignRowBodies();
 
 /* ===== 목적별 탭 (Superset Tabs 대응: 한 번에 한 탭만) =====
    h2와 다음 h2 전까지의 형제 요소를 같은 탭으로 묶음 */
@@ -1277,7 +1306,8 @@ const tabOfQ={0:'overview',1:'size',2:'size',3:'acq',4:'size',5:'size',6:'output
       el.classList.toggle('tab-hidden',el.dataset.tab!==t);
     });
     [...bar.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
-    try{renderCharts();}catch(e){} // 숨김 상태에서 그려진 차트 크기 보정
+    try{renderCharts();}catch(e){}
+    alignRowBodies();  // 숨김 상태에서는 높이가 0으로 재져서 탭이 보인 뒤 다시 맞춘다 // 숨김 상태에서 그려진 차트 크기 보정
   }
   bar.addEventListener('click',e=>{
     const b=e.target.closest('button'); if(!b) return;

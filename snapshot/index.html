@@ -71,11 +71,14 @@
   .card + .grid, .grid + .card, .card + .row2, .row2 + .card, :not(.row2) > .card + .card{margin-top:14px}
   .card h3{margin:0 0 2px;font-size:15px}
   .card .cap{color:var(--muted2);font-size:12px;margin:0 0 12px}
+  /* 2열에서 짝이 되는 카드의 «머리(제목+설명)» 높이를 맞춘다. 한쪽 설명이 한 줄 더 길다는
+     이유로 차트가 어긋나 보이던 문제를 여기서 막는다. --caph는 JS가 쌍마다 계산해 넣는다. */
+  .row2 > .card > .cap{min-height:var(--caph,auto)}
   .row2 > .card .chartbox,
-  .row2 > .card .chartbox.sm{
-    margin-top:auto;
-    flex:0 0 auto;
-  }
+  .row2 > .card .chartbox.sm{flex:0 0 auto}
+  /* 남는 세로 공간은 카드 «맨 아래»로 모은다 — 예전에는 차트에 margin-top:auto를 걸어
+     설명과 차트 사이가 벌어졌고, 한쪽에만 △ 배너가 붙으면 그 간격이 100px 넘게 났다. */
+  .row2 > .card > .m-src{margin-top:auto}
   .chead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
   .chartbox{position:relative;width:100%;height:240px;overflow:hidden;contain:layout paint}
   .chartbox.sm{height:210px}
@@ -219,8 +222,9 @@
   .m-mask .m-n{font-size:11px;color:var(--muted2);max-width:560px}
   .m-mask .m-n b{color:var(--warn);font-weight:600}
 
+  /* 차트 아래에 붙으므로 위쪽에 간격을 준다 */
   .m-warnbar{
-    display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;padding:8px 10px;
+    display:flex;gap:8px;align-items:flex-start;margin:12px 0 0;padding:8px 10px;
     background:rgba(224,179,65,.08);border:1px solid rgba(224,179,65,.32);border-radius:8px;
   }
   .m-warnbar svg{width:16px;height:16px;flex:0 0 auto;margin-top:1px}
@@ -546,7 +550,7 @@
   <div class="row2" style="margin-top:14px">
     <div class="card" data-m="visitMedian">
       <h3>UGC 월드당 월간 방문 중앙값</h3>
-      <p class="cap">한 번이라도 플레이된 UGC 월드만 대상 · 중앙값이라 히트작에 흔들리지 않음. 전형적인 월드가 받는 방문량<br/>대상 월드 수가 2월 51개 → 7월 162개로 3배가 됐습니다. 같은 집합을 놓고 재는 값이 아니므로 추세를 읽기 전에 △ 배지의 요인 분해를 보세요</p>
+      <p class="cap">한 번이라도 플레이된 UGC 월드만 대상 · 중앙값이라 히트작에 흔들리지 않음. 전형적인 월드가 받는 방문량<br/>대상 월드 수가 2월 51개 → 7월 162개로 3배가 됐습니다 — 고정 집합 비교가 아닙니다</p>
       <div class="chartbox sm"><div class="webchart" id="visitMedChart"></div></div>
     </div>
     <div class="card" data-m="worldConsume">
@@ -831,12 +835,13 @@ function applyAvailability(){
     if(h3 && a.s!=='ok') h3.insertAdjacentHTML('beforeend', chip(a.s, key));
 
     if(a.s==='warn'){
-      const anchor = card.querySelector('.cap') || card.querySelector('.chead') || h3;
       const bar = document.createElement('div');
       bar.className='m-warnbar';
       bar.innerHTML = `${ICON_WARN}<div class="t">${a.why}${a.need?`<span class="need">필요: ${a.need}</span>`:''}
         <span class="need m-hint">마우스를 올리면 <b>믿을 수 있는 범위 · 대안 · 필요한 작업</b>을 볼 수 있습니다</span></div>`;
-      anchor.insertAdjacentElement('afterend', bar);
+      // 차트 «아래»에 붙인다. 설명 바로 밑에 두면 배너 높이만큼 차트가 밀려서,
+      // 2열에서 한쪽에만 배너가 있을 때 두 차트의 시작 높이가 어긋난다.
+      card.appendChild(bar);
       markTip(bar, key);
     }
     if(a.s==='na'){
@@ -862,6 +867,34 @@ function applyAvailability(){
 
   /* KPI 카드·지표 정의 표의 배지는 마크업에 data-mk를 심어두고 위임으로 처리 */
   document.querySelectorAll('.m-chip[data-mk]').forEach(el=>{ el.tabIndex=0; });
+}
+
+/* 2열로 놓인 카드 쌍의 «본문 시작 높이»를 맞춘다.
+   카드마다 설명 줄 수, 스탯 한 줄, △ 배너 유무가 달라서 그냥 흘려두면 두 차트가
+   서로 다른 높이에서 시작해 어긋나 보인다. 설명 높이를 먼저 통일하고, 그래도 남는
+   차이는 차트 위 여백으로 흡수한다. 폭이 바뀌면 줄바꿈 수가 달라지므로 매번 다시 잰다. */
+function alignRowBodies(){
+  document.querySelectorAll('.row2').forEach(row=>{
+    const cards=[...row.children].filter(c=>c.classList.contains('card'));
+    if(cards.length<2) return;
+    const caps=cards.map(c=>c.querySelector(':scope > .cap'));
+    const boxes=cards.map(c=>c.querySelector('.chartbox'));
+    caps.forEach(c=>c&&c.style.removeProperty('--caph'));
+    boxes.forEach(b=>b&&b.style.removeProperty('margin-top'));
+    // 한 열로 접히면(모바일) 맞출 대상이 없다
+    if(getComputedStyle(row).gridTemplateColumns.split(' ').length<2) return;
+    if(caps.every(Boolean)){
+      const h=Math.max(...caps.map(c=>c.getBoundingClientRect().height));
+      caps.forEach(c=>c.style.setProperty('--caph', h+'px'));
+    }
+    if(!boxes.every(Boolean)) return;
+    const off=boxes.map((b,i)=>b.getBoundingClientRect().top-cards[i].getBoundingClientRect().top);
+    const target=Math.max(...off);
+    boxes.forEach((b,i)=>{
+      const d=target-off[i];
+      if(d>0.5) b.style.marginTop=((parseFloat(getComputedStyle(b).marginTop)||0)+d)+'px';
+    });
+  });
 }
 
 function renderAvailSummary(){
@@ -1567,7 +1600,7 @@ addEventListener('resize',()=>{
   if(innerWidth===_lastW) return;
   _lastW=innerWidth;
   clearTimeout(_reflowT);
-  _reflowT=setTimeout(()=>{ try{renderCharts();}catch(e){} }, 150);
+  _reflowT=setTimeout(()=>{ try{renderCharts();}catch(e){} alignRowBodies(); }, 150);
 }, {passive:true});
 
 
@@ -1588,7 +1621,7 @@ document.getElementById('segSel').addEventListener('change',e=>{
 });
 document.getElementById('periodSel').addEventListener('change',e=>{
   periodN=+e.target.value;
-  renderAll(); updateCharts(); applyAvailability();
+  renderAll(); updateCharts(); applyAvailability(); alignRowBodies();
 });
 document.getElementById('retTog').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
@@ -1599,6 +1632,7 @@ document.getElementById('retTog').addEventListener('click',e=>{
 renderAvailSummary(); renderDefs(); renderSprintAnno(); renderAll();
 try{ makeCharts(); }catch(err){ console.error('chart load failed',err); }
 applyAvailability();
+alignRowBodies();
 
 /* ===== 목적별 탭 (Superset Tabs 대응: 한 번에 한 탭만) =====
    h2와 다음 h2 전까지의 형제 요소를 같은 탭으로 묶음 */
@@ -1630,6 +1664,7 @@ const tabOfQ={0:'overview',1:'size',2:'size',3:'acq',4:'size',5:'size',6:'output
     });
     [...bar.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
     try{renderCharts();}catch(e){} // 숨김 상태에서 그려진 차트 크기 보정
+    alignRowBodies();            // 숨김 상태에서는 높이가 0으로 재져서 탭이 보인 뒤 다시 맞춘다
   }
   bar.addEventListener('click',e=>{
     const b=e.target.closest('button'); if(!b) return;
