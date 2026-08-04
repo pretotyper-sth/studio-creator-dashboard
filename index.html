@@ -347,8 +347,8 @@
       <div class="note"><b>관측 대기</b>(퍼블리시 30일 미만)는 아직 판단할 데이터가 없는 구간으로 품질 축 밖에 있습니다. 품질 순서는 그 다음부터 — 기준 미달 → Tier 3 → 2 → 1 → 0<br/><b>기준 미달</b> = 30일이 지났는데도 Tier3 문턱을 넘지 못한 월드. 신규 여부와 무관한 성과 기준<br/>관측 대기와 기준 미달의 비율 변화를 같이 보면, 퍼블리시가 활발한 것과 품질이 안 나오는 것을 구분할 수 있습니다</div>
     </div>
     <div class="card">
-      <h3>TTFP 중앙값 추이 (가입 → 첫 퍼블리시)</h3>
-      <p class="cap">Time To First Publish · 코호트별 중앙값(일). 짧을수록 온보딩 효율</p>
+      <h3>TTFP 중앙값 추이 (스튜디오 첫 로그인 → 첫 퍼블리시)</h3>
+      <p class="cap">Time To First Publish · 코호트별 중앙값(일). 짧을수록 온보딩 효율<br/>기산점은 <b>게임 회원가입일이 아니라 스튜디오에 처음 들어온 날</b>입니다. 가입 기준으로 재면 "스튜디오에 오기까지 걸린 기간"과 "와서 퍼블리시하기까지 걸린 기간"이 한 숫자에 섞여, 온보딩을 개선해도 지표가 안 움직입니다</p>
       <div class="chartbox sm"><div class="webchart" id="ttfpChart"></div></div>
     </div>
   </div>
@@ -378,8 +378,8 @@
       <div id="cohort"></div>
     </div>
     <div class="card">
-      <h3>지속 작업률 (퍼블리시 후 30일 내)</h3>
-      <p class="cap">첫 퍼블리시 후 30일 내 <b>동일 월드 v2+ 업데이트 또는 다른 월드 신규 퍼블리시</b>한 비율. 퍼블리시 코호트별</p>
+      <h3>지속 작업률 (퍼블리시 후 1~30일)</h3>
+      <p class="cap">첫 퍼블리시 후 <b>1~30일 안에</b> 동일 월드 v2+ 업데이트 또는 다른 월드 신규 퍼블리시한 비율. 퍼블리시 코호트별<br/>같은 날(0일) 재퍼블리시는 "지속"이 아니라 같은 작업의 연장이라 제외합니다 — 코호트마다 이 문턱을 다르게 쓰면 앞 코호트가 실제보다 좋아 보입니다</p>
       <div id="continueStat"></div>
       <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="continueChart"></div></div>
     </div>
@@ -424,10 +424,10 @@
   <h2 class="q"><span class="qnum">Q15</span>만든 월드는 실제로 소비되고 있는가?</h2>
   <div class="card">
     <h3>소비되는 월드 비율</h3>
-    <p class="cap">월간 방문을 1건이라도 받은 Live 월드 비율 · 막대 = Live 월드 수와 그중 방문받은 월드, 꺾은선 = 비율<br/><b>이 블록만 실측값</b> (2026-02 ~ 07-26, fct_world_analytics) · 월드↔크리에이터 관계 매핑이 없어 세그먼트 분해 미지원이라 상단 필터와 무관하게 전체 기준</p>
+    <p class="cap">한 달 동안 플레이어가 한 명이라도 들어온 월드 비율 · 막대 = 등재 월드 수와 그중 플레이된 월드, 꺾은선 = 비율<br/><b>이 블록만 실측값</b> (2026-02 ~ 07-31 확정, fct_world_analytics) · 월드↔크리에이터 관계 매핑이 없어 세그먼트 분해 미지원이라 상단 필터와 무관하게 전체 기준</p>
     <div id="visitStat"></div>
     <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="visitCovChart"></div></div>
-    <div class="note">분모는 생성된 Live 월드 전체로, 노출 설정이 Private·Pause여서 앱에 보이지 않는 월드도 포함됨. Public만으로 좁히면 비율은 이보다 높아짐</div>
+    <div class="note"><b>분모가 아직 'Live 월드'가 아닙니다.</b> <code>namespace='live'</code>는 배포 채널 이름일 뿐 퍼블리시 상태가 아니고, 이 테이블은 한 번 등재된 월드에 방문이 0이어도 매일 행을 남깁니다. 지금 Live인 월드를 확정할 상태 메타(Published/Unpublished/Banned)가 없어 현재 분모는 <b>등재 월드</b>이며 이 비율은 잠정값입니다. 그래서 실측 스냅샷 페이지는 비율 대신 <b>플레이된 월드의 절대 수</b>를 싣습니다 — 상태 메타가 붙으면 이 비율이 대표 지표가 됩니다</div>
   </div>
   <div class="row2" style="margin-top:14px">
     <div class="card">
@@ -437,7 +437,7 @@
     </div>
     <div class="card">
       <h3>상위 10% 월드의 방문 점유율</h3>
-      <p class="cap">방문받은 월드 중 상위 10%가 전체 방문에서 차지하는 비중 · 높을수록 소수 히트작 의존</p>
+      <p class="cap">한 번이라도 플레이된 월드 중 상위 10%가 전체 방문에서 차지하는 비중 · 높을수록 소수 히트작 의존</p>
       <div class="chartbox sm"><div class="webchart" id="visitConcChart"></div></div>
     </div>
   </div>
@@ -480,7 +480,7 @@
   <div class="row2">
     <div class="card">
       <h3>크리에이터 비교 — 더 빨리, 더 꾸준히 만드는가</h3>
-      <p class="cap">최근 90일 활성 창작 크리에이터를 <b>Agent 사용(AI CRUD 1회+) / 미사용</b> 두 그룹으로 나눠 같은 기간 비교 · 상관관계 참고용(Agent 덕분이라고 단정할 수는 없음)</p>
+      <p class="cap">최근 90일 활성 창작 크리에이터를 <b>Agent 사용(AI CRUD 1회+) / 미사용</b> 두 그룹으로 나눠 같은 기간 비교 · 상관관계 참고용(Agent 덕분이라고 단정할 수는 없음)<br/><b>TTFP 비교는 Agent GA 이후 첫 퍼블리시한 사람만</b>으로 한정합니다. GA 전에 이미 퍼블리시를 끝낸 고참이 미사용 그룹에 섞이면 그쪽 TTFP가 구조적으로 짧게 나와 비교가 무의미해집니다</p>
       <div id="agentCompare"></div>
     </div>
     <div class="card">
@@ -725,7 +725,7 @@ function renderScorecard(){
     kpiCard('90일 활성 창작', d.active90, '명', '최근 90일 슬라이딩') +
     kpiCard('편집 전환율', d.editConv, '%', '스튜디오 활성 대비 편집') +
     kpiCard('퍼블리시 전환(90일)', d.pubConv90, '%', `퍼블리시 ${d.pubCreators90} / 활성 ${d.active90}`) +
-    kpiCard('지속 작업률', d.continueByCohort[1], '%', `퍼블리시 후 30일 내 재출시·업데이트<br/>30일이 다 지난 최근 그룹(${pubCohortMonths[1]} 퍼블리시) 기준`) +
+    kpiCard('지속 작업률', d.continueByCohort[1], '%', `퍼블리시 후 1~30일 재출시·업데이트 (같은 날 제외)<br/>30일이 다 지난 최근 그룹(${pubCohortMonths[1]} 퍼블리시) 기준`) +
     kpiCard('MAU (Studio)', d.mau.at(-1), '명', '월간 Studio 활성') +
     kpiCard('Tier3+ 월드', t3, '개', '신규 방문 700+ · D1 12%+ · 체류 4분+<br/>충족 월드 누적 (숫자 낮을수록 상위)') +
     kpiCard('Tier2+ 월드', t2, '개', '신규 방문 2,000+ · D1 15%+ · 체류 6분+<br/>충족 월드 누적') +
@@ -762,8 +762,9 @@ function renderVisitStat(){
   const i=visitedShare.length-1;
   document.getElementById('visitStat').innerHTML =
     `<div class="statline"><span class="bigstat">${visitedShare[i]}<small>%</small></span>
-     <span class="statdesc">이번 달(진행 중) Live 월드 <b>${liveWorlds[i]}개</b> 중 <b>${visitedWorlds[i]}개</b>만 방문을 받음<br/>
-     총 방문 <b>${worldVisitsTotal[i].toLocaleString()}건</b> · 방문받은 월드의 중앙값 <b>${visitMedian[i].toLocaleString()}건</b></span></div>`;
+     <span class="statdesc">7월(7/1~7/31) 등재 월드 <b>${liveWorlds[i]}개</b> 중 <b>${visitedWorlds[i]}개</b>만 플레이어가 들어옴<br/>
+     총 방문 <b>${worldVisitsTotal[i].toLocaleString()}건</b> · 플레이된 월드의 중앙값 <b>${visitMedian[i].toLocaleString()}건</b><br/>
+     <span style="color:var(--muted2)">분모는 Live 월드가 아니라 등재 월드입니다 — 퍼블리시 상태 메타가 없어 비율은 잠정값</span></span></div>`;
 }
 /* 두 그룹 비교를 가로 막대 쌍으로 그린다. 지표마다 단위(%·일·건)가 달라 축을 공유할 수
    없으므로, 각 행을 그 행의 두 값 중 큰 쪽으로 정규화해 행 안에서만 길이를 비교한다.
@@ -786,7 +787,7 @@ function cmpBars(headA,headB,rows){
 function renderAgentCompare(){
   const v=seg[current].agentVs;
   document.getElementById('agentCompare').innerHTML = cmpBars('Agent 사용','미사용',[
-    ['첫 퍼블리시까지 걸린 시간 (TTFP 중앙값)','가입일 → 첫 퍼블리시까지 일수의 중앙값',v.ttfp[0],v.ttfp[1],'일',true],
+    ['첫 퍼블리시까지 걸린 시간 (TTFP 중앙값)','스튜디오 첫 로그인 → 첫 퍼블리시까지 일수의 중앙값',v.ttfp[0],v.ttfp[1],'일',true],
     ['퍼블리시 전환율','90일 내 퍼블리시한 크리에이터 ÷ 그룹 전체',v.pubConv[0],v.pubConv[1],'%',false],
     ['지속 작업률','퍼블리시 후 30일 내 재출시·업데이트한 비율',v.cont[0],v.cont[1],'%',false]
   ]);
@@ -1200,8 +1201,8 @@ function renderCharts(){
   ],{unit:'명',partialLast:true});
   barChart('ailabsChart','AI_Labs 누적 결과물',M,[{label:'AI_Labs',data:mc(d.ailabs),color:C.purple}],{legend:false,unit:'건',partialLast:true});
   comboChart('visitCovChart','소비되는 월드 비율',M,{
-    totals:{label:'Live 월드',data:mc(liveWorlds),color:'#3d4557'},
-    parts:{label:'방문받은 월드',data:mc(visitedWorlds),color:C.success},
+    totals:{label:'등재 월드',data:mc(liveWorlds),color:'#3d4557'},
+    parts:{label:'플레이된 월드',data:mc(visitedWorlds),color:C.success},
     rate:{label:'비율(%)',data:mc(visitedShare),color:C.warn}
   },{partialLast:true,unit:'개'});
   lineChart('visitMedChart','월드당 월간 방문 중앙값',M,[{label:'중앙값',data:mc(visitMedian),color:C.accent}],{unit:'건',partialLast:true});
