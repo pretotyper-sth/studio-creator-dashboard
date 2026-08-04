@@ -258,6 +258,7 @@
   #mtip .lb.l2{color:var(--success)}  /* 믿을 수 있는 범위 */
   #mtip .lb.l3{color:var(--warn)}     /* 주의 */
   #mtip .lb.l4{color:var(--accent)}   /* 대안 */
+  #mtip .lb.l5{color:var(--purple)}   /* 근본 원인 추적 */
   #mtip .lb.l5{color:var(--purple)}   /* 필요한 작업 */
   #mtip .tx{color:#b9c2cf}
   #mtip .tx b{color:var(--text);font-weight:600}
@@ -364,7 +365,7 @@
   <div class="row2" style="margin-top:14px">
     <div class="card" data-m="weeklyNew">
       <h3>주간 신규 크리에이터 (Weekly New)</h3>
-      <p class="cap">최근 7일 슬라이딩 · 최초 편집 완료자</p>
+      <p class="cap">월~일 주 버킷 · 최초 <b>스튜디오 활동</b> 기준(최초 편집 아님) · 마지막 주는 7/27~7/31 5일치</p>
       <div class="chartbox sm"><div class="webchart" id="weeklyNewChart"></div></div>
     </div>
     <div class="card" data-m="mau">
@@ -372,6 +373,11 @@
       <p class="cap">퍼블리시 여부와 무관하게 Studio를 실제로 사용한 월간 유니크</p>
       <div class="chartbox sm"><div class="webchart" id="mauChart"></div></div>
     </div>
+  </div>
+  <div class="card" data-m="newCohortDepth" style="margin-top:14px">
+    <h3>유입은 늘었는데 활동 규모는 왜 덜 늘었나 — 코호트별 정착 깊이</h3>
+    <p class="cap">7월 활동 크리에이터 <b>219명</b>을 <b>최초 활동 시점</b>으로 나눠 활동 일수를 비교했습니다 · 활동 인·일 = 사람 수 × 활동한 날 수</p>
+    <div id="cohortDepthBox"></div>
   </div>
 
   <h2 class="q"><span class="qnum">Q2</span>누적 크리에이터는 몇 명인가?</h2>
@@ -433,7 +439,7 @@
   <div class="row2">
     <div class="card" data-m="pubWorlds">
       <h3>월별 신규 퍼블리시 월드</h3>
-      <p class="cap">해당 월에 <b>처음 퍼블리시에 성공한 월드</b> 수 (재퍼블리시 제외) · 마지막 달은 7/27까지 부분 집계</p>
+      <p class="cap">해당 월에 <b>처음 퍼블리시된 월드</b> 수 (재퍼블리시 제외) · 7월 전체(7/1~7/31) 집계<br/>쿠킹 <b>성공 판정 로그가 7/10 이후 끊겨</b>, 성공 여부 대신 <b>퍼블리시 시도 후 실제 라이브 등재</b>로 판정했습니다. 이전 스냅샷의 7월 39개는 이 단절 때문에 나온 값이고 실제는 131개입니다 — 배지를 눌러 근거를 확인하세요</p>
       <div class="chartbox sm"><div class="webchart" id="pubChart"></div></div>
     </div>
     <div class="card" data-m="pubStatus">
@@ -451,9 +457,11 @@
       <div class="note"><b>관측 대기</b>(퍼블리시 30일 미만)는 아직 판단할 데이터가 없는 구간으로 품질 축 밖에 있습니다. 품질 순서는 그 다음부터 — 기준 미달 → Tier 3 → 2 → 1 → 0<br/><b>기준 미달</b> = 30일이 지났는데도 Tier3 문턱을 넘지 못한 월드. 신규 여부와 무관한 성과 기준<br/>관측 대기와 기준 미달의 비율 변화를 같이 보면, 퍼블리시가 활발한 것과 품질이 안 나오는 것을 구분할 수 있습니다</div>
     </div>
     <div class="card" data-m="ttfp">
-      <h3>TTFP 중앙값 추이 (가입 → 첫 퍼블리시)</h3>
-      <p class="cap">Time To First Publish · 코호트별 중앙값(일). 짧을수록 온보딩 효율</p>
+      <h3>TTFP 중앙값 추이 (스튜디오 첫 로그인 → 첫 퍼블리시)</h3>
+      <p class="cap">Time To First Publish · 첫 퍼블리시 월 코호트의 중앙값(일). 짧을수록 온보딩 효율<br/>
+      기준선을 <b>가입일에서 스튜디오 첫 로그인으로 바꿨습니다.</b> 가입일 기준은 4월이 296일로 튀는데, 온보딩이 느려서가 아니라 «게임 가입은 옛날, 스튜디오 유입은 최근»인 계정이 섞여서입니다 — 배지를 눌러 근거를 확인하세요</p>
       <div class="chartbox sm"><div class="webchart" id="ttfpChart"></div></div>
+      <div id="ttfpBaseline"></div>
     </div>
   </div>
 
@@ -483,7 +491,8 @@
     </div>
     <div class="card" data-m="continueRate">
       <h3>지속 작업률 (퍼블리시 후 30일 내)</h3>
-      <p class="cap">첫 퍼블리시 후 30일 내 <b>동일 월드 v2+ 업데이트 또는 다른 월드 신규 퍼블리시</b>한 비율. 퍼블리시 코호트별</p>
+      <p class="cap">첫 퍼블리시 후 1~30일 내 <b>동일 월드 v2+ 업데이트 또는 다른 월드 신규 퍼블리시</b>한 비율. 퍼블리시 코호트별<br/>
+      업데이트 로그가 <b>2026-05-15에 멈춰</b> 분자를 만들 수 없어 na로 내렸습니다. 이전 스냅샷의 4월 47%는 «퍼블리시와 같은 날 업데이트»를 지속으로 센 값이고, 임계값을 1~30일로 통일하면 20%입니다 — 배지를 눌러 근거를 확인하세요</p>
       <div id="continueStat"></div>
       <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="continueChart"></div></div>
     </div>
@@ -533,21 +542,22 @@
     <b>57,774시간(60.7%)</b>을 차지합니다. 아래 숫자는 <b>플랫폼 전체 소비가 아니라 UGC 몫</b>입니다.
   </div>
   <div class="card" data-m="visitedWorldsCnt">
-    <h3>방문받은 UGC 월드 수</h3>
-    <p class="cap">한 달에 방문을 1건이라도 받은 UGC 월드 · 막대 = 월간 방문받은 월드, 꺾은선 = 일평균<br/>2026-02 ~ 07-29, fct_world_analytics(UGC 전용) · 월드↔크리에이터 매핑이 없어 세그먼트 분해는 불가</p>
+    <h3>한 번이라도 플레이된 UGC 월드 수</h3>
+    <p class="cap">한 달 동안 플레이어가 한 명이라도 들어온 UGC 월드 · 막대 = 그 달에 플레이된 월드, 꺾은선 = 하루 평균<br/>2026-02 ~ 07-31, fct_world_analytics(UGC 전용) · 월드↔크리에이터 매핑이 없어 세그먼트 분해는 불가</p>
     <div id="visitStat"></div>
     <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="visitCovChart"></div></div>
-    <div class="note">비율로 만들려면 분모가 될 Live 월드 수가 필요한데 퍼블리시 상태 메타가 없어 확정할 수 없습니다. 참고로 이 테이블에 등재된 월드는 7월 1,162개지만 <b>그중 386개는 전 기간 방문이 0건</b>이라 Live 월드로 볼 수 없습니다</div>
+    <div class="note">비율로 만들려면 분모가 될 Live 월드 수가 필요한데 퍼블리시 상태 메타가 없어 확정할 수 없습니다. 참고로 이 테이블에 등재된 월드는 7월 1,167개지만 <b>그중 386개는 전 기간 플레이가 0건</b>이라 Live 월드로 볼 수 없습니다</div>
   </div>
   <div class="row2" style="margin-top:14px">
-    <div class="card" data-m="worldConsume">
+    <div class="card" data-m="visitMedian">
       <h3>UGC 월드당 월간 방문 중앙값</h3>
-      <p class="cap">방문을 받은 UGC 월드만 대상 · 중앙값이라 히트작에 흔들리지 않음. 전형적인 월드가 받는 방문량</p>
+      <p class="cap">한 번이라도 플레이된 UGC 월드만 대상 · 중앙값이라 히트작에 흔들리지 않음. 전형적인 월드가 받는 방문량<br/>2월 809건 → 7월 228건으로 계속 내려왔지만 <b>월드가 나빠진 신호는 아닙니다.</b> 카탈로그가 3배(51→162개)로 늘어난 희석 효과와 <b>6월 브라질 캠페인 종료 후 정상화</b>가 겹친 결과입니다 — 아래 두 표로 분해했습니다</p>
       <div class="chartbox sm"><div class="webchart" id="visitMedChart"></div></div>
+      <div id="medianDecompBox"></div>
     </div>
     <div class="card" data-m="worldConsume">
-      <h3>상위 10% UGC 월드의 방문 점유율 <span class="m-chip list" data-mlist="top10Worlds" tabindex="0">상위 16개 목록 보기</span></h3>
-      <p class="cap">방문받은 UGC 월드 중 상위 10%가 전체 방문에서 차지하는 비중 · 높을수록 소수 히트작 의존<br/>배지에 마우스를 올리면 7월 기준 상위 16개 월드가 월드명 × 점유율로 나옵니다</p>
+      <h3>상위 10% UGC 월드의 방문 점유율 <span class="m-chip list" data-mlist="top10Worlds" tabindex="0">상위 17개 목록 보기</span></h3>
+      <p class="cap">한 번이라도 플레이된 UGC 월드 중 상위 10%가 전체 방문에서 차지하는 비중 · 높을수록 소수 히트작 의존<br/>배지에 마우스를 올리면 7월 기준 상위 17개 월드가 월드명 × 점유율로 나옵니다</p>
       <div class="chartbox sm"><div class="webchart" id="visitConcChart"></div></div>
     </div>
   </div>
@@ -651,9 +661,9 @@ const C = {accent:'#4c8dff',success:'#35c28a',warn:'#e0b341',danger:'#e05a5a',pu
    기간 필터와 무관하므로 카드에 '기간 무관' 배지를 붙인다. */
 let periodN = 6;
 const PERIOD = {
-  6: {label:'최근 6개월', range:'2026-02-01 ~ 07-29', months:'2~7월'},
-  3: {label:'최근 3개월', range:'2026-05-01 ~ 07-29', months:'5~7월'},
-  1: {label:'최근 1개월', range:'2026-07-01 ~ 07-29', months:'7월'},
+  6: {label:'최근 6개월', range:'2026-02-01 ~ 07-31', months:'2~7월'},
+  3: {label:'최근 3개월', range:'2026-05-01 ~ 07-31', months:'5~7월'},
+  1: {label:'최근 1개월', range:'2026-07-01 ~ 07-31', months:'7월'},
 };
 const P = () => PERIOD[periodN];
 const win  = a => (a||[]).slice(-periodN);                       // 창 슬라이스
@@ -700,6 +710,7 @@ function tipHTML(key){
     sec('l1','무엇이 한계인가', d.limit || a.why) +
     sec('l2','지금 그대로 믿어도 되는 범위', d.trust) +
     sec('l3','이렇게 읽으면 틀립니다', d.doubt) +
+    sec('l5','근본 원인 추적 — 릴리즈 노트·원천 로그 대조', d.root) +
     sec('l4','대신 이렇게 보세요', d.alt) +
     fix +
     (a.src ? `<div class="src2">소스: ${a.src}</div>` : '');
@@ -712,7 +723,7 @@ const LIST_TIP = {
     const totalShare = rows.at(-1).cum;
     return {
       title:'상위 10% UGC 월드 목록',
-      sub:`7월(7/1~7/29) 방문받은 <b>UGC</b> 월드 <b>${visitedWorlds.at(-1)}개</b> 중 상위 <b>${rows.length}개</b> · 전체 방문 ${worldVisitsTotal.at(-1).toLocaleString()}건 기준 · CP(회사 제작) 월드 미포함`,
+      sub:`7월(7/1~7/31) 한 번이라도 플레이된 <b>UGC</b> 월드 <b>${visitedWorlds.at(-1)}개</b> 중 상위 <b>${rows.length}개</b> · 전체 방문 ${worldVisitsTotal.at(-1).toLocaleString()}건 기준 · CP(회사 제작) 월드 미포함`,
       body:`<table class="lst">
         <thead><tr><th></th><th>월드명</th><th class="n">방문</th><th class="n">점유율</th><th></th></tr></thead>
         <tbody>${rows.map(r=>`<tr>
@@ -723,7 +734,7 @@ const LIST_TIP = {
           <td class="bar"><span class="shbar"><i style="width:${Math.max(4,r.share/maxShare*100).toFixed(0)}%"></i></span></td>
         </tr>`).join('')}</tbody></table>`,
       foot:`이 <b>${rows.length}개</b>가 전체 방문의 <b>${totalShare.toFixed(1)}%</b>를 가져갑니다. 1위 <b>${esc(rows[0].name)}</b> 하나가 <b>${rows[0].share.toFixed(1)}%</b>, 상위 3개만으로 <b>${rows[2].cum.toFixed(1)}%</b>입니다.<br/>
-        <span style="color:var(--muted2)">소스: FCT_WORLD_ANALYTICS 월간 방문 합 · 월드명 META.FCT_WORLD_META · 7/1~7/29</span>`,
+        <span style="color:var(--muted2)">소스: FCT_WORLD_ANALYTICS 월간 방문 합 · 월드명 META.FCT_WORLD_META · 7/1~7/31</span>`,
     };
   },
 };
@@ -888,18 +899,18 @@ function renderPubStats(){
       ${stat(d.pubCreators90,'퍼블리시 크리에이터 (유니크) · 최근 90일')}
     </div>
     <div class="pstat">
-      ${stat(d.pubWorldsCum,'퍼블리시 월드 · 2025-08~현재 누적')}
+      ${stat(d.pubWorldsCum,'퍼블리시 이력 월드 · 2025-08~현재 누적')}
       ${stat(wsum(d.pubWorlds),`신규 퍼블리시 월드 · <b style="color:var(--accent)">${P().label}</b> (${P().range})`)}
     </div>
-    <div class="note" style="margin-top:12px">선택 기간(${P().months}) 신규 퍼블리시 <b>${wsum(d.pubWorlds)}개</b> · 월평균 <b>${wavg(d.pubWorlds)}개</b> · 월 최대 <b>${wmax(d.pubWorlds)}개</b>. 퍼블리시 성공 로그(cooking)는 <b>2025-08부터</b> 적재돼 그 이전 월드는 누적에서 빠집니다. 위 크리에이터 수는 <b>최근 90일 고정 창</b>이라 기간 필터와 무관합니다.</div>`;
+    <div class="note" style="margin-top:12px">선택 기간(${P().months}) 신규 퍼블리시 <b>${wsum(d.pubWorlds)}개</b> · 월평균 <b>${wavg(d.pubWorlds)}개</b> · 월 최대 <b>${wmax(d.pubWorlds)}개</b>. 쿠킹 로그는 <b>2025-08부터</b> 적재돼 그 이전 월드는 누적에서 빠집니다. 누적 674개 중 <b>성공 판정까지 붙은 건 569개</b>뿐인데, 차이 105개는 대부분 7/10 이후 성공 로그 단절분입니다. 위 크리에이터 수는 <b>최근 90일 고정 창</b>이라 기간 필터와 무관합니다.</div>`;
 }
 
 function renderContinueStat(){
   const d=seg[current], latest=d.continueByCohort[0], n=d.continueCohortN[0];
   document.getElementById('continueStat').innerHTML =
     `<div class="statline"><span class="bigstat">${latest}<small>%</small></span>
-     <span class="statdesc"><b>4월에 첫 퍼블리시한 ${n}명</b> 중 30일 내 재출시·업데이트한 비율 (${Math.round(latest*n/100)}명)<br/>
-     표본이 한 자릿수~20명대라 한두 명 차이로 값이 크게 흔들립니다</span></div>`;
+     <span class="statdesc"><b>4월에 첫 퍼블리시한 ${n}명</b> 중 1~30일 내 재출시·업데이트한 비율 (${Math.round(latest*n/100)}명)<br/>
+     표본이 한 자릿수~20명대라 한두 명 차이로 값이 크게 흔들리고, <b>업데이트 로그가 5/15에 멈춰</b> 분자가 불완전합니다</span></div>`;
 }
 function renderReturnStat(){
   const d=seg[current], tot=wsum(d.returnCreators);
@@ -929,12 +940,12 @@ function renderFunnel(){
     ["에디터 진입", d.cumEditor[L], '#6f7dff'],
     ["첫 편집", d.cumC[L], C.purple],
     ["첫 퍼블리시", d.cumPub[L], C.success],
-    ["업데이트(v2+)", d.cumUpdate[L], '#2fa876'],
   ]);
   const base = steps[0][1];
   document.getElementById('funnelNote').innerHTML =
     `서비스 시작~${SNAPSHOT.asOf} 누적 · 스튜디오 로그인=100%<br/>` +
-    `<span style="color:#ef8f8f">회원가입 단계 제외</span> — 웹로그 기준 가입 도달 계정이 ${d.cumSignupRaw.toLocaleString()}명으로 스튜디오 로그인 ${base.toLocaleString()}명보다 적게 잡혀 퍼널이 역전됩니다`;
+    `<span style="color:#ef8f8f">회원가입 단계 제외</span> — 웹로그 기준 가입 도달 계정이 ${d.cumSignupRaw.toLocaleString()}명으로 스튜디오 로그인 ${base.toLocaleString()}명보다 적게 잡혀 퍼널이 역전됩니다<br/>` +
+    `<span style="color:#ef8f8f">업데이트(v2+) 단계 제외</span> — 원천 로그가 <b>2026-05-15에 멈춰</b> ${d.cumUpdate[L]}명에서 고정돼 있습니다. 기록된 ${d.cumUpdate[L]}건 중 15건은 퍼블리시보다 앞선 날짜라 값 자체도 신뢰할 수 없습니다`;
   document.getElementById('funnel').innerHTML = steps.map((s,i)=>{
     const p = (s[1]/base*100);
     const drop = i===0 ? '<span class="fdrop">&nbsp;</span>' : (()=>{
@@ -1007,6 +1018,77 @@ function renderCohort(){
 }
 
 
+// 코호트별 정착 깊이 — 머리 수와 실제 작업량이 어긋나는 걸 한 표에서 보이게 한다.
+function renderCohortDepth(){
+  const box=document.getElementById('cohortDepthBox'); if(!box) return;
+  const totalDays=cohortDepth.reduce((s,r)=>s+r.userDays,0);
+  const veteran=cohortDepth.find(r=>r.grp==='Agent 이전 기존');
+  const fresh=cohortDepth.find(r=>r.grp==='7월 신규');
+  box.innerHTML=`<table class="defs">
+    <thead><tr><th>최초 활동 시점</th><th class="num">사람</th><th class="num">활동 인·일</th>
+    <th class="num">1인당 평균</th><th class="num">중앙값</th><th class="num">하루만 쓰고 이탈</th></tr></thead>
+    <tbody>${cohortDepth.map(r=>`<tr>
+      <td>${r.grp}</td>
+      <td class="num">${r.creators}명</td>
+      <td class="num">${r.userDays.toLocaleString()}일 <span style="color:var(--muted2)">(${Math.round(r.userDays/totalDays*100)}%)</span></td>
+      <td class="num"><b>${r.avgDays}일</b></td>
+      <td class="num">${r.medDays}일</td>
+      <td class="num" style="color:${r.pctOneDay>30?'var(--danger)':'var(--muted)'}">${r.oneDay}명 (${r.pctOneDay}%)</td>
+    </tr>`).join('')}</tbody></table>
+    <div class="note" style="margin-top:10px">
+      <b>신규 ${fresh.creators}명이 만든 활동량(${fresh.userDays}인·일)이 고참 ${veteran.creators}명이 만든 양(${veteran.userDays}인·일)보다 적습니다.</b>
+      머리 수는 ${(fresh.creators/veteran.creators).toFixed(1)}배인데 작업량은 더 적습니다 — 유입은 됐고 <b>정착이 병목</b>입니다.<br/>
+      «신청자 191명»은 7월 한 달이 아니라 <b>최근 90일 누적</b>입니다. 7월 안에 Agent를 쓴 사람은 <b>${agentUsersMonth.at(-1)}명</b>(활동 크리에이터의 ${Math.round(agentUsersMonth.at(-1)/seg.all.mau.at(-1)*100)}%)이고, 그중 29.4%가 하루만 썼습니다.
+    </div>`;
+}
+
+// 방문 중앙값 하락을 «희석»과 «실제 감소»로 분해한다. 이게 없으면 좋은 신호인지 나쁜 신호인지 못 가린다.
+function renderMedianDecomp(){
+  const box=document.getElementById('medianDecompBox'); if(!box) return;
+  const n=v=>v==null?'<span style="color:var(--muted2)">–</span>':v.toLocaleString();
+  box.innerHTML=`<div class="note" style="margin:10px 0 8px">6→7월 하락을 월드 집합별로 분해 — <b>기준 주의</b>: 이 표는 쿠킹 이력이 확인된 UGC만 대상이라
+      6월 <b>272건</b>(108개) → 7월 <b>204건</b>(157개)입니다. 카드 상단의 전체 기준(335 → 228건)과 <b>섞어서 인용하면 안 됩니다</b>.</div>
+    <table class="defs">
+    <thead><tr><th>월드 집합</th><th class="num">수</th><th class="num">6월 중앙값</th><th class="num">7월 중앙값</th><th>해석</th></tr></thead>
+    <tbody>${medianDecomp.map(r=>`<tr>
+      <td>${r.grp}</td><td class="num">${r.worlds}개</td>
+      <td class="num">${n(r.junMed)}</td><td class="num">${n(r.julMed)}</td>
+      <td style="font-size:12px;color:var(--muted)">${r.note}</td>
+    </tr>`).join('')}</tbody></table>
+    <div class="note" style="margin:14px 0 8px">①의 정체 — <b>6월 브라질 광고 캠페인</b>의 예산 곡선과 일별 방문 대조
+      <span style="color:var(--muted2)">(구간 = Confluence 「브라질 광고 캠페인 운영 계획」의 예산 집행 일정)</span></div>
+    <table class="defs">
+    <thead><tr><th>구간</th><th>단계</th><th class="num">예산</th><th class="num">일 방문</th><th class="num">일 DAU</th></tr></thead>
+    <tbody>${campaignPhases.map(r=>`<tr${r.peak?' style="background:rgba(224,179,65,.07)"':''}>
+      <td>${r.phase}</td><td>${r.label}</td><td class="num" style="color:var(--muted)">${r.budget}</td>
+      <td class="num"><b${r.peak?' style="color:var(--warn)"':''}>${r.visitsPerDay.toLocaleString()}</b></td>
+      <td class="num">${r.dauPerDay.toLocaleString()}</td>
+    </tr>`).join('')}</tbody></table>
+    <div class="note" style="margin-top:10px">예산을 올린 순서대로 트래픽이 올라가고 <b>캠페인이 끝난 6/28에 꺾입니다.</b>
+      다만 종료 후 일 <b>9,948건</b>은 캠페인 전 일 <b>3,780건</b>의 <b style="color:var(--success)">2.6배</b>입니다 — 유입분의 상당량이 남았습니다.
+      <b>6월을 비교 기준월로 쓰면 이후 모든 달이 하락으로 보입니다.</b></div>`;
+}
+
+// TTFP 기준선 두 개를 나란히 — 격차 자체가 "스튜디오 유입은 신규지만 계정은 오래된 사람" 비중을 뜻한다
+function renderTtfpBaseline(){
+  const box=document.getElementById('ttfpBaseline'); if(!box) return;
+  const d=seg[current], M=months.map(m=>m.split('/')[0]+'월');
+  box.innerHTML=`<div class="note" style="margin:10px 0 8px">두 기준선 비교 — 차이가 곧 <b>가입 후 스튜디오에 오기까지 걸린 시간</b>입니다</div>
+    <table class="defs">
+    <thead><tr><th>첫 퍼블리시 코호트</th><th class="num">표본</th><th class="num">스튜디오 첫 로그인 기준</th><th class="num">가입일 기준(옛 정의)</th><th class="num">격차</th></tr></thead>
+    <tbody>${M.map((m,i)=>{
+      const a=d.ttfpDays[i], b=d.ttfpDaysBySignup[i], gap=b-a;
+      const small=d.ttfpN[i]<10;
+      return `<tr><td>${m}</td>
+        <td class="num" style="color:${small?'var(--warn)':'var(--muted)'}">${d.ttfpN[i]}명${small?' (부족)':''}</td>
+        <td class="num"><b>${a}일</b></td>
+        <td class="num" style="color:var(--muted)">${b}일</td>
+        <td class="num" style="color:${gap>=200?'var(--danger)':'var(--muted2)'}">+${gap}일</td></tr>`;
+    }).join('')}</tbody></table>
+    <div class="note" style="margin-top:10px">4월 코호트의 격차가 <b>289일</b>입니다 — 이들은 스튜디오에 온 뒤 <b>7일</b> 만에 퍼블리시했지만,
+      게임 계정은 그보다 <b>10개월 가까이 전</b>에 만들었습니다. 옛 정의의 «296일»은 온보딩 속도가 아니라 계정 나이였습니다.</div>`;
+}
+
 function pct(v,t){return t? Math.round(v/t*100):0}
 function kpiCard(label,val,unit,sub,tag){
   return `<div class="card kpi"><div class="klabel">${label}${tag||''}</div>
@@ -1028,11 +1110,11 @@ function renderScorecard(){
   const fx = `<span class="m-chip" style="margin-left:6px;background:#2a3140;color:var(--muted2);border-color:#39414f" title="최근 90일 슬라이딩 또는 서비스 시작~현재 누적 지표라 상단 기간 필터의 영향을 받지 않습니다">기간 무관</span>`;
   document.getElementById('scorecard').innerHTML =
     kpiCard('90일 활성 크리에이터', d.active90, '명', '최근 90일 슬라이딩 · 편집 외 스튜디오 활동 포함', wchip('active90')+fx) +
-    kpiCard('편집 전환율', d.editConv, '%', '누적 기준 · 첫 편집 739 / 스튜디오 로그인 2,398', wchip('editConv')+fx) +
+    kpiCard('편집 전환율', d.editConv, '%', `누적 기준 · 첫 편집 ${d.cumC.at(-1).toLocaleString()} / 스튜디오 로그인 ${d.cumLogin.at(-1).toLocaleString()}`, wchip('editConv')+fx) +
     kpiCard('퍼블리시 전환(90일)', d.pubConv90, '%', `퍼블리시 ${d.pubCreators90}명 / 활성 ${d.active90}명`, fx) +
     kpiCard('Agent 사용률(90일)', d.agentUseRate.at(-1), '%', `${d.agentUsers90.at(-1)}명 / 활성 ${d.active90}명`, fx) +
-    kpiCard('MAU (Studio)', d.mau.at(-1), '명', `7/1~7/29 유니크${periodN>1?` · ${P().months} 월평균 ${wavg(d.mau)}명 · 최대 ${wmax(d.mau)}명`:''}`) +
-    kpiCard('방문받은 UGC 월드 (7월)', visitedWorlds.at(-1), '개', `일평균 ${dailyVisitedAvg.at(-1)}개 · ${P().label} 총 방문 ${wsum(worldVisitsTotal).toLocaleString()}건 · CP 월드 미포함`, wchip('visitedWorldsCnt')) +
+    kpiCard('MAU (Studio)', d.mau.at(-1), '명', `7/1~7/31 유니크${periodN>1?` · ${P().months} 월평균 ${wavg(d.mau)}명 · 최대 ${wmax(d.mau)}명`:''}`) +
+    kpiCard('플레이된 UGC 월드 (7월)', visitedWorlds.at(-1), '개', `하루 평균 ${dailyVisitedAvg.at(-1)}개 · ${P().label} 총 방문 ${wsum(worldVisitsTotal).toLocaleString()}건 · CP 월드 미포함`, wchip('visitedWorldsCnt')) +
     naCard('Tier3+ 월드', '방문·D1·체류 기준을 컬럼에 매핑 불가', 'tier') +
     naCard('코어 크리에이터', '계정별 활동 시간 테이블 없음', 'core') +
     naCard('활성화율 (7일 3h+)', '계정별 활동 시간 테이블 없음', 'activation');
@@ -1067,16 +1149,16 @@ function renderAgentStat(){
 }
 function renderVisitStat(){
   const i=visitedWorlds.length-1;
-  // 월별 "방문받은 월드 수"는 각 달의 유니크라 여러 달을 더할 수 없다(합집합 미계산).
+  // 월별 "플레이된 월드 수"는 각 달의 유니크라 여러 달을 더할 수 없다(합집합 미계산).
   // 따라서 대표값은 항상 최근 달이고, 기간에 반응하는 건 합산 가능한 방문 건수 쪽이다.
   const multi = periodN>1;
   document.getElementById('visitStat').innerHTML =
     `<div class="statline"><span class="bigstat">${visitedWorlds[i]}<small>개</small></span>
-     <span class="statdesc">7월(7/1~7/29)에 방문을 1건이라도 받은 <b>UGC</b> 월드 · 일평균 <b>${dailyVisitedAvg[i]}개</b> · 일 최대 <b>${dailyVisitedMax[i]}개</b> <span style="color:var(--muted2)">(29일 내내 방문받는 상시 월드 56개 + 간헐 방문분)</span><br/>
-     총 방문 <b>${worldVisitsTotal[i].toLocaleString()}건</b> · 방문받은 월드의 중앙값 <b>${visitMedian[i].toLocaleString()}건</b></span></div>
+     <span class="statdesc">7월(7/1~7/31)에 플레이어가 한 번이라도 들어온 <b>UGC</b> 월드 · 하루 평균 <b>${dailyVisitedAvg[i]}개</b> · 하루 최대 <b>${dailyVisitedMax[i]}개</b> <span style="color:var(--muted2)">(31일 내내 플레이되는 상시 월드 55개 + 간헐 플레이분)</span><br/>
+     총 방문 <b>${worldVisitsTotal[i].toLocaleString()}건</b> · 월드당 방문 중앙값 <b>${visitMedian[i].toLocaleString()}건</b></span></div>
      <div class="note" style="margin-top:10px">
-       <b style="color:var(--accent)">${P().label}</b> (${P().range}) — 총 방문 <b>${wsum(worldVisitsTotal).toLocaleString()}건</b>${multi?` · 월평균 방문받은 월드 <b>${wavg(visitedWorlds)}개</b> · 월 최대 <b>${wmax(visitedWorlds)}개</b>`:''}
-       ${multi?'<br/>월별 «방문받은 월드»는 각 달의 유니크라 <b>여러 달을 더할 수 없습니다</b>(합집합 미계산). 위 대표 수치가 7월 고정인 이유입니다.':''}
+       <b style="color:var(--accent)">${P().label}</b> (${P().range}) — 총 방문 <b>${wsum(worldVisitsTotal).toLocaleString()}건</b>${multi?` · 월평균 플레이된 월드 <b>${wavg(visitedWorlds)}개</b> · 월 최대 <b>${wmax(visitedWorlds)}개</b>`:''}
+       ${multi?'<br/>월별 «플레이된 월드»는 각 달의 유니크라 <b>여러 달을 더할 수 없습니다</b>(합집합 미계산). 위 대표 수치가 7월 고정인 이유입니다.':''}
      </div>`;
 }
 /* 두 그룹 비교를 가로 막대 쌍으로 그린다. 지표마다 단위(%·일·건)가 달라 축을 공유할 수
@@ -1100,9 +1182,10 @@ function cmpBars(headA,headB,rows){
 function renderAgentCompare(){
   const d=seg[current], v=d.agentVs;
   document.getElementById('agentCompare').innerHTML = cmpBars('Agent 사용','미사용',[
-    ['퍼블리시 전환율','최근 90일에 퍼블리시한 크리에이터 ÷ 그룹 전체 (각 190명)',v.pubConv[0],v.pubConv[1],'%',false],
-    ['첫 퍼블리시까지 걸린 시간 (TTFP 중앙값)','가입일 → 첫 퍼블리시까지 일수의 중앙값 (사용 58명 / 미사용 27명만 집계)',v.ttfp[0],v.ttfp[1],'일',true]
-  ]) + `<div class="note" style="margin-top:12px">최근 90일 활성 ${d.active90}명이 Agent 사용 ${d.agentVsN[0]}명 / 미사용 ${d.agentVsN[1]}명으로 정확히 반씩 나뉩니다. <b>지속 작업률</b>은 그룹별 표본이 한 자릿수라 뺐습니다.</div>`;
+    ['퍼블리시 전환율',`최근 90일에 퍼블리시한 크리에이터 ÷ 그룹 전체 (사용 ${d.agentVsPubN[0]}/${d.agentVsN[0]}명 · 미사용 ${d.agentVsPubN[1]}/${d.agentVsN[1]}명)`,v.pubConv[0],v.pubConv[1],'%',false]
+  ]) + `<div class="note" style="margin-top:12px">최근 90일 활성 ${d.active90}명이 Agent 사용 <b>${d.agentVsN[0]}명</b> / 미사용 <b>${d.agentVsN[1]}명</b>으로 거의 반씩 나뉩니다.<br/>
+    <b style="color:#ef8f8f">TTFP 비교는 내렸습니다</b> — Agent 그룹에서 첫 퍼블리시 이력이 있는 61명 중 <b>28명(46%)이 Agent 오픈(5/18) 전에 이미 첫 퍼블리시</b>를 마쳤습니다. 기준선을 퍼널과 같은 «스튜디오 첫 로그인»으로 맞추면 이전 스냅샷의 «사용 64일 / 미사용 84일»이 «47일 / 33.5일»로 <b>방향까지 뒤집힙니다.</b> 배지를 눌러 근거를 확인하세요.<br/>
+    <b>지속 작업률</b>도 뺐습니다 — 업데이트 로그가 5/15에 멈춰 그룹별로 나눌 값이 없습니다.</div>`;
   document.getElementById('agentWorldCompare').innerHTML = cmpBars('Agent 제작','미사용',[
     ['Tier3+ 도달률','Tier3 기준 달성 월드 ÷ 그룹 전체 월드',1,1,'%',false],
     ['월드당 월간 방문 (중앙값)','월드 1개가 한 달에 받는 방문 세션의 중앙값',1,1,'건',false],
@@ -1468,7 +1551,9 @@ function renderCharts(){
   barChart('tierChart','퍼블리시 월드 품질 티어 분포',['관측 대기','기준 미달','Tier 3','Tier 2','Tier 1','Tier 0'],[
     {label:'월드 수',data:d.tierDist,colors:['#3d4557',C.muted,C.success,C.purple,C.accent,C.warn]}
   ],{legend:false,unit:'개'});
-  trend('ttfpChart','TTFP 중앙값 추이',M,[{label:'중앙값',data:mc(d.ttfpDays),color:C.purple}],{unit:'일'});
+  // 가입일 기준 시리즈(ttfpDaysBySignup)는 4월 296일 때문에 y축을 뭉개므로 차트에 겹치지 않고 아래 표로만 병기
+  trend('ttfpChart','TTFP 중앙값 추이',M,[{label:'스튜디오 첫 로그인 → 첫 퍼블리시',data:mc(d.ttfpDays),color:C.purple}],{unit:'일'});
+  renderTtfpBaseline();
   const nets=mc(d.inflow.map((v,i)=>v-d.outflow[i]));
   barChart('inoutChart','90일 활성 로스터 순증',M,[
     {label:'순증/순감',data:nets,colors:nets.map(v=>v>=0?C.success:C.danger)}
@@ -1522,8 +1607,8 @@ function renderCharts(){
     {label:'참여 크리에이터',data:mc(d.communityEngaged),color:C.success,right:true}
   ],{unit:'명',partialLast:true});
   barChart('ailabsChart','AI_Labs 누적 결과물',M,[{label:'AI_Labs',data:mc(d.ailabs),color:C.purple}],{legend:false,unit:'건',partialLast:true});
-  barChart('visitCovChart','방문받은 월드 수',M,[
-    {label:'월간 방문받은 월드',data:mc(visitedWorlds),color:C.success},
+  barChart('visitCovChart','플레이된 월드 수',M,[
+    {label:'그 달에 플레이된 월드',data:mc(visitedWorlds),color:C.success},
     {label:'일평균',data:mc(dailyVisitedAvg),color:C.accent}
   ],{unit:'개'});
   trend('visitMedChart','월드당 월간 방문 중앙값',M,[{label:'중앙값',data:mc(visitMedian),color:C.accent}],{unit:'건'});
@@ -1552,7 +1637,7 @@ function renderPeriodBar(){
       ? ` <span style="color:var(--warn)">1개월은 월 포인트가 하나뿐이라 추세 차트가 단일 막대로 바뀝니다 — 주·일 단위 분해는 현재 마트에 없습니다.</span>`
       : ``);
 }
-function renderAll(){ renderPeriodBar(); renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); renderAgentStat(); renderAgentErrStat(); renderVisitStat(); renderAgentCompare(); }
+function renderAll(){ renderPeriodBar(); renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); renderAgentStat(); renderAgentErrStat(); renderVisitStat(); renderAgentCompare(); renderCohortDepth(); renderMedianDecomp(); }
 
 document.getElementById('segSel').addEventListener('change',e=>{
   current=e.target.value;
