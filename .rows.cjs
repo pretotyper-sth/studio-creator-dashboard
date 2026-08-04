@@ -3,7 +3,7 @@ const { chromium } = require('/Users/jungsoo.kim/.claude/skills/gstack/node_modu
 const TABS = ['overview', 'acq', 'size', 'ret', 'output', 'agent', 'community'];
 (async () => {
   const b = await chromium.launch();
-  for (const [name, url] of [['mock', 'http://127.0.0.1:8802/'], ['snap', 'http://127.0.0.1:8802/snapshot/']]) {
+  for (const [name, url] of [['mock', 'http://127.0.0.1:8809/'], ['snap', 'http://127.0.0.1:8809/snapshot/']]) {
     const p = await b.newPage({ viewport: { width: 1440, height: 1100 } });
     await p.goto(url, { waitUntil: 'networkidle' });
     const bad = [];
