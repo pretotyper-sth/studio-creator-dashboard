@@ -7,8 +7,8 @@
 | `/` | 가상(mock) 데이터 | 지표 정의 얼라인 — 모든 차트가 채워진 상태로 보임 |
 | `/snapshot/` | 실측 데이터 (2026-07-31 기준 1회성 스냅샷) | 현황 공유 — 지금 실제로 볼 수 있는 것과 없는 것을 구분해 보여줌 |
 
-- 배포: https://studio-creator-dashboard.pages.dev/
-- 실측 스냅샷: https://studio-creator-dashboard.pages.dev/snapshot/
+- 가상 데이터: https://pretotyper-sth.github.io/studio-creator-dashboard/
+- 실측 스냅샷: https://pretotyper-sth.github.io/studio-creator-dashboard/snapshot/
 
 ## 실측 스냅샷 (`/snapshot/`)
 
@@ -436,13 +436,17 @@ python3 -m http.server 8787
 
 ## 배포
 
-Cloudflare Pages 직접 업로드입니다. `dist/`를 만들어 올립니다.
+**`main`에 푸시하면 끝입니다.** GitHub Pages가 `.github/workflows/pages.yml`로 자동 배포하고
+20초쯤 뒤에 반영됩니다. 빌드 단계도 없고 레포 루트를 그대로 올리므로 `index.html`과
+`snapshot/`이 곧 배포물입니다.
 
 ```bash
-rm -rf dist && mkdir -p dist/snapshot
-cp index.html data.js dist/
-cp snapshot/index.html snapshot/data.js dist/snapshot/
-npx wrangler pages deploy dist --project-name=studio-creator-dashboard --branch=main
+git add -A && git commit -m "..." && git push origin main
 ```
 
-`dist/`는 gitignore 대상이라 배포 때마다 위 명령으로 다시 만들어야 합니다.
+정적 파일뿐이라 백엔드가 없고, 레포가 공개라 Pages도 공개입니다 — 사내망 없이 열립니다.
+
+이전에는 Cloudflare Pages 직접 업로드도 병행했는데 **2026-08-07에 제거했습니다.** 같은 화면이
+두 도메인에 뜨면 한쪽이 조용히 낡아 잘못된 수치를 보여주게 되고, wrangler 쪽은 매번 수동
+명령이 필요한 데다 OAuth 토큰이 3일 만에 만료되고 사내 TLS 프록시(`CN=*.krafton.com`) 때문에
+`NODE_EXTRA_CA_CERTS`까지 걸어야 해서 자동 배포보다 손이 많이 갔습니다.
