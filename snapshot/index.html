@@ -327,6 +327,48 @@
   .m-chip.list:hover{filter:brightness(1.25)}
 
   .m-src{font-size:11px;color:var(--muted2);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+
+  /* 작업 요청 탭 */
+  .ops-sum{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+  .ops-sum .b{flex:1;min-width:150px;background:#141a23;border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+  .ops-sum .b .v{font-size:22px;font-weight:700;color:var(--text);line-height:1.2}
+  .ops-sum .b .l{font-size:11.5px;color:var(--muted2);margin-top:3px}
+  .ops-g{margin-top:14px}
+  .ops-g > .lead{font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.65}
+  table.ops{width:100%;border-collapse:collapse}
+  table.ops th{text-align:left;font-size:11px;color:var(--muted2);font-weight:600;padding:0 12px 7px 0;border-bottom:1px solid var(--border)}
+  table.ops td{padding:11px 12px 11px 0;border-bottom:1px solid #1c232e;vertical-align:top;font-size:12px;color:var(--muted);line-height:1.65}
+  table.ops tr:last-child td{border-bottom:none}
+  table.ops .t{color:var(--text);font-weight:600;font-size:12.5px;display:block;word-break:keep-all}
+  table.ops .sub{color:var(--muted2);font-size:11px;display:block;margin-top:2px}
+  table.ops code{background:#1c232e;padding:1px 5px;border-radius:3px;font-size:11px;color:#c4a3ff}
+  table.ops b{color:var(--text)}
+  .opsm{display:inline-block;margin:0 5px 5px 0;padding:3px 9px;border-radius:11px;font-size:11px;
+        background:#1c232e;border:1px solid #2c3644;color:#9fb0c6;cursor:pointer;font-family:inherit;line-height:1.5}
+  .opsm:hover{border-color:var(--accent);color:var(--text);background:#232c39}
+  .opsm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .opsm .n{color:var(--muted2);margin-left:4px;font-size:10px}
+  @keyframes opsFlash{0%,100%{box-shadow:0 0 0 0 rgba(91,155,255,0)}
+                      12%{box-shadow:0 0 0 3px rgba(91,155,255,.55)}
+                      70%{box-shadow:0 0 0 3px rgba(91,155,255,.35)}}
+  .ops-flash{animation:opsFlash 1.7s ease-out}
+  @keyframes opsFlashRow{0%,100%{background:transparent}12%,70%{background:rgba(91,155,255,.16)}}
+  .ops-flash-row > td{animation:opsFlashRow 1.7s ease-out}
+
+  /* 용어 정의 — 어떤 탭에서도 펼쳐볼 수 있게 필터 바 아래 고정 */
+  #terms{margin:12px 0 0;border:1px solid var(--border);border-radius:8px;background:#141a23}
+  #terms>summary{cursor:pointer;padding:10px 14px;font-size:12.5px;font-weight:600;color:var(--text);list-style:none}
+  #terms>summary::-webkit-details-marker{display:none}
+  #terms>summary::before{content:'▸';display:inline-block;width:14px;color:var(--muted2)}
+  #terms[open]>summary::before{content:'▾'}
+  #terms>summary .hint{font-weight:400;color:var(--muted2);margin-left:6px}
+  #terms .body{padding:2px 14px 14px;font-size:12px;color:var(--muted);line-height:1.7}
+  #terms table{width:100%;border-collapse:collapse;margin:6px 0 10px}
+  #terms th{text-align:left;font-size:11px;color:var(--muted2);font-weight:600;padding:6px 10px 6px 0;border-bottom:1px solid var(--border);vertical-align:bottom}
+  #terms td{padding:8px 10px 8px 0;border-bottom:1px solid #1c232e;vertical-align:top}
+  #terms td:first-child{white-space:nowrap;color:var(--text);font-weight:600}
+  #terms code{background:#1c232e;padding:1px 5px;border-radius:3px;font-size:11px;color:#c4a3ff}
+  #terms b{color:var(--text)}
   .kpi.m-na{opacity:1}
   .kpi.m-na .kval{color:var(--muted2)}
   .legend-na{opacity:.25;filter:grayscale(1)}
@@ -367,6 +409,44 @@
   <div id="periodNote" class="note" style="margin:8px 0 0"></div>
   <div id="availSummary"></div>
 
+  <details id="terms">
+    <summary>이 대시보드가 «활동 · 신규 · 창작»을 각각 무엇으로 세는지<span class="hint">— 카드 이름이 헷갈릴 때 여기를 펴세요</span></summary>
+    <div class="body">
+      <p style="margin:4px 0 10px">스튜디오 관련 지표는 전부 <code>studio_log</code> 한 테이블에서 나옵니다. 이 테이블은
+        <b>스튜디오에서 일어난 모든 이벤트</b>를 한 행씩 담고, 이벤트 종류는 <code>event_name</code>으로 구분됩니다
+        (<code>studio_login</code> · <code>world_create</code> · <code>world_modified</code> · <code>studio_asset_click</code> ·
+        <code>save_attempt</code> · <code>publish_result</code> · <code>system_logs</code> 등). 어떤 <code>event_name</code>을
+        조건으로 거느냐에 따라 아래 세 단계가 갈립니다.</p>
+      <table>
+        <thead><tr><th style="width:150px">단계</th><th style="width:300px">조건 (studio_log 기준)</th><th>이 조건을 쓰는 카드</th></tr></thead>
+        <tbody>
+          <tr><td>① 스튜디오 로그인</td>
+              <td><b>스튜디오를 켠 것.</b> 마트 구현은 <code>event_name</code> 조건 없이
+                  <code>accountid</code>가 있는 이벤트 1건 이상인데, 실측 결과 로그인 계정과 <b>51:50</b>으로 거의 일치합니다.</td>
+              <td>MAU · 90일 활성 스튜디오 계정 · 주간 신규 스튜디오 계정 · 국가별 · 인/아웃 · 복귀 · Agent 사용률의 분모</td></tr>
+          <tr><td>② 에디터 진입</td>
+              <td><code>event_name = 'world_create'</code></td>
+              <td>온보딩 퍼널 2번째 칸 (누적 1,653명)</td></tr>
+          <tr><td>③ 편집 = «창작»</td>
+              <td><code>event_name = 'world_modified'</code> <b>AND</b> <code>event_value</code> ∈
+                  (<code>foundation_design</code>, <code>technical_design</code>, <code>script_generation</code>,
+                  <code>script_modified</code>, <code>object_transform_modified</code>)</td>
+              <td><b>없음</b> — 90일 활성 창작 크리에이터는 <span style="color:#ef8f8f">측정 불가</span>입니다</td></tr>
+        </tbody>
+      </table>
+      <p style="margin:0 0 8px"><b>«활동»과 «신규»는 둘 다 ①, 즉 스튜디오 로그인 기준입니다.</b>
+        활동은 «그 기간에 스튜디오를 켰다», 신규는 «스튜디오를 처음 켠 날»(계정별 <code>MIN(dt)</code>)입니다.
+        <b>처음 편집한 날이 아닙니다</b> — 그건 <code>first_edit_date</code>로 별도 컬럼입니다.</p>
+      <p style="margin:0 0 8px"><b>①을 «로그인»이라 불러도 되는지 확인했습니다.</b>
+        2026-08-01~08-07 <code>PROD.RAW_MERGED.STUDIO_LOG</code>에서 이벤트를 남긴 계정은 <b>51개</b>,
+        그중 <code>studio_login</code>이 있는 계정은 <b>50개</b>입니다. 차이 1개는 세션이 주 경계를 넘은 경우로 보이고,
+        월·90일 유니크에서는 흡수됩니다. <b>로그인 기준으로 읽어도 됩니다.</b></p>
+      <p style="margin:0">막혀 있는 것은 ③입니다. 로스터 테이블(<code>FCT_STUDIO_CREATOR_MASTER</code>)이
+        <code>event_name</code> 필터 없이 만들어져서 <b>편집한 계정만 좁혀낼 수 없습니다.</b>
+        ③은 <code>fct_creator_first_login_date</code>가 최초 도달일을 만들 때만 쓰고 일자별로는 남지 않습니다.</p>
+    </div>
+  </details>
+
   <!-- Superset Tabs 컴포넌트 대응 — 필터 바 바로 아래, 한 번에 한 탭만 표시 -->
   <div class="tabs" id="tabs">
     <button data-tab="overview" class="on">요약</button>
@@ -377,26 +457,40 @@
     <button data-tab="agent">Agent</button>
     <button data-tab="community">커뮤니티</button>
     <button data-tab="defs">지표 정의</button>
+    <button data-tab="ops">작업 요청</button>
   </div>
 
   <h2 class="q"><span class="qnum">Q0</span>핵심 KPI는 지금 어떤 상태인가?</h2>
   <div class="score" id="scorecard"></div>
 
   <h2 class="q"><span class="qnum">Q1</span>현재 활성 창작 크리에이터는 몇 명인가?</h2>
+  <div class="note" style="margin:0 0 12px"><b>«창작»의 기준</b> — <code>event_name='world_modified'</code>이고 <code>event_value</code>가
+    <code>foundation_design · technical_design · script_generation · script_modified · object_transform_modified</code> 중 하나인 이벤트.
+    <code>fct_creator_first_login_date</code>가 첫 편집일을 만들 때 쓰는 정의와 같습니다.
+    <b style="color:#ef8f8f">이 기준으로는 셀 수 없습니다</b> — 마트에 계정×이벤트×일자 테이블이 없어서입니다. 그래서 아래 두 카드를 나눴습니다.
+    <br/>«활동»·«신규»의 기준은 상단 <b>「이 대시보드가 활동·신규·창작을 각각 무엇으로 세는지」</b>를 펴서 보세요.</div>
   <div class="card" data-m="active90">
-    <h3>최근 90일 활성 창작 크리에이터 추세</h3>
-    <p class="cap">각 지점 = 해당 월 말일 기준 최근 90일 슬라이딩 값 (마지막 지점은 오늘 기준 · 점선 = 진행 중)</p>
+    <h3>최근 90일 활성 <b>스튜디오 계정</b> 추세</h3>
+    <p class="cap">각 지점 = 해당 월 말일 기준 최근 90일 슬라이딩 값 (마지막 지점은 오늘 기준 · 점선 = 진행 중)<br/>
+    <b>스튜디오 로그인 기준</b>입니다 — 최근 90일 안에 스튜디오를 한 번이라도 켠 계정 수. <b>편집 여부는 보지 않습니다</b>(그건 바로 아래 카드이고 측정 불가입니다)</p>
     <div class="chartbox"><div class="webchart" id="activeTrend"></div></div>
+  </div>
+  <div class="card" data-m="editCreators90" style="margin-top:14px">
+    <h3>최근 90일 활성 <b>창작</b> 크리에이터 추세 (편집 기준)</h3>
+    <p class="cap">위 기준대로 «실제로 월드를 편집한 계정»만 센 값 · 90일 슬라이딩</p>
+    <div class="chartbox"><div class="webchart" id="editCreatorsChart"></div></div>
   </div>
   <div class="row2" style="margin-top:14px">
     <div class="card" data-m="weeklyNew">
-      <h3>주간 신규 크리에이터 (Weekly New)</h3>
-      <p class="cap">월~일 주 버킷 · 최초 <b>스튜디오 활동</b> 기준(최초 편집 아님) · 마지막 주는 7/27~7/31 5일치</p>
+      <h3>주간 신규 스튜디오 계정 (Weekly New)</h3>
+      <p class="cap"><b>스튜디오 로그인 기준</b>입니다 — 스튜디오를 <b>처음 켠 주</b>. 처음 편집한 주가 아닙니다<br/>
+      월~일 주 버킷(7일 슬라이딩 아님) · 완결된 주만 표시(7/27~7/31 부분 주 제외)</p>
       <div class="chartbox sm"><div class="webchart" id="weeklyNewChart"></div></div>
     </div>
     <div class="card" data-m="mau">
       <h3>월간 Studio 활성 사용자 (MAU)</h3>
-      <p class="cap">퍼블리시 여부와 무관하게 Studio를 실제로 사용한 월간 유니크</p>
+      <p class="cap"><b>스튜디오 로그인 기준</b>입니다 — 그 달에 스튜디오를 한 번이라도 켠 계정 수<br/>
+      켜고 바로 나가도 포함됩니다 — 편집·저장·퍼블리시 여부는 보지 않습니다</p>
       <div class="chartbox sm"><div class="webchart" id="mauChart"></div></div>
     </div>
   </div>
@@ -405,7 +499,7 @@
   <div class="mini-kpis" id="q2Kpis"></div>
   <div class="card" data-m="cumStage">
     <h3>누적 크리에이터 단계별 현황</h3>
-    <p class="cap">각 지점 = 해당 월 말일 기준 서비스 시작~현재 누적 · <b>스튜디오 로그인 → 첫 편집 → 첫 퍼블리시</b> 3개 단계 비교</p>
+    <p class="cap">각 지점 = 해당 월 말일 기준 누적 · 스튜디오 로그인 → 첫 편집 → 첫 퍼블리시<br/><b>세 곡선 모두 그릴 수 없습니다.</b> 시작점이 서로 다르고 어느 것도 서비스 시작이 아닙니다 — 스튜디오 로그인 2025-05-01(런칭은 2025년 3월) · 첫 퍼블리시 2025-08. 첫 편집은 7월분 70명이 마트에 안 들어왔고, 2025-08·09의 봉우리는 성장이 아니라 <b>로그 시작 시점에 생긴 인위적 봉우리</b>입니다</p>
     <div class="chartbox"><div class="webchart" id="cumChart"></div></div>
   </div>
 
@@ -414,7 +508,7 @@
     <div class="chead">
       <div>
         <h3>스튜디오 로그인 → 에디터 진입 → 첫 편집 → 퍼블리시 → 업데이트</h3>
-        <p class="cap">스튜디오 로그인 기준 100% · 계정별 각 단계 최초 도달 누적</p>
+        <p class="cap">스튜디오 로그인 기준 100% · 계정별 각 단계 최초 도달 누적<br/>다섯 칸 중 <b>세 칸이 깨져 있고</b>(회원가입 커버리지 62.6% · 첫 편집 7월분 70명 누락 · 첫 퍼블리시·업데이트 5/17 이후 판정 불가), 남은 두 칸도 <b>인원 수로는 못 씁니다</b> — 원천 테이블이 2025-05-01부터라 런칭 후 7주가 빠집니다. <b>비율만 인용 가능</b>: «2025-05-01 이후 첫 로그인이 기록된 계정 중 69%가 에디터 진입»</p>
       </div>
       <div class="seg" id="funnelTog">
         <button data-fm="cum" class="on">전체 누적</button>
@@ -439,8 +533,9 @@
 
   <h2 class="q"><span class="qnum">Q4</span>어느 국가에서 창작 활동이 가장 활발한가?</h2>
   <div class="card" data-m="country">
-    <h3>국가별 활성 크리에이터 (최근 90일)</h3>
-    <p class="cap">최근 90일 활성 크리에이터의 접속 국가 기준 · 상위 5개국 + 기타</p>
+    <h3>국가별 활성 스튜디오 계정 (최근 90일)</h3>
+    <p class="cap">최근 90일 안에 스튜디오를 켠 계정의 접속 국가 · 상위 5개국 + 기타<br/>
+    국가는 그날 <b>첫 이벤트</b>의 <code>country</code>를 씁니다(<code>daily_country</code>) · 편집 여부와 무관</p>
     <div class="chartbox sm"><div class="webchart" id="countryChart"></div></div>
   </div>
 
@@ -452,44 +547,58 @@
   </div>
 
   <h2 class="q"><span class="qnum">Q6</span>크리에이터의 퍼블리시 전환율은 얼마나 되는가?</h2>
+  <div class="note" style="margin:0 0 12px"><b>«퍼블리시»의 기준</b> — 이 대시보드가 세는 것은 <code>WORLD_PUBLISH_STARTED</code> 이벤트가 찍힌 <code>(world_id, world_version)</code>입니다.
+    스튜디오에서 <b>업로드(쿠킹)를 시작한 시점</b>에 찍히고, 성공 여부는 <code>world_cooking_completed</code>의 status로 판정합니다.
+    제품의 상태값은 네 단계(Ready for Publishing → Publishing → Published → Unused)인데
+    <b style="color:#ef8f8f">이 상태는 로그에 남지 않습니다</b> · <a href="https://overdare.atlassian.net/wiki/spaces/NFTMetaverse/pages/28939503" style="color:var(--accent)" target="_blank" rel="noopener">상태값 문서</a><br/><br/>
+    그래서 «퍼블리시 월드»는 <b>«배포 완료된 월드»가 아니라 «업로드를 시도한 월드»</b>입니다. 구체적으로 세 가지가 섞입니다.<br/>
+    ① <b>publish later로 쿠킹만 끝낸 월드도 +1이 됩니다.</b> 상태값 문서상 Ready for Publishing은 «cooking 완료»이지만 Home에 안 뜨고 QR로만 접속되는 <b>모바일 테스트 상태</b>입니다. 한 번도 Live였던 적이 없는 월드가 «퍼블리시 월드»에 들어갑니다.<br/>
+    ② <b>최초 퍼블리시일이 앞당겨집니다.</b> v1~v4를 테스트로 올리고 v5에서 publish now를 했다면, 월드 수로는 1개지만 «몇 월에 나왔는가»는 <b>v5가 아니라 v1이 올라간 달</b>로 잡힙니다. TTFP(첫 퍼블리시까지 걸린 시간)도 같은 방향으로 짧아집니다.<br/>
+    ③ <b>Unused·Banned가 빠지지 않습니다.</b> 누적은 단조 증가만 하므로 내려간 월드가 그대로 남습니다.<br/><br/>
+    <b>확정에 필요한 조회 1건</b> — publish later 경로가 <code>WORLD_PUBLISH_STARTED</code>를 남기는지입니다. 남긴다면 위처럼 Draft가 섞이고, 안 남긴다면 반대로 <b>모바일 테스트를 거쳐 배포한 월드가 통째로 빠집니다.</b> 어느 쪽이든 지금 수치는 정의와 다릅니다.</div>
   <div class="card" data-m="pubCreators">
     <h3>퍼블리싱 현황</h3>
-    <p class="cap">퍼블리시한 <b>유니크 크리에이터</b>(1명이 10개 내도 1명) + 실제 퍼블리시 월드 수</p>
+    <p class="cap">퍼블리시한 유니크 크리에이터(1명이 10개 내도 1명) + 실제 퍼블리시 월드 수<br/>퍼블리시 여부를 판정할 수단이 없습니다. 자주 인용되는 <b>149명 · 187명</b>은 각각 «마트 기록»과 «원천에서 확인된 누락만 더한 하한»이라 어느 쪽도 지표가 아닙니다 — ✕ 배지에 근거를 남겼습니다</p>
     <div id="pubStats"></div>
   </div>
   <div class="row2">
     <div class="card" data-m="pubWorlds">
-      <h3>월별 신규 퍼블리시 월드</h3>
-      <p class="cap">해당 월에 <b>처음 퍼블리시된 월드</b> 수 (재퍼블리시 제외) · 7월 전체(7/1~7/31) 집계<br/>쿠킹 <b>성공 판정 로그가 7/10 이후 끊겨</b> 성공 여부 대신 <b>퍼블리시 시도 후 실제 라이브 등재</b>로 판정했습니다 — 판정 방식과 근거는 △ 배지 참고</p>
+      <h3>월별 신규 퍼블리시 월드 (상태별)</h3>
+      <p class="cap">각 지점 = 해당 월에 <b>처음 퍼블리시된 월드</b> 수 (재퍼블리시 제외) · <b>Published</b>(배포 완료) vs <b>Update Required</b>(운영 일시중지·접속불가) vs 기타 · ※ Public은 Access Setting(별도 축)<br/><b>두 축이 각각 막혀 있습니다.</b> ① 막대 높이 — 5/17 place 이관 이후 world_version이 전부 '1'로만 들어와 <b>신규와 업데이트가 구분되지 않습니다.</b> ② 색 구분(상태) — <b>상태값은 로그에 아예 없습니다.</b> 스튜디오·쿠킹 로그는 «업로드를 시작했다/끝났다»만 남기고 그 결과가 Published가 됐는지 Draft로 남았는지는 기록하지 않습니다. 상태는 하이커 어드민에만 있고 그마저 최근 30일 활성 월드 162개만 내려옵니다 — ✕ 배지에 근거를 남겼습니다</p>
       <div class="chartbox sm"><div class="webchart" id="pubChart"></div></div>
     </div>
-    <div class="card" data-m="pubStatus">
-      <h3>퍼블리시 월드 상태 구성 (누적)</h3>
-      <p class="cap">서비스 시작~현재 누적 · <b>World Publishing/Version Status</b> 기준. <b>Published</b>=배포 완료(접속 가능). Public(Access Setting)과 다름 · <a href="https://overdare.atlassian.net/wiki/spaces/NFTMetaverse/pages/28939503" style="color:var(--accent)" target="_blank" rel="noopener">상태값 문서</a></p>
-      <div class="chartbox sm"><div class="webchart" id="statusChart"></div></div>
-      <div class="legend" id="statusLegend"></div>
+    <div class="card" data-m="cumPubWorlds">
+      <h3>누적 퍼블리시 월드</h3>
+      <p class="cap">월말 기준 지금까지 나온 월드의 누적 수<br/><b>5/17 place 이관에서 world_id 체계가 끊겨</b> 이력을 이어 붙일 수 없습니다(이전 2000번대 ↔ 이후 3000번대 겹침 0 · 매핑 없음). 시작점도 서비스 시작이 아니라 쿠킹 로그 적재 시작(2025-08)입니다. 월드 규모는 Q15의 <b>«플레이된 UGC 월드 수»</b>를 보세요</p>
+      <div class="chartbox sm"><div class="webchart" id="cumPubChart"></div></div>
     </div>
   </div>
   <div class="row2" style="margin-top:14px">
+    <div class="card" data-m="pubStatus">
+      <h3>퍼블리시 월드 상태 구성 (누적)</h3>
+      <p class="cap">전체 월드 대상(누적) · <b>World Publishing/Version Status</b> 기준. <b>Published</b>=배포 완료(접속 가능). Public(Access Setting)과 다름 · <a href="https://overdare.atlassian.net/wiki/spaces/NFTMetaverse/pages/28939503" style="color:var(--accent)" target="_blank" rel="noopener">상태값 문서</a></p>
+      <div class="chartbox sm"><div class="webchart" id="statusChart"></div></div>
+      <div class="legend" id="statusLegend"></div>
+    </div>
     <div class="card" data-m="tier">
       <h3>퍼블리시 월드 품질 티어 분포 (누적)</h3>
       <p class="cap">숫자가 낮을수록 상위 품질 (Tier0 최상)<br/>Tier3: 방문 700+·D1 12%+·4분+ · Tier2: 2,000+·15%+·6분+ · Tier1: 5,000+·20%+·8분+ · Tier0: 10,000+·24%+·10분+</p>
       <div class="chartbox sm"><div class="webchart" id="tierChart"></div></div>
       <div class="note"><b>관측 대기</b>(퍼블리시 30일 미만)는 아직 판단할 데이터가 없는 구간으로 품질 축 밖에 있습니다. 품질 순서는 그 다음부터 — 기준 미달 → Tier 3 → 2 → 1 → 0<br/><b>기준 미달</b> = 30일이 지났는데도 Tier3 문턱을 넘지 못한 월드. 신규 여부와 무관한 성과 기준<br/>관측 대기와 기준 미달의 비율 변화를 같이 보면, 퍼블리시가 활발한 것과 품질이 안 나오는 것을 구분할 수 있습니다</div>
     </div>
-    <div class="card" data-m="ttfp">
-      <h3>TTFP 중앙값 추이 (스튜디오 첫 로그인 → 첫 퍼블리시)</h3>
-      <p class="cap">Time To First Publish · 첫 퍼블리시 월 코호트의 중앙값(일). 짧을수록 온보딩 효율<br/>
-      기준선을 <b>가입일에서 스튜디오 첫 로그인으로 바꿨습니다.</b> 가입일 기준은 4월이 296일로 튀는데, 온보딩이 느려서가 아니라 «게임 가입은 옛날, 스튜디오 유입은 최근»인 계정이 섞여서입니다 — 배지를 눌러 근거를 확인하세요</p>
-      <div class="chartbox sm"><div class="webchart" id="ttfpChart"></div></div>
-      <div id="ttfpBaseline"></div>
-    </div>
+  </div>
+  <div class="card" data-m="ttfp" style="margin-top:14px">
+    <h3>TTFP 중앙값 추이 (스튜디오 첫 로그인 → 첫 퍼블리시)</h3>
+    <p class="cap">Time To First Publish · 첫 퍼블리시 월 코호트의 중앙값(일)<br/>
+    기준선을 가입일에서 스튜디오 첫 로그인으로 바로잡았지만, 그래도 <b>분자인 첫 퍼블리시일이 5/17 이후 안 찍힙니다.</b> 7월 표본 18명은 실제(56명)의 3분의 1이고 빠진 쪽이 «들어오자마자 낸» 계정이라 중앙값이 실제보다 길게 나옵니다 — ✕ 배지에 근거를 남겼습니다</p>
+    <div class="chartbox sm"><div class="webchart" id="ttfpChart"></div></div>
+    <div id="ttfpBaseline"></div>
   </div>
 
   <h2 class="q"><span class="qnum">Q7</span>활동 크리에이터는 늘고 있는가? (유입 vs 이탈)</h2>
   <div class="card" data-m="inout">
-    <h3>인 / 아웃 — 90일 활성 크리에이터 변화</h3>
-    <p class="cap">매달 말일에 "최근 90일 안에 한 번이라도 편집한 크리에이터 명단"을 만들어 직전 달 명단과 비교합니다 (마지막 지점은 오늘 기준).<br/><b>진입</b>=지난 명단에 없다가 새로 들어온 사람 · <b>이탈</b>=지난 명단에 있었지만 90일간 활동이 없어 빠진 사람 · <b>순증 = 진입 − 이탈</b></p>
+    <h3>인 / 아웃 — 90일 활성 스튜디오 계정 변화</h3>
+    <p class="cap">매달 말일에 "최근 90일 안에 <b>스튜디오를 연</b> 계정 명단"을 만들어 직전 달 명단과 비교합니다 (마지막 지점은 오늘 기준). 편집한 계정 명단이 아닙니다.<br/><b>진입</b>=지난 명단에 없다가 새로 들어온 계정 · <b>이탈</b>=지난 명단에 있었지만 90일간 활동이 없어 빠진 계정 · <b>순증 = 진입 − 이탈</b></p>
     <div id="inoutKpis"></div>
     <div class="chartbox" style="height:260px"><div class="webchart" id="inoutChart"></div></div>
     <div class="legend" style="margin-top:10px">
@@ -512,25 +621,17 @@
     </div>
     <div class="card" data-m="continueRate">
       <h3>지속 작업률 (퍼블리시 후 30일 내)</h3>
-      <p class="cap">첫 퍼블리시 후 1~30일 내 <b>동일 월드 v2+ 업데이트 또는 다른 월드 신규 퍼블리시</b>한 비율. 퍼블리시 코호트별<br/>
-      업데이트 로그가 <b>2026-05-15에 멈춰</b> 분자를 만들 수 없어 na로 내렸습니다. 이전 스냅샷의 4월 47%는 «퍼블리시와 같은 날 업데이트»를 지속으로 센 값이고, 임계값을 1~30일로 통일하면 20%입니다 — 배지를 눌러 근거를 확인하세요</p>
+      <p class="cap">첫 퍼블리시 후 1~30일 내 <b>동일 월드 v2+ 업데이트 또는 다른 월드 신규 퍼블리시</b>한 비율<br/>
+      업데이트 로그가 <b>2026-05-15에 멈춰</b> 분자를 만들 수 없습니다. 멈춘 시점이 place 이관(5/18)과 겹칩니다 — 6월 코호트의 낮은 값은 «업데이트를 안 했다»가 아니라 «기록하지 않았다»입니다</p>
       <div id="continueStat"></div>
       <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="continueChart"></div></div>
     </div>
   </div>
-  <div class="row2" style="margin-top:14px">
-    <div class="card" data-m="returnCreators">
-      <h3>이탈 후 복귀 크리에이터</h3>
-      <p class="cap">직전 스튜디오 활동에서 <b>30일 넘게 비운 뒤 다시 돌아온</b> 크리에이터. 월별 복귀 수</p>
-      <div id="returnStat"></div>
-      <div class="chartbox sm" style="height:170px;margin-top:8px"><div class="webchart" id="returnChart"></div></div>
-    </div>
-    <div class="card" data-m="partnerRet">
-      <h3>Partner(외주) 계약자 정착률</h3>
-      <p class="cap">계약 완료 후 30일 내 5시간+ <b>자발 재활동</b> · 후속 계약이 잡힌 기간은 제외 — 계약과 무관하게 플랫폼에 남는지를 봄</p>
-      <div id="paidRetStat"></div>
-      <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="paidRetChart"></div></div>
-    </div>
+  <div class="card" data-m="returnCreators" style="margin-top:14px">
+    <h3>이탈 후 복귀 계정</h3>
+    <p class="cap">직전 스튜디오 활동에서 <b>30일 넘게 비운 뒤 다시 돌아온</b> 계정. 월별 복귀 수 · 편집 여부와 무관</p>
+    <div id="returnStat"></div>
+    <div class="chartbox sm" style="height:170px;margin-top:8px"><div class="webchart" id="returnChart"></div></div>
   </div>
 
   <h2 class="q"><span class="qnum">Q9</span>스프린트(배포 주기)별 크리에이터 유입은 어떻게 변화하는가?</h2>
@@ -650,8 +751,43 @@
   </div>
 
   <h2 class="q"><span class="qnum">Q14</span>각 지표는 정확히 무엇을 의미하는가?</h2>
-  <div class="note" style="margin:0 0 12px">집계 기간 표기 규칙 — <b>90일</b>=오늘 기준 최근 90일 슬라이딩 · <b>누적</b>=서비스 시작~현재 · <b>코호트</b>=해당 월에 가입/퍼블리시한 집단 · <b>최근 월</b>=이번 달(부분 포함)</div>
+  <div class="note" style="margin:0 0 12px">집계 기간 표기 규칙 — <b>90일</b>=오늘 기준 최근 90일 슬라이딩 · <b>누적</b>=서비스 시작~현재 · <b>코호트</b>=해당 월에 가입/퍼블리시한 집단 · <b>최근 월</b>=이번 달(부분 포함)
+    <br/><b style="color:#ef8f8f">단, «누적»으로 표시되던 지표는 지금 하나도 서비스 시작부터가 아닙니다</b> — 스튜디오 로그인 2025-05-01 · 쿠킹/퍼블리시 2025-08-12 · 플레이 로그 2024-10-15. 그래서 누적 지표는 전부 측정 불가로 두었습니다</div>
   <div id="defsWrap"></div>
+
+  <h2 class="q"><span class="qnum">Q17</span>측정 불가를 없애려면 무엇을 해야 하는가</h2>
+  <div class="note" style="margin:0 0 12px">이 탭은 지표가 아니라 <b>작업 목록</b>입니다. 위 탭들의 ✕ 블록에 적힌 «필요한 작업»을 전부 한곳에 모아
+    작업 단위로 묶고, 그 작업이 끝나면 되살아나는 지표를 옆에 달았습니다.
+    <b>지표 이름을 누르면 해당 카드로 이동합니다.</b><br/>
+    ✕ 블록은 개별 버그가 아니라 대부분 <b>제품 구조 변경(5/17 place 이관)을 DW가 따라가지 못한 것</b>에서 파생됩니다. 그래서 영향 범위가 큰 묶음부터 두었습니다.</div>
+  <div id="opsSummary"></div>
+  <div id="opsWrap"></div>
+
+  <h2 class="q"><span class="qnum">Q18</span>«월드가 몇 개인가»에 왜 답을 못 하는가 — 하이커 대조</h2>
+  <div class="card">
+    <h3>네 숫자가 서로 다른 것을 셉니다</h3>
+    <p class="cap">«퍼블리시된 월드 수»로 인용되는 값이 네 개인데, 어느 것도 그 질문의 답이 아닙니다. 무엇을 세는지와 어디서 끊기는지를 나란히 둡니다.</p>
+    <table class="defs">
+      <thead><tr><th class="num" style="width:74px">값</th><th style="width:150px">무엇을 세는가</th><th style="width:190px">출처</th><th>왜 답이 아닌가</th></tr></thead>
+      <tbody>
+        <tr><td class="num"><b>3,722</b></td><td>place 메타에 존재하는 월드</td><td>PROD.THIRDPARTY<br/><code>place_information_meta</code></td>
+            <td><b>2026-07-09부터</b>이고 3,536개가 그날 백필로 한꺼번에 들어왔습니다. payload에 <code>createdAt</code>이 없어 <b>월드 생성일과 7/9 이전 이력을 복원할 수 없습니다.</b> 퍼블리시 여부와도 무관합니다 — 만들다 만 월드가 섞입니다.</td></tr>
+        <tr><td class="num"><b>1,167</b></td><td>분석 테이블에 등재된 월드</td><td>MART_PROD<br/><code>fct_world_analytics</code></td>
+            <td>이 테이블은 <b>그날 플레이가 있었는지와 무관하게</b> 생성된 모든 월드를 하루 한 행씩 넣습니다. 「행이 있는 월드」는 등재 수지 서비스 중인 월드가 아닙니다. namespace도 전 구간 <code>'live'</code> 단일값이라 필터가 안 됩니다.</td></tr>
+        <tr><td class="num"><b>673</b></td><td>쿠킹(퍼블리시 시도) 이력이 있는 월드</td><td>MART_PROD<br/><code>fct_studio_cooking</code></td>
+            <td>쿠킹 로그가 <b>2025-08부터</b>라 그 이전 월드가 빠집니다. 게다가 5/17 place 이관으로 <b>world_id 체계가 끊겨</b>(이전 2000번대 ↔ 이후 3000번대 겹침 0, 매핑 없음) 이력을 이어 붙일 수 없습니다. 성공 판정까지 붙은 건 569개인데 이 차이 자체가 단절의 크기입니다.</td></tr>
+        <tr><td class="num"><b>162</b></td><td>7월에 실제로 플레이된 UGC 월드</td><td>MART_PROD<br/><code>fct_world_analytics</code> (dau&gt;0)</td>
+            <td><b>이것만 확실합니다.</b> 다만 «퍼블리시된 월드»가 아니라 «소비된 월드»입니다. 이 대시보드는 월드 규모를 물을 때 이 값만 씁니다.</td></tr>
+      </tbody>
+    </table>
+    <div class="note" style="margin-top:12px"><b>하이커(운영 어드민) 메타도 기준이 될 수 없습니다.</b>
+      하이커 데이터는 Snowflake <code>PROD.THIRDPARTY</code>의 두 테이블로 들어오는데 둘 다 한계가 뚜렷합니다.<br/>
+      · <code>world_information_meta</code> — 하루 <b>160여 개만</b> 들어옵니다. 최근 30일 안에 플레이가 있었던 월드 162개와 정확히 일치하고 경계 2건까지 설명됩니다.
+        즉 <b>「최근 30일 활성 월드」</b> 목록이지 전량이 아닙니다. 월드 상태 3축(<code>accessStatus</code> / <code>exposureStatus</code> / <code>currentVersion.status</code>)이 여기 있어서,
+        <b>상태는 활성 월드에만 채워집니다.</b><br/>
+      · <code>place_information_meta</code> — place 3,752개 / 월드 3,722개로 전량에 가깝지만 7/9 백필이라 <b>시계열이 없습니다.</b><br/>
+      «지금 서비스 중인 월드»에 답하려면 상태 3축이 전량 월드에 채워져야 하는데, 지금은 활성 162개에만 있습니다.</div>
+  </div>
 
   <footer id="footerNote"></footer>
 
@@ -664,11 +800,15 @@
 document.getElementById('metaDate').innerHTML =
   `데이터 기준일 <b>${SNAPSHOT.asOf}</b> · 스냅샷 산출 ${SNAPSHOT.builtAt}<br/><span style="color:var(--muted2)">${SNAPSHOT.source} · 자동 갱신 없음</span>`;
 document.getElementById('footerNote').innerHTML =
-  `이 페이지는 <b>${SNAPSHOT.asOf} 기준 1회성 스냅샷</b>입니다. 자동으로 갱신되지 않습니다.<br/>` +
-  `<span style="color:#ef8f8f">✕ 표시된 블록은 현재 로그·테이블로 측정할 수 없는 지표</span>이고, ` +
-  `<span style="color:var(--warn)">△ 표시된 블록은 정의를 대체했거나 표본·커버리지 한계가 있는 지표</span>입니다.<br/>` +
-  `<b>✕ · △ 배지나 블록에 마우스를 올리면</b> 무엇이 한계인지, 어디까지 믿어도 되는지, 대신 무엇을 보면 되는지, ` +
-  `그리고 정확히 보려면 어떤 로깅·DW·운영 작업이 필요한지를 확인할 수 있습니다.`;
+  `<b>2026-08-07 재판정</b> — 판정을 <b>실측 · 측정 불가 두 가지</b>로만 두었습니다. 이전에 있던 «△ 주의» 칸은 없앴습니다.<br/>` +
+  `실측이 되려면 ① 원천이 한 테이블이고 그 로깅이 관측 구간 내내 끊기지 않았고 ② 정의를 대체하지 않았고 ` +
+  `③ 독립된 다른 원천과 대조했을 때 자릿수 차이가 없어야 합니다. 하나라도 못 지키면 <b>값을 만들지 않고</b> ✕로 둡니다.<br/>` +
+  `<span style="color:#ef8f8f">✕ 블록은 수치를 싣지 않습니다</span> — 이전 스냅샷에서 원천을 세어 더해 만들었던 보정값 ` +
+  `(첫 편집 809 · 첫 퍼블리시 187 · 90일 퍼블리시 108 · 누적 월드 673 · 7월 신규 131)은 전부 내렸습니다. ` +
+  `근거 수치는 지웠다는 사실과 함께 각 블록 툴팁에 남겨두었습니다.<br/>` +
+  `<b>✕ 배지나 블록에 마우스를 올리면</b> 무엇이 한계인지, 어디까지 믿어도 되는지, 대신 무엇을 보면 되는지, ` +
+  `그리고 정확히 보려면 어떤 로깅·DW·운영 작업이 필요한지를 확인할 수 있습니다.<br/>` +
+  `이 페이지는 <b>${SNAPSHOT.asOf} 기준 1회성 스냅샷</b>이고 자동으로 갱신되지 않습니다.`;
 
 let current = "all";
 let retTh = "3h";
@@ -1066,10 +1206,9 @@ function renderAvailSummary(){
   const n=s=>all.filter(x=>x.s===s).length;
   document.getElementById('availSummary').innerHTML =
     `<div class="note" style="margin:14px 0 0;display:flex;gap:18px;flex-wrap:wrap;align-items:center">
-      <span><b style="color:var(--success)">실측 ${n('ok')}개</b> 정의 그대로 집계</span>
-      <span><b style="color:var(--warn)">주의 ${n('warn')}개</b> 정의 대체·표본/커버리지 한계</span>
-      <span><b style="color:#ef8f8f">불가 ${n('na')}개</b> 현재 로그로 측정 불가</span>
-      <span style="color:var(--muted2)">△·✕ 배지에 마우스를 올리면 한계·대안·필요한 작업이 나옵니다</span>
+      <span><b style="color:var(--success)">실측 ${n('ok')}개</b> 정의 그대로 · 보정 없음</span>
+      <span><b style="color:#ef8f8f">측정 불가 ${n('na')}개</b> 수치를 싣지 않음</span>
+      <span style="color:var(--muted2)">2026-08-07 재판정 — «주의» 칸을 없애고 보정값을 전부 내렸습니다 · ✕ 블록에 마우스를 올리면 한계·대안·필요한 작업이 나옵니다</span>
     </div>`;
 }
 
@@ -1083,25 +1222,24 @@ function renderLeaderboard(){
 
 function renderPubStats(){
   const d = seg[current];
-  const stat=(v,l)=>`<div style="flex:1"><div class="v">${v.toLocaleString()}</div><div class="l">${l}</div></div>`;
+  const stat=(v,l)=>`<div style="flex:1"><div class="v" style="color:var(--muted2)">${v==null?'—':v.toLocaleString()}</div><div class="l">${l}</div></div>`;
   document.getElementById('pubStats').innerHTML=`
     <div class="pstat" style="margin-bottom:14px">
-      ${stat(d.pubCreatorsCum,'퍼블리시 크리에이터 (유니크) · 서비스 시작~현재 누적')}
+      ${stat(d.pubCreatorsCum,'퍼블리시 크리에이터 (유니크) · 누적(쿠킹 로그 2025-08~)')}
       ${stat(d.pubCreators90,'퍼블리시 크리에이터 (유니크) · 최근 90일')}
     </div>
     <div class="pstat">
       ${stat(d.pubWorldsCum,'퍼블리시 이력 월드 · 2025-08~현재 누적')}
-      ${stat(wsum(d.pubWorlds),`신규 퍼블리시 월드 · <b style="color:var(--accent)">${P().label}</b> (${P().range})`)}
+      ${stat(d.pubWorlds90,'신규 퍼블리시 월드 · 선택 기간')}
     </div>
-    <div class="note" style="margin-top:12px">선택 기간(${P().months}) 신규 퍼블리시 <b>${wsum(d.pubWorlds)}개</b> · 월평균 <b>${wavg(d.pubWorlds)}개</b> · 월 최대 <b>${wmax(d.pubWorlds)}개</b>. 쿠킹 로그는 <b>2025-08부터</b> 적재돼 그 이전 월드는 누적에서 빠집니다. 누적 674개 중 성공 판정까지 붙은 건 <b>569개</b>입니다. 위 크리에이터 수는 <b>최근 90일 고정 창</b>이라 기간 필터와 무관합니다.</div>`;
+    <div class="note" style="margin-top:12px">네 값 모두 수치를 싣지 않았습니다. 퍼블리시 여부를 판정할 수단이 5/17 place 이관 이후 없기 때문입니다. 원천에서 세면 나오는 숫자들(크리에이터 149 또는 187 · 월드 673 또는 569)은 서로 다른 기준이라 어느 쪽도 지표가 아닙니다 — ✕ 블록에 근거를 남겼습니다.</div>`;
 }
 
 function renderContinueStat(){
-  const d=seg[current], latest=d.continueByCohort[0], n=d.continueCohortN[0];
   document.getElementById('continueStat').innerHTML =
-    `<div class="statline"><span class="bigstat">${latest}<small>%</small></span>
-     <span class="statdesc"><b>4월에 첫 퍼블리시한 ${n}명</b> 중 1~30일 내 재출시·업데이트한 비율 (${Math.round(latest*n/100)}명)<br/>
-     표본이 한 자릿수~20명대라 한두 명 차이로 값이 크게 흔들리고, <b>업데이트 로그가 5/15에 멈춰</b> 분자가 불완전합니다</span></div>`;
+    `<div class="statline"><span class="bigstat" style="color:var(--muted2)">—</span>
+     <span class="statdesc">첫 퍼블리시 후 1~30일 내 재출시·업데이트한 비율<br/>
+     <b>업데이트 로그가 2026-05-15에 멈춰</b> 분자를 만들 수 없습니다. 표본도 월 8~20명뿐이라 복구돼도 한두 명이 값을 바꿉니다</span></div>`;
 }
 function renderReturnStat(){
   const d=seg[current], tot=wsum(d.returnCreators);
@@ -1134,9 +1272,11 @@ function renderFunnel(){
   ]);
   const base = steps[0][1];
   document.getElementById('funnelNote').innerHTML =
-    `서비스 시작~${SNAPSHOT.asOf} 누적 · 스튜디오 로그인=100%<br/>` +
-    `<span style="color:#ef8f8f">회원가입 단계 제외</span> — 웹로그 기준 가입 도달 계정이 ${d.cumSignupRaw.toLocaleString()}명으로 스튜디오 로그인 ${base.toLocaleString()}명보다 적게 잡혀 퍼널이 역전됩니다<br/>` +
-    `<span style="color:#ef8f8f">업데이트(v2+) 단계 제외</span> — 원천 로그가 <b>2026-05-15에 멈춰</b> ${d.cumUpdate[L]}명에서 고정돼 있습니다. 기록된 ${d.cumUpdate[L]}건 중 15건은 퍼블리시보다 앞선 날짜라 값 자체도 신뢰할 수 없습니다`;
+    `계정별 각 단계 최초 도달 누적 · 스튜디오 로그인=100%<br/>` +
+    `<span style="color:#ef8f8f">회원가입 단계 제외</span> — 웹로그 기준 가입 도달 계정이 ${d.cumSignupRaw.toLocaleString()}명으로 스튜디오 로그인보다 적게 잡혀 퍼널이 역전됩니다(커버리지 62.6%)<br/>` +
+    `<span style="color:#ef8f8f">업데이트(v2+) 단계 제외</span> — 원천 로그가 <b>2026-05-15에 멈춰</b> 67명에서 고정돼 있습니다. 기록된 67건 중 15건은 퍼블리시보다 앞선 날짜라 값 자체도 신뢰할 수 없습니다<br/>` +
+    `<span style="color:#ef8f8f">네 칸 모두 인원 수 제거</span> — 첫 편집은 7월분 70명 누락, 첫 퍼블리시는 5/17 이후 판정 불가, 앞 두 칸은 원천 테이블이 <b>2025-05-01부터</b>라 런칭(2025년 3월) 후 7주가 빠집니다. ` +
+    `인용 가능한 것은 <b>비율 하나뿐</b>입니다 — «2025-05-01 이후 첫 로그인이 기록된 계정 중 <b>69%</b>가 에디터 진입»`;
   document.getElementById('funnel').innerHTML = steps.map((s,i)=>{
     const p = (s[1]/base*100);
     const drop = i===0 ? '<span class="fdrop">&nbsp;</span>' : (()=>{
@@ -1213,20 +1353,16 @@ function renderCohort(){
 function renderTtfpBaseline(){
   const box=document.getElementById('ttfpBaseline'); if(!box) return;
   const d=seg[current], M=months.map(m=>m.split('/')[0]+'월');
-  box.innerHTML=`<div class="note" style="margin:10px 0 8px">두 기준선 비교 — 차이가 곧 <b>가입 후 스튜디오에 오기까지 걸린 시간</b>입니다</div>
+  box.innerHTML=`<div class="note" style="margin:10px 0 8px">코호트별 표본과 중앙값 — 수치를 싣지 않았습니다</div>
     <table class="defs">
-    <thead><tr><th>첫 퍼블리시 코호트</th><th class="num">표본</th><th class="num">스튜디오 첫 로그인 기준</th><th class="num">가입일 기준(옛 정의)</th><th class="num">격차</th></tr></thead>
-    <tbody>${M.map((m,i)=>{
-      const a=d.ttfpDays[i], b=d.ttfpDaysBySignup[i], gap=b-a;
-      const small=d.ttfpN[i]<10;
-      return `<tr><td>${m}</td>
-        <td class="num" style="color:${small?'var(--warn)':'var(--muted)'}">${d.ttfpN[i]}명${small?' (부족)':''}</td>
-        <td class="num"><b>${a}일</b></td>
-        <td class="num" style="color:var(--muted)">${b}일</td>
-        <td class="num" style="color:${gap>=200?'var(--danger)':'var(--muted2)'}">+${gap}일</td></tr>`;
-    }).join('')}</tbody></table>
-    <div class="note" style="margin-top:10px">4월 코호트의 격차가 <b>289일</b>입니다 — 이들은 스튜디오에 온 뒤 <b>7일</b> 만에 퍼블리시했지만,
-      게임 계정은 그보다 <b>10개월 가까이 전</b>에 만들었습니다. 옛 정의의 «296일»은 온보딩 속도가 아니라 계정 나이였습니다.</div>`;
+    <thead><tr><th>첫 퍼블리시 코호트</th><th class="num">표본</th><th class="num">스튜디오 첫 로그인 기준</th><th class="num">가입일 기준(옛 정의)</th></tr></thead>
+    <tbody>${M.map(m=>`<tr><td>${m}</td>
+        <td class="num" style="color:var(--muted2)">—</td>
+        <td class="num" style="color:var(--muted2)">—</td>
+        <td class="num" style="color:var(--muted2)">—</td></tr>`).join('')}</tbody></table>
+    <div class="note" style="margin-top:10px">기준선 문제는 해결됐습니다 — 가입일 기준의 «4월 296일»은 온보딩 속도가 아니라 계정 나이였고,
+      스튜디오 첫 로그인 기준으로 바꾸면 7일입니다. 하지만 <b>분자인 첫 퍼블리시일이 5/17 이후 안 찍혀</b> 표본 자체가 무너졌습니다.
+      7월은 18명만 잡히는데 실제로는 56명이고, 빠진 38명이 대부분 «들어오자마자 낸» 계정이라 남은 표본으로 중앙값을 내면 실제보다 길게 나옵니다.</div>`;
 }
 
 function pct(v,t){return t? Math.round(v/t*100):0}
@@ -1239,42 +1375,40 @@ function mini(label,val,sub,cls){
   return `<div class="mini-kpi ${cls||''}"><div class="l">${label}</div><div class="v">${val}</div><div class="s">${sub||''}</div></div>`;
 }
 function naCard(label,sub,key){
-  return `<div class="card kpi m-na"><div class="klabel">${label} <span class="m-chip na m-hit" data-mk="${key}">✕</span></div>
+  return `<div class="card kpi m-na" data-manchor="${key}"><div class="klabel">${label} <span class="m-chip na m-hit" data-mk="${key}">✕</span></div>
     <div class="kval" style="color:var(--muted2)">—</div>
     <div class="ksub">${sub}</div></div>`;
 }
 function renderScorecard(){
   const d=seg[current];
-  const wchip = k => `<span class="m-chip warn m-hit" data-mk="${k}">△</span>`;
   // 90일 슬라이딩·누적 지표는 상단 기간 필터로 바뀌지 않는다는 걸 카드에 명시
-  const fx = `<span class="m-chip" style="margin-left:6px;background:#2a3140;color:var(--muted2);border-color:#39414f" title="최근 90일 슬라이딩 또는 서비스 시작~현재 누적 지표라 상단 기간 필터의 영향을 받지 않습니다">기간 무관</span>`;
+  const fx = `<span class="m-chip" style="margin-left:6px;background:#2a3140;color:var(--muted2);border-color:#39414f" title="최근 90일 슬라이딩 또는 누적 지표라 상단 기간 필터의 영향을 받지 않습니다">기간 무관</span>`;
   document.getElementById('scorecard').innerHTML =
-    kpiCard('90일 활성 크리에이터', d.active90, '명', '최근 90일 슬라이딩 · 편집 외 스튜디오 활동 포함', wchip('active90')+fx) +
-    kpiCard('편집 전환율', d.editConv, '%', `누적 기준 · 첫 편집 ${d.cumC.at(-1).toLocaleString()} / 스튜디오 로그인 ${d.cumLogin.at(-1).toLocaleString()}`, wchip('editConv')+fx) +
-    kpiCard('퍼블리시 전환(90일)', d.pubConv90, '%', `퍼블리시 ${d.pubCreators90}명 / 활성 ${d.active90}명`, fx) +
-    kpiCard('Agent 사용률(90일)', d.agentUseRate.at(-1), '%', `${d.agentUsers90.at(-1)}명 / 활성 ${d.active90}명`, fx) +
+    kpiCard('90일 활성 스튜디오 계정', d.active90, '명', '최근 90일 슬라이딩 · 스튜디오를 연 계정(편집 여부 무관)', fx) +
     kpiCard('MAU (Studio)', d.mau.at(-1), '명', `7/1~7/31 유니크${periodN>1?` · ${P().months} 월평균 ${wavg(d.mau)}명 · 최대 ${wmax(d.mau)}명`:''}`) +
-    kpiCard('플레이된 UGC 월드 (7월)', visitedWorlds.at(-1), '개', `하루 평균 ${dailyVisitedAvg.at(-1)}개 · ${P().label} 총 방문 ${wsum(worldVisitsTotal).toLocaleString()}건 · CP 월드 미포함`, wchip('visitedWorldsCnt')) +
+    kpiCard('플레이된 UGC 월드 (7월)', visitedWorlds.at(-1), '개', `하루 평균 ${dailyVisitedAvg.at(-1)}개 · ${P().label} 총 방문 ${wsum(worldVisitsTotal).toLocaleString()}건 · CP 월드 미포함`) +
+    kpiCard('Agent 사용률(90일)', d.agentUseRate.at(-1), '%', `${d.agentUsers90.at(-1)}명 / 활성 스튜디오 계정 ${d.active90}명`, fx) +
+    naCard('90일 활성 창작 크리에이터', '마트에 계정×이벤트×일자 테이블 없음', 'editCreators90') +
+    naCard('편집 전환율', '분자(첫 편집 도달)가 7월분 70명을 못 받음', 'editConv') +
+    naCard('퍼블리시 전환(90일)', '5/17 place 이관 후 퍼블리시 판정 불가', 'pubCreators') +
+    naCard('누적 퍼블리시 월드', 'world_id 연속성 단절로 누적이 성립하지 않음', 'cumPubWorlds') +
     naCard('Tier3+ 월드', '방문·D1·체류 기준을 컬럼에 매핑 불가', 'tier') +
-    naCard('코어 크리에이터', '계정별 활동 시간 테이블 없음', 'core') +
-    naCard('활성화율 (7일 3h+)', '계정별 활동 시간 테이블 없음', 'activation');
+    naCard('코어 크리에이터', '계정별 활동 시간 테이블 없음', 'core');
 }
 function renderQ2Kpis(){
   const d=seg[current];
+  const naMini = (label,sub,key) =>
+    `<div class="mini-kpi" data-manchor="${key}"><div class="l">${label} <span class="m-chip na m-hit" data-mk="${key}">✕</span></div>` +
+    `<div class="v" style="color:var(--muted2)">—</div><div class="s">${sub}</div></div>`;
   document.getElementById('q2Kpis').innerHTML =
-    mini('① 누적 스튜디오 로그인', `${d.cumLogin.at(-1).toLocaleString()}명`, '서비스 시작~현재') +
-    mini('② 누적 첫 편집', `${d.cumC.at(-1).toLocaleString()}명`, `로그인 대비 ${pct(d.cumC.at(-1),d.cumLogin.at(-1))}%`) +
-    mini('③ 누적 첫 퍼블리시', `${d.cumPub.at(-1).toLocaleString()}명`, `첫 편집 대비 ${pct(d.cumPub.at(-1),d.cumC.at(-1))}%`);
+    naMini('① 누적 스튜디오 로그인', '마트 시작점이 2025-05-01 · 원천(2025-03-26)보다 478명 적음', 'cumLogin') +
+    naMini('② 누적 첫 편집', 'first_edit_date가 7월분 70명을 못 받음', 'editConv') +
+    naMini('③ 누적 첫 퍼블리시', '5/17 place 이관 후 퍼블리시 판정 불가', 'cumStage');
 }
 function renderActStat(){
   document.getElementById('actStat').innerHTML =
     `<div class="statline"><span class="bigstat" style="color:var(--muted2)">—</span>
      <span class="statdesc">가입 후 7일 내 누적 3시간+ 활성화율</span></div>`;
-}
-function renderPaidRetStat(){
-  document.getElementById('paidRetStat').innerHTML =
-    `<div class="statline"><span class="bigstat" style="color:var(--muted2)">—</span>
-     <span class="statdesc">계약 없는 상태에서 30일 내 5시간+ 자발 재활동</span></div>`;
 }
 function renderAgentStat(){
   const d=seg[current], rate=d.agentUseRate.at(-1), users=d.agentUsers90.at(-1);
@@ -1284,7 +1418,7 @@ function renderAgentStat(){
                               : '7월은 온전히 집계된 달입니다';
   document.getElementById('agentStat').innerHTML =
     `<div class="statline"><span class="bigstat">${rate}<small>%</small></span>
-     <span class="statdesc">최근 90일 활성 <b>${d.active90}명</b> 중 <b>${users}명</b>이 Agent 사용 <span style="color:var(--muted2)">(90일 고정 창 — 기간 필터와 무관)</span><br/>
+     <span class="statdesc">최근 90일 활성 스튜디오 계정 <b>${d.active90}명</b> 중 <b>${users}명</b>이 Agent 사용 <span style="color:var(--muted2)">(90일 고정 창 — 기간 필터와 무관)</span><br/>
      <b style="color:var(--accent)">${P().label}</b> Agent 세션 <b>${wsum(agentSessions).toLocaleString()}건</b> · ${covered}</span></div>`;
 }
 function renderVisitStat(){
@@ -1323,8 +1457,9 @@ function renderAgentCompare(){
   const d=seg[current], v=d.agentVs;
   document.getElementById('agentCompare').innerHTML = cmpBars('Agent 사용','미사용',[
     ['퍼블리시 전환율',`최근 90일에 퍼블리시한 크리에이터 ÷ 그룹 전체 (사용 ${d.agentVsPubN[0]}/${d.agentVsN[0]}명 · 미사용 ${d.agentVsPubN[1]}/${d.agentVsN[1]}명)`,v.pubConv[0],v.pubConv[1],'%',false]
-  ]) + `<div class="note" style="margin-top:12px">최근 90일 활성 ${d.active90}명이 Agent 사용 <b>${d.agentVsN[0]}명</b> / 미사용 <b>${d.agentVsN[1]}명</b>으로 거의 반씩 나뉩니다.<br/>
-    <b style="color:#ef8f8f">TTFP 비교는 내렸습니다</b> — Agent 그룹에서 첫 퍼블리시 이력이 있는 61명 중 <b>28명(46%)이 Agent 오픈(5/18) 전에 이미 첫 퍼블리시</b>를 마쳤습니다. 기준선을 퍼널과 같은 «스튜디오 첫 로그인»으로 맞추면 이전 스냅샷의 «사용 64일 / 미사용 84일»이 «47일 / 33.5일»로 <b>방향까지 뒤집힙니다.</b> 배지를 눌러 근거를 확인하세요.<br/>
+  ]) + `<div class="note" style="margin-top:12px">여기서 실측인 것은 <b>분모뿐</b>입니다 — 최근 90일 활성 스튜디오 계정 ${d.active90}명이 Agent 사용 <b>${d.agentVsN[0]}명</b> / 미사용 <b>${d.agentVsN[1]}명</b>으로 거의 반씩 나뉩니다.<br/>
+    <b style="color:#ef8f8f">퍼블리시 전환 비교는 내렸습니다</b> — 분자가 퍼블리시 판정에 의존하는데 5/17 이후 죽어 있습니다. 원천에서 세면 «사용 27.7% vs 미사용 9.0%»가 나오지만 양쪽 다 과소집계이고, 누락 38명이 어느 그룹에 몰렸는지 모릅니다.<br/>
+    <b style="color:#ef8f8f">TTFP 비교</b>는 애초에 성립하지 않습니다 — Agent 그룹에서 첫 퍼블리시 이력이 있는 61명 중 <b>28명(46%)이 Agent 오픈(5/18) 전에 이미 퍼블리시</b>했습니다.<br/>
     <b>지속 작업률</b>도 뺐습니다 — 업데이트 로그가 5/15에 멈춰 그룹별로 나눌 값이 없습니다.</div>`;
   document.getElementById('agentWorldCompare').innerHTML = cmpBars('Agent 제작','미사용',[
     ['Tier3+ 도달률','Tier3 기준 달성 월드 ÷ 그룹 전체 월드',1,1,'%',false],
@@ -1373,18 +1508,84 @@ function renderDefs(){
     const a=AVAIL[k];
     if(!a) return '';
     return a.s==='ok' ? `<span class="m-chip ok" style="margin:0" title="${a.src||'정의 그대로 실측'}">실측</span>`
-         : a.s==='warn' ? `<span class="m-chip warn m-hit" style="margin:0" data-mk="${k}">△ 주의</span>`
-                        : `<span class="m-chip na m-hit" style="margin:0" data-mk="${k}">✕ 불가</span>`;
+                      : `<span class="m-chip na m-hit" style="margin:0" data-mk="${k}">✕ 불가</span>`;
   };
   document.getElementById('defsWrap').innerHTML = groups.map(([k,name])=>{
     const rows=defs.filter(r=>r[3]===k);
     if(!rows.length) return '';
     return `<div class="card"><h3>${name}</h3><table class="defs">
       <thead><tr><th style="width:88px">상태</th><th>지표</th><th>쉽게 말하면</th><th>계산 / 소스</th></tr></thead>
-      <tbody>${rows.map(r=>`<tr><td>${state(r[4])}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody>
+      <tbody>${rows.map(r=>`<tr data-defrow="${r[4]}"><td>${state(r[4])}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody>
     </table></div>`;
   }).join('');
 }
+/* 작업 요청 탭 — OPS(data.js)에서 그립니다. 지표 칩을 누르면 그 지표 카드로 이동합니다. */
+const OPS_KIND = {
+  '로깅': 'background:rgba(160,107,255,.18);color:#c4a3ff',
+  'DW':   'background:rgba(76,141,255,.18);color:#8fb4ff',
+  '운영': 'background:rgba(232,180,90,.16);color:#e8b45a',
+};
+function renderOps(){
+  const meta = k => defs.find(r=>r[4]===k);
+  const nameOf = k => (meta(k)||[])[0] || k;
+  // 한 지표가 여러 작업에 걸려 있을 수 있어, 지표별로 몇 개가 남았는지 같이 보여줍니다.
+  const blockedBy = {};
+  OPS.forEach(g=>g.items.forEach(i=>i.m.forEach(k=>{ blockedBy[k]=(blockedBy[k]||0)+1; })));
+
+  const taskN = OPS.reduce((a,g)=>a+g.items.length,0);
+  const byKind = {};
+  OPS.forEach(g=>g.items.forEach(i=>{ byKind[i.k]=(byKind[i.k]||0)+1; }));
+  const naN = Object.values(AVAIL).filter(a=>a.s==='na').length;
+  const box = (v,l) => `<div class="b"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+  document.getElementById('opsSummary').innerHTML =
+    `<div class="ops-sum">${box(naN+'개','지금 측정 불가인 지표')}${box(taskN+'개','이걸 여는 작업')}` +
+    Object.entries(byKind).map(([k,v])=>box(v+'건', k+' 작업')).join('') + `</div>`;
+
+  document.getElementById('opsWrap').innerHTML = OPS.map(g=>`
+    <div class="card ops-g">
+      <h3>${g.g}</h3>
+      <p class="lead">${g.lead}</p>
+      <table class="ops">
+        <thead><tr><th style="width:50px">구분</th><th style="width:290px">작업</th><th>왜 필요한가</th><th style="width:250px">되살아나는 지표</th></tr></thead>
+        <tbody>${g.items.map(i=>`
+          <tr>
+            <td><span class="m-chip" style="margin:0;${OPS_KIND[i.k]||''}">${i.k}</span></td>
+            <td><span class="t">${i.t}</span>${i.sub?`<span class="sub">${i.sub}</span>`:''}</td>
+            <td>${i.goal}</td>
+            <td>${i.m.map(k=>{
+                  const rest = blockedBy[k]-1;
+                  const tip = rest>0 ? `이 지표는 다른 작업 ${rest}건도 함께 끝나야 열립니다`
+                                     : '이 작업만 끝나면 열립니다';
+                  return `<button class="opsm" data-goto="${k}" title="${tip}">${nameOf(k)}${rest>0?`<span class="n">+${rest}</span>`:''}</button>`;
+                }).join('')}</td>
+          </tr>`).join('')}</tbody>
+      </table>
+    </div>`).join('');
+}
+
+/* 지표 칩 클릭 → 그 지표로 이동.
+   카드가 있으면 그 탭의 카드로, 카드 없이 정의만 있는 지표(updateStage · liveBase ·
+   studioHours · signupStep)는 「지표 정의」 탭의 해당 행으로 보냅니다. */
+function gotoMetric(k){
+  const target = document.querySelector(`.card[data-m="${k}"]`) || document.querySelector(`[data-manchor="${k}"]`);
+  const toDefs = !target;
+  // 어느 탭으로 갈지는 defs의 분류가 아니라 «그 요소가 실제로 놓인 탭»에서 읽습니다.
+  // 같은 지표가 분류상 acq인데 카드는 size 탭에 있는 경우가 있어서입니다.
+  const tab = toDefs ? 'defs' : (target.closest('[data-tab]')?.dataset.tab || 'defs');
+  if(window.__gotoTab) window.__gotoTab(tab);
+  requestAnimationFrame(()=>{
+    const el = toDefs ? document.querySelector(`tr[data-defrow="${k}"]`) : target;
+    if(!el) return;
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    const cls = toDefs ? 'ops-flash-row' : 'ops-flash';
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.opsm[data-goto]'); if(!b) return;
+  gotoMetric(b.dataset.goto);
+});
+
 function renderSprintAnno(){
   document.getElementById('sprintAnno').innerHTML = '';
 }
@@ -1668,7 +1869,8 @@ function renderCharts(){
     const {fill,right,partialLast,...rest}=opt;
     return barChart(id,title,labels,bars,{...rest,legend:sets.length>1});
   };
-  trend('activeTrend','최근 90일 활성 크리에이터',M,[{label:'90일 활성',data:mc(d.activeTrend),color:C.accent,fill:true}],{unit:'명'});
+  trend('activeTrend','최근 90일 활성 스튜디오 계정',M,[{label:'90일 활성 계정',data:mc(d.activeTrend),color:C.accent,fill:true}],{unit:'명'});
+  trend('editCreatorsChart','최근 90일 활성 창작 크리에이터 (편집 기준)',M,[{label:'90일 활성 편집자',data:mc(d.editCreators90),color:C.purple,fill:true}],{unit:'명'});
   // 주간 시리즈는 6/08~7/27만 존재. 1개월을 고르면 7월 주차(마지막 4개)로 좁힌다.
   const wkN=periodN===1?4:weeks.length;
   barChart('weeklyNewChart','주간 신규 크리에이터',weeks.slice(-wkN),[{label:'주간 신규',data:d.weeklyNew.slice(-wkN),color:C.accent}],{legend:false,unit:'명',partialLast:true});
@@ -1684,8 +1886,13 @@ function renderCharts(){
     {label:'90일 활성',data:country.map(v=>v[1]),colors:[C.accent,C.success,C.warn,C.purple,C.danger,C.muted]}
   ],{legend:false,unit:'명'});
   barChart('pubChart','월별 신규 퍼블리시 월드',M,[
-    {label:'신규 퍼블리시 월드',data:mc(d.pubWorlds),color:C.success}
-  ],{legend:false,unit:'개',partialLast:true});
+    {label:'Published',data:mc(d.pubWorlds),color:C.success},
+    {label:'Update Required',data:mc(d.pubWorlds),color:C.warn},
+    {label:'기타',data:mc(d.pubWorlds),color:C.muted}
+  ],{stacked:true,unit:'개',partialLast:true});
+  trend('cumPubChart','누적 퍼블리시 월드',M,[
+    {label:'누적 퍼블리시 월드',data:mc(d.cumPubWorlds),color:C.success,fill:true}
+  ],{unit:'개'});
   donutChart('statusChart','퍼블리시 월드 상태 구성',['Published','Update Required','기타'],d.statusCum,[C.success,C.warn,C.muted]);
   drawStatusLegend();
   barChart('tierChart','퍼블리시 월드 품질 티어 분포',['관측 대기','기준 미달','Tier 3','Tier 2','Tier 1','Tier 0'],[
@@ -1701,8 +1908,7 @@ function renderCharts(){
   barChart('continueChart','지속 작업률',pubCohortMonths.map((m,i)=>`${m}(n=${d.continueCohortN[i]})`),[
     {label:'지속 작업률',data:d.continueByCohort,colors:[C.purple,C.purple,C.purple]}
   ],{legend:false,max:100,percent:true});
-  barChart('returnChart','이탈 후 복귀 크리에이터',M,[{label:'복귀',data:mc(d.returnCreators),color:C.accent}],{legend:false,unit:'명'});
-  barChart('paidRetChart','Partner(외주) 계약자 정착률',M,[{label:'정착률',data:mc(d.paidRetention),color:C.warn}],{legend:false,max:100,percent:true,partialLast:true});
+  barChart('returnChart','이탈 후 복귀 계정',M,[{label:'복귀',data:mc(d.returnCreators),color:C.accent}],{legend:false,unit:'명'});
   barChart('sprintChart','스프린트별 신규 크리에이터',sprints,[
     {label:'신규 크리에이터',data:d.sprintNew,colors:sprints.map(s=>sprintEvents[s]?C.success:C.accent)}
   ],{legend:false,unit:'명'});
@@ -1717,7 +1923,7 @@ function renderCharts(){
     {label:'Tier1+',data:mc(d.tier1plus),color:C.accent}
   ],{unit:'개',partialLast:true});
   comboChart('agentChart','Studio Agent 사용 현황',M,{
-    totals:{label:'90일 활성',data:mc(d.activeTrend),color:'#3d4557'},
+    totals:{label:'90일 활성 계정',data:mc(d.activeTrend),color:'#3d4557'},
     parts:{label:'Agent 사용',data:mc(d.agentUsers90),color:C.purple},
     rate:{label:'사용률(%)',data:mc(d.agentUseRate),color:C.success}
   },{maxR:100});
@@ -1777,7 +1983,7 @@ function renderPeriodBar(){
       ? ` <span style="color:var(--warn)">1개월은 월 포인트가 하나뿐이라 추세 차트가 단일 막대로 바뀝니다 — 주·일 단위 분해는 현재 마트에 없습니다.</span>`
       : ``);
 }
-function renderAll(){ renderPeriodBar(); renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); renderAgentStat(); renderAgentErrStat(); renderVisitStat(); renderAgentCompare(); }
+function renderAll(){ renderPeriodBar(); renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderAgentStat(); renderAgentErrStat(); renderVisitStat(); renderAgentCompare(); }
 
 document.getElementById('segSel').addEventListener('change',e=>{
   current=e.target.value;
@@ -1793,14 +1999,14 @@ document.getElementById('retTog').addEventListener('click',e=>{
   [...document.querySelectorAll('#retTog button')].forEach(x=>x.classList.toggle('on',x===b));
   renderCohort();
 });
-renderAvailSummary(); renderDefs(); renderSprintAnno(); renderAll();
+renderAvailSummary(); renderDefs(); renderOps(); renderSprintAnno(); renderAll();
 try{ makeCharts(); }catch(err){ console.error('chart load failed',err); }
 applyAvailability();
 alignRowBodies();
 
 /* ===== 목적별 탭 (Superset Tabs 대응: 한 번에 한 탭만) =====
    h2와 다음 h2 전까지의 형제 요소를 같은 탭으로 묶음 */
-const tabOfQ={0:'overview',1:'size',2:'size',3:'acq',4:'size',5:'size',6:'output',7:'ret',8:'ret',9:'acq',10:'output',11:'acq',12:'agent',13:'community',14:'defs',15:'output',16:'agent'};
+const tabOfQ={0:'overview',1:'size',2:'size',3:'acq',4:'size',5:'size',6:'output',7:'ret',8:'ret',9:'acq',10:'output',11:'acq',12:'agent',13:'community',14:'defs',15:'output',16:'agent',17:'ops',18:'ops'};
 (function initTabs(){
   document.querySelectorAll('h2.q').forEach(h=>{
     const n=parseInt(h.querySelector('.qnum').textContent.replace('Q',''),10);
@@ -1829,7 +2035,9 @@ const tabOfQ={0:'overview',1:'size',2:'size',3:'acq',4:'size',5:'size',6:'output
     [...bar.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
     try{renderCharts();}catch(e){} // 숨김 상태에서 그려진 차트 크기 보정
     alignRowBodies();            // 숨김 상태에서는 높이가 0으로 재져서 탭이 보인 뒤 다시 맞춘다
+    history.replaceState(null,'','#'+t);
   }
+  window.__gotoTab = apply;      // 작업 요청 탭에서 지표로 건너뛸 때 씁니다
   bar.addEventListener('click',e=>{
     const b=e.target.closest('button'); if(!b) return;
     apply(b.dataset.tab);

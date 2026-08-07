@@ -333,24 +333,29 @@
       <div class="chartbox sm"><div class="webchart" id="pubChart"></div></div>
     </div>
     <div class="card">
+      <h3>누적 퍼블리시 월드</h3>
+      <p class="cap">월말 기준 <b>지금까지 나온 월드</b>의 누적 수 · 월별 신규와 같은 판정 기준<br/>누적이라 <b>내려가지 않습니다</b> — 지금 서비스 중인 월드 수가 아닙니다. 실제 소비 규모는 Q15의 «플레이된 UGC 월드 수»를 보세요</p>
+      <div class="chartbox sm"><div class="webchart" id="cumPubChart"></div></div>
+    </div>
+  </div>
+  <div class="row2" style="margin-top:14px">
+    <div class="card">
       <h3>퍼블리시 월드 상태 구성 (누적)</h3>
       <p class="cap">서비스 시작~현재 누적 · <b>World Publishing/Version Status</b> 기준. <b>Published</b>=배포 완료(접속 가능). Public(Access Setting)과 다름 · <a href="https://overdare.atlassian.net/wiki/spaces/NFTMetaverse/pages/28939503" style="color:var(--accent)" target="_blank" rel="noopener">상태값 문서</a></p>
       <div class="chartbox sm"><div class="webchart" id="statusChart"></div></div>
       <div class="legend" id="statusLegend"></div>
     </div>
-  </div>
-  <div class="row2" style="margin-top:14px">
     <div class="card">
       <h3>퍼블리시 월드 품질 티어 분포 (누적)</h3>
       <p class="cap">숫자가 낮을수록 상위 품질 (Tier0 최상)<br/>Tier3: 방문 700+·D1 12%+·4분+ · Tier2: 2,000+·15%+·6분+ · Tier1: 5,000+·20%+·8분+ · Tier0: 10,000+·24%+·10분+</p>
       <div class="chartbox sm"><div class="webchart" id="tierChart"></div></div>
       <div class="note"><b>관측 대기</b>(퍼블리시 30일 미만)는 아직 판단할 데이터가 없는 구간으로 품질 축 밖에 있습니다. 품질 순서는 그 다음부터 — 기준 미달 → Tier 3 → 2 → 1 → 0<br/><b>기준 미달</b> = 30일이 지났는데도 Tier3 문턱을 넘지 못한 월드. 신규 여부와 무관한 성과 기준<br/>관측 대기와 기준 미달의 비율 변화를 같이 보면, 퍼블리시가 활발한 것과 품질이 안 나오는 것을 구분할 수 있습니다</div>
     </div>
-    <div class="card">
-      <h3>TTFP 중앙값 추이 (스튜디오 첫 로그인 → 첫 퍼블리시)</h3>
-      <p class="cap">Time To First Publish · 코호트별 중앙값(일). 짧을수록 온보딩 효율<br/>기산점은 <b>게임 회원가입일이 아니라 스튜디오에 처음 들어온 날</b>입니다. 가입 기준으로 재면 "스튜디오에 오기까지 걸린 기간"과 "와서 퍼블리시하기까지 걸린 기간"이 한 숫자에 섞여, 온보딩을 개선해도 지표가 안 움직입니다</p>
-      <div class="chartbox sm"><div class="webchart" id="ttfpChart"></div></div>
-    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>TTFP 중앙값 추이 (스튜디오 첫 로그인 → 첫 퍼블리시)</h3>
+    <p class="cap">Time To First Publish · 코호트별 중앙값(일). 짧을수록 온보딩 효율<br/>기산점은 <b>게임 회원가입일이 아니라 스튜디오에 처음 들어온 날</b>입니다. 가입 기준으로 재면 "스튜디오에 오기까지 걸린 기간"과 "와서 퍼블리시하기까지 걸린 기간"이 한 숫자에 섞여, 온보딩을 개선해도 지표가 안 움직입니다</p>
+    <div class="chartbox sm"><div class="webchart" id="ttfpChart"></div></div>
   </div>
 
   <h2 class="q"><span class="qnum">Q7</span>활동 크리에이터는 늘고 있는가? (유입 vs 이탈)</h2>
@@ -384,19 +389,11 @@
       <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="continueChart"></div></div>
     </div>
   </div>
-  <div class="row2" style="margin-top:14px">
-    <div class="card">
-      <h3>이탈 후 복귀 크리에이터</h3>
-      <p class="cap">마지막 스튜디오 로그인 <b>30일+ 경과 후 재로그인</b>한 크리에이터 (활성화 기준 재충족). 월별 복귀 수</p>
-      <div id="returnStat"></div>
-      <div class="chartbox sm" style="height:170px;margin-top:8px"><div class="webchart" id="returnChart"></div></div>
-    </div>
-    <div class="card">
-      <h3>Partner(외주) 계약자 정착률</h3>
-      <p class="cap">계약 완료 후 30일 내 5시간+ <b>자발 재활동</b> · 후속 계약이 잡힌 기간은 제외 — 계약과 무관하게 플랫폼에 남는지를 봄</p>
-      <div id="paidRetStat"></div>
-      <div class="chartbox sm" style="margin-top:8px"><div class="webchart" id="paidRetChart"></div></div>
-    </div>
+  <div class="card" style="margin-top:14px">
+    <h3>이탈 후 복귀 크리에이터</h3>
+    <p class="cap">마지막 스튜디오 로그인 <b>30일+ 경과 후 재로그인</b>한 크리에이터 (활성화 기준 재충족). 월별 복귀 수</p>
+    <div id="returnStat"></div>
+    <div class="chartbox sm" style="height:170px;margin-top:8px"><div class="webchart" id="returnChart"></div></div>
   </div>
 
   <h2 class="q"><span class="qnum">Q9</span>스프린트(배포 주기)별 크리에이터 유입은 어떻게 변화하는가?</h2>
@@ -744,13 +741,6 @@ function renderActStat(){
   document.getElementById('actStat').innerHTML =
     `<div class="statline"><span class="bigstat">${latest}<small>%</small></span>
      <span class="statdesc">최근 가입 코호트 · 7일 내 3시간+ 활성화율</span></div>`;
-}
-function renderPaidRetStat(){
-  const d=seg[current], latest=d.paidRetention.at(-1);
-  const show = current==='organic' || current==='internal' ? '—' : latest;
-  document.getElementById('paidRetStat').innerHTML =
-    `<div class="statline"><span class="bigstat">${show}${show==='—'?'': '<small>%</small>'}</span>
-     <span class="statdesc">계약 없는 상태에서 30일 내 5시간+ 자발 재활동 · 후속 계약자는 집계 제외</span></div>`;
 }
 function renderAgentStat(){
   const d=seg[current], rate=d.agentUseRate.at(-1), users=Math.round(d.active90*rate/100);
@@ -1139,6 +1129,9 @@ function renderCharts(){
     {label:'Update Required',data:mc(ps.ur),color:C.warn},
     {label:'기타',data:mc(ps.oth),color:C.muted}
   ],{stacked:true,unit:'개',partialLast:true});
+  lineChart('cumPubChart','누적 퍼블리시 월드',M,[
+    {label:'누적 퍼블리시 월드',data:mc(d.cumPubWorlds),color:C.success,fill:true}
+  ],{unit:'개',partialLast:true});
   donutChart('statusChart','퍼블리시 월드 상태 구성',['Published','Update Required','기타'],d.statusCum,[C.success,C.warn,C.muted]);
   drawStatusLegend();
   barChart('tierChart','퍼블리시 월드 품질 티어 분포',['관측 대기','기준 미달','Tier 3','Tier 2','Tier 1','Tier 0'],[
@@ -1153,7 +1146,6 @@ function renderCharts(){
     {label:'지속 작업률',data:d.continueByCohort,colors:[C.purple,C.purple,C.muted]}
   ],{legend:false,max:100,percent:true});
   barChart('returnChart','이탈 후 복귀 크리에이터',M,[{label:'복귀',data:mc(d.returnCreators),color:C.accent}],{legend:false,unit:'명',partialLast:true});
-  barChart('paidRetChart','Partner(외주) 계약자 정착률',M,[{label:'정착률',data:mc(d.paidRetention),color:C.warn}],{legend:false,max:100,percent:true,partialLast:true});
   barChart('sprintChart','스프린트별 신규 크리에이터',sprints,[
     {label:'신규 크리에이터',data:d.sprintNew,colors:sprints.map(s=>sprintEvents[s]?C.success:C.accent)}
   ],{legend:false,unit:'명'});
@@ -1250,7 +1242,7 @@ function alignRowBodies(){
   });
 }
 
-function renderAll(){ renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderPaidRetStat(); renderAgentStat(); renderAgentErrStat(); renderVisitStat(); renderAgentCompare(); }
+function renderAll(){ renderScorecard(); renderQ2Kpis(); renderLeaderboard(); renderPubStats(); renderContinueStat(); renderReturnStat(); renderFunnel(); renderCohort(); renderInout(); renderActStat(); renderAgentStat(); renderAgentErrStat(); renderVisitStat(); renderAgentCompare(); }
 
 document.getElementById('segSel').addEventListener('change',e=>{
   current=e.target.value;
