@@ -1,0 +1,50 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 서로 모순되는 수치가 배포되는 것을 막는 게이트.
+      # na 지표에 값이 남아 있거나 작업 요청 탭이 na 지표를 빠뜨리면 실패합니다.
+      - name: Audit snapshot data
+        run: node .audit-snap.cjs
+
+      - name: Require deploy credentials
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          missing=""
+          [ -z "$TOKEN" ] && missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -z "$ACCOUNT" ] && missing="$missing CLOUDFLARE_ACCOUNT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing secret(s):$missing — see the 배포 section in README.md"
+            exit 1
+          fi
+
+      - name: Assemble deploy directory
+        run: |
+          rm -rf dist && mkdir -p dist/snapshot
+          cp index.html data.js dist/
+          cp snapshot/index.html snapshot/data.js dist/snapshot/
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=studio-creator-dashboard --branch=main

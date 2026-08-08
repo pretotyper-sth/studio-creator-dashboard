@@ -7,8 +7,8 @@
 | `/` | 가상(mock) 데이터 | 지표 정의 얼라인 — 모든 차트가 채워진 상태로 보임 |
 | `/snapshot/` | 실측 데이터 (2026-07-31 기준 1회성 스냅샷) | 현황 공유 — 지금 실제로 볼 수 있는 것과 없는 것을 구분해 보여줌 |
 
-- 가상 데이터: https://pretotyper-sth.github.io/studio-creator-dashboard/
-- 실측 스냅샷: https://pretotyper-sth.github.io/studio-creator-dashboard/snapshot/
+- 가상 데이터: https://studio-creator-dashboard.pages.dev/
+- 실측 스냅샷: https://studio-creator-dashboard.pages.dev/snapshot/
 
 ## 실측 스냅샷 (`/snapshot/`)
 
@@ -436,17 +436,49 @@ python3 -m http.server 8787
 
 ## 배포
 
-**`main`에 푸시하면 끝입니다.** GitHub Pages가 `.github/workflows/pages.yml`로 자동 배포하고
-20초쯤 뒤에 반영됩니다. 빌드 단계도 없고 레포 루트를 그대로 올리므로 `index.html`과
-`snapshot/`이 곧 배포물입니다.
+**`main`에 푸시하면 끝입니다.** `.github/workflows/deploy.yml`이 Cloudflare Pages로 올리고
+30초쯤 뒤에 `studio-creator-dashboard.pages.dev`에 반영됩니다. 빌드 도구는 없고
+`index.html`·`data.js`·`snapshot/`을 그대로 복사해 올리므로 소스가 곧 배포물입니다.
 
 ```bash
 git add -A && git commit -m "..." && git push origin main
 ```
 
-정적 파일뿐이라 백엔드가 없고, 레포가 공개라 Pages도 공개입니다 — 사내망 없이 열립니다.
+푸시 전에 `node .audit-snap.cjs`가 CI에서 먼저 돌아 **실패하면 배포가 멈춥니다.** `na` 지표에
+값이 남아 있거나 작업 요청 탭이 `na` 지표를 빠뜨리면 여기서 걸립니다 — 모순된 수치가 라이브로
+새는 것을 막는 장치이니 통과할 때까지 데이터를 고쳐야 합니다.
 
-이전에는 Cloudflare Pages 직접 업로드도 병행했는데 **2026-08-07에 제거했습니다.** 같은 화면이
-두 도메인에 뜨면 한쪽이 조용히 낡아 잘못된 수치를 보여주게 되고, wrangler 쪽은 매번 수동
-명령이 필요한 데다 OAuth 토큰이 3일 만에 만료되고 사내 TLS 프록시(`CN=*.krafton.com`) 때문에
-`NODE_EXTRA_CA_CERTS`까지 걸어야 해서 자동 배포보다 손이 많이 갔습니다.
+정적 파일뿐이라 백엔드가 없고, 사내망 없이 열립니다.
+
+### 배포 대상을 Cloudflare 하나로 두는 이유
+
+**도메인이 하나여야 합니다.** 같은 화면이 두 도메인에 뜨면 한쪽이 조용히 낡아 잘못된 수치를
+보여줍니다 — 실제로 2026-08-07에 `pages.dev`가 8/4 빌드에 멈춰 있었습니다. `pages.dev`가
+공유된 주소이므로 이쪽을 정본으로 두고 GitHub Pages는 껐습니다.
+
+수동 `wrangler` 실행은 OAuth 토큰이 3일 만에 만료되고 사내 TLS 프록시(`CN=*.krafton.com`)
+때문에 `NODE_EXTRA_CA_CERTS`를 걸어야 하는데, **CI에서는 둘 다 해당되지 않습니다.** API
+토큰은 만료되지 않고 GitHub 러너는 프록시를 타지 않습니다.
+
+### 필요한 시크릿
+
+| 시크릿 | 상태 | 발급 방법 |
+| --- | --- | --- |
+| `CLOUDFLARE_ACCOUNT_ID` | 설정됨 | `wrangler whoami` |
+| `CLOUDFLARE_API_TOKEN` | **직접 넣어야 함** | Cloudflare 대시보드 → My Profile → API Tokens → Create Token → Custom token → 권한 `Account · Cloudflare Pages · Edit` 하나만 |
+
+```bash
+gh secret set CLOUDFLARE_API_TOKEN   # 프롬프트에 토큰 붙여넣기
+```
+
+토큰이 없으면 워크플로가 첫 단계에서 어떤 시크릿이 없는지 알려주고 멈춥니다. 로컬에서
+긴급 배포가 필요하면:
+
+```bash
+security find-certificate -a -p /Library/Keychains/System.keychain > /tmp/ca.pem
+security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain >> /tmp/ca.pem
+rm -rf dist && mkdir -p dist/snapshot
+cp index.html data.js dist/ && cp snapshot/index.html snapshot/data.js dist/snapshot/
+NODE_EXTRA_CA_CERTS=/tmp/ca.pem npx wrangler pages deploy dist \
+  --project-name=studio-creator-dashboard --branch=main
+```
